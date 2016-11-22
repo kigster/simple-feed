@@ -1,24 +1,5 @@
 require 'spec_helper'
 
-module SimpleFeed
-  class MockProvider
-    attr_accessor :host, :port, :db, :namespace
-
-    def initialize(host, port, db:, namespace: nil)
-      self.host      = host
-      self.port      = port
-      self.db        = db
-      self.namespace = namespace
-    end
-
-    NAME = 'I am a mock provider and I laugh at you'.freeze
-
-    def name
-      NAME
-    end
-  end
-end
-
 RSpec.shared_examples :validate_provider do
   subject(:provider) { proxy.provider }
   context 'instantiation' do
@@ -57,7 +38,7 @@ RSpec.describe SimpleFeed::ProviderProxy do
   end
 
   context 'using fixtures' do
-    let(:props) { SimpleFeed::Fixtures.mock_provider_properties }
+    let(:props) { SimpleFeed::Fixtures.mock_provider_props }
     let(:klass) { props[:klass] }
     let(:args) { props[:args] }
     let(:opts) { props[:opts] }

@@ -1,20 +1,27 @@
-require 'hashie/extensions/symbolize_keys'
-
 module SimpleFeed
   class ProviderProxy
-    attr_accessor :klass, :arguments, :provider
+    attr_accessor :provider
 
-    def self.from(hash)
-      Hashie::Extensions::SymbolizeKeys.symbolize_keys!(hash)
-      self.new(hash[:klass], *hash[:args], **hash[:opts])
+    def self.from(definition)
+      if definition.is_a?(Hash)
+        ::SimpleFeed.symbolize!(definition)
+        self.new(definition[:klass], *definition[:args], **definition[:opts])
+      else
+        self.new(definition)
+      end
+
     end
 
-    def initialize(klass, *args, **options)
-      klass          = ::Object.const_get(klass) if klass.is_a?(::String)
-      self.klass     = klass
-      self.arguments = arguments
+    def initialize(provider_or_klass, *args, **options)
+      if provider_or_klass.is_a?(::String)
+        self.provider  = ::Object.const_get(provider_or_klass).new(*args, **options)
+      else
+        self.provider = provider_or_klass
+      end
 
-      self.provider  = klass.new(*args, **options)
+      SimpleFeed::Providers::REQUIRED_METHODS.each do |m|
+        raise ArgumentError, "Invalid provider type #{provider.class} does not support required method #{m}" unless provider.respond_to?(m)
+      end
     end
 
     # Forward all other method calls to Provider
