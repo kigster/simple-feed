@@ -20,4 +20,3 @@ module SimpleFeed
     registry[name.to_sym]
   end
 end
-

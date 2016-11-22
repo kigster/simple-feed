@@ -23,16 +23,16 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'base62-rb'
-  spec.add_dependency 'hashie'
-  spec.add_dependency 'redis', '~> 3.3'
-  spec.add_dependency 'connection_pool', '~> 2.2'
+  spec.add_dependency 'redis', '~> 3'
+  spec.add_dependency 'connection_pool', '~> 2'
   spec.add_dependency 'activesupport'
 
   spec.add_development_dependency 'yard'
-  spec.add_development_dependency 'codeclimate-test-reporter', '~> 0.6'
+  spec.add_development_dependency 'simplecov', '~> 0.12'
+  spec.add_development_dependency 'codeclimate-test-reporter', '~> 1.0'
 
   spec.add_development_dependency 'ventable'
   spec.add_development_dependency 'bundler'
   spec.add_development_dependency 'rake', '~> 10.0'
-  spec.add_development_dependency 'rspec', '~> 3.0'
+  spec.add_development_dependency 'rspec', '~> 3.5'
 end

@@ -3,9 +3,9 @@
 [![Gem Version](https://badge.fury.io/rb/simple-feed.svg)](https://badge.fury.io/rb/simple-feed)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kigster/simple-feed/master/LICENSE.txt)
 [![Build Status](https://travis-ci.org/kigster/simple-feed.svg?branch=master)](https://travis-ci.org/kigster/simple-feed)
-[![Code Climate](https://codeclimate.com/repos/5813da0398926c0088000285/badges/5e15f53bfbcd4c68cdaa/gpa.svg)](https://codeclimate.com/repos/5813da0398926c0088000285/feed)
-[![Test Coverage](https://codeclimate.com/repos/5813da0398926c0088000285/badges/5e15f53bfbcd4c68cdaa/coverage.svg)](https://codeclimate.com/repos/5813da0398926c0088000285/coverage)
-[![Issue Count](https://codeclimate.com/repos/5813da0398926c0088000285/badges/5e15f53bfbcd4c68cdaa/issue_count.svg)](https://codeclimate.com/repos/5813da0398926c0088000285/feed)
+[![Code Climate](https://codeclimate.com/repos/58339a5b3d9faa74ac006b36/badges/8b899f6df4fc1ed93759/gpa.svg)](https://codeclimate.com/repos/58339a5b3d9faa74ac006b36/feed)
+[![Test Coverage](https://codeclimate.com/repos/58339a5b3d9faa74ac006b36/badges/8b899f6df4fc1ed93759/coverage.svg)](https://codeclimate.com/repos/58339a5b3d9faa74ac006b36/coverage)
+[![Issue Count](https://codeclimate.com/repos/58339a5b3d9faa74ac006b36/badges/8b899f6df4fc1ed93759/issue_count.svg)](https://codeclimate.com/repos/58339a5b3d9faa74ac006b36/feed)
 
 This is a ruby implementation of a fast simple feed commonly used in a typical social network-like applications. The implementation is optimized for **read-time performance** and high concurrency (lots of users). A default Redis-based provider implementation is provided, with the API supporting new providers very easily. 
 
@@ -49,23 +49,24 @@ will be populated with the events coming from the followers.
 ```ruby
 require 'simplefeed'
 require 'simplefeed/providers/redis'
-  
-SimpleFeed.define(:followed_activity) do |feed|
-    feed.provider      = SimpleFeed::Providers::Redis.new(
-      redis: -> { ::Redis.new(host: '127.0.0.1') },
-    )
-    feed.max_size     = 1000 # how many items can be in the feed
-    feed.per_page     = 20   # default page size
+
+SimpleFeed.define(:followed_activity) do |f|
+  f.provider = SimpleFeed::Providers::Redis.new(
+    redis: -> { ::Redis.new(host: '127.0.0.1') },
+  )
+  f.max_size = 1000 # how many items can be in the feed
+  f.per_page = 20 # default page size
 end
 
-SimpleFeed.feed(:notifications) do |config|
-    config.provider = SimpleFeed::Providers::Redis.new(
-      redis: ::ConnectionPool.new(size: 5, timeout: 5) do
-                ::Redis.new(host: '192.168.10.10', port: 9000)
-              end
-    )
-    config.per_page = 50
+SimpleFeed.feed(:notifications) do |f|
+  f.provider = SimpleFeed::Providers::Redis.new(
+    redis: ::ConnectionPool.new(size: 5, timeout: 5) do
+      ::Redis.new(host: '192.168.10.10', port: 9000)
+    end
+  )
+  f.per_page = 50
 end
+
 ```
 
 After the feed is defined, the gem creates a similarly named method
@@ -86,10 +87,9 @@ When we publish events to the feeds, we typically (although not always) do it fo
 require 'simplefeed'
 user_ids = current_user.followed.map(&:id) # => [ 123, 545, ... ]
 user_ids.each do |user_id|
-  SimpleFeed.followed_activity.store(user_id, 'Jon followed Igbis Dracula', Time.now)
+  SimpleFeed.followed_activity.store(user_id, 'Jon followed Igbis', Time.now)
 end
 ```
-
 
 #### Reading the Feed
 
@@ -105,8 +105,9 @@ user_feed.paginate(page: 1, reset_last_read: false)
 # <SimpleFeed::Event#0xf98f234 value='George liked Jons post' at='2016-12-10 21:32:56 -0800'>
 # ....
 # ]
-user_feed.reset_last_read 
-#=> resets the last read timestamp to now, or an optional argument
+# now, let's force-reset the last read timestamp
+user_feed.reset_last_read # defaults to Time.now
+#=> 0
 user_feed.unread_count
 #=> 0
 ```
