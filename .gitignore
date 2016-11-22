@@ -1,0 +1,15 @@
+/.bundle/
+/.yardoc
+/Gemfile.lock
+/_yardoc/
+/coverage/
+/pkg/
+/doc/
+/spec/reports/
+/tmp/
+.idea
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
