@@ -18,7 +18,11 @@ module SimpleFeed
     end
 
     def self.follow_feed
-      @follow_feed ||= SimpleFeed.define(:follow_feed, **(::SimpleFeed.symbolize!(self.sample_feed.feeds.first.to_hash)))
+      @follow_feed ||= define_feed(:follow_feed)
+    end
+
+    def self.define_feed(feed_name)
+      SimpleFeed.define(feed_name, **(::SimpleFeed.symbolize!(self.sample_feed.feeds.first.to_hash)))
     end
   end
 

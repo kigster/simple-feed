@@ -5,6 +5,7 @@ module SimpleFeed
     attr_accessor :per_page, :max_size
     attr_reader :name
 
+    # Methods on the feed instance require user_id: parameter
     SimpleFeed::Providers::REQUIRED_METHODS.each do |m|
       define_method(m) do |*args, **opts, &block|
         self.provider.send(m, *args, **opts, &block)
@@ -28,6 +29,12 @@ module SimpleFeed
       @proxy
     end
 
+    def user_activity(user_id)
+      UserActivity.new(user_id: user_id, feed: self)
+    end
+
+    alias_method :for, :user_activity
+
     def configure(hash = {})
       SimpleFeed.symbolize!(hash)
       class_attrs.each do |attr|
@@ -36,9 +43,10 @@ module SimpleFeed
       yield self if block_given?
     end
 
-    def equal?(other)
+    def eql?(other)
       other.class == self.class &&
-        class_attrs.all? { |m| self.send(m).equal?(other.send(m)) }
+        %i(per_page max_size name).all? { |m| self.send(m).equal?(other.send(m)) } &&
+        self.provider.provider.class == other.provider.provider.class
     end
 
     def class_attrs
