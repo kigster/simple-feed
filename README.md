@@ -96,11 +96,11 @@ order to read and write to a feed of a given user, you need to obtain a
 handle on a `UserActivity` instance for a given feed:
 
 ```ruby
-fa_feed = SimpleFeed.news_feed
-@user_activity = fa_feed.user_activity(current_user.id)
+@news_feed = SimpleFeed.news_feed
+@user_activity = @news_feed.user_activity(current_user.id)
 
 # A shorter alias for method #user_activity is #for
-@user_activity = fa_feed.for(user_id)
+@user_activity = @news_feed.for(user_id)
 ````
 
 #### Publishing Data to the Feed
