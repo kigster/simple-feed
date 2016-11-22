@@ -14,5 +14,6 @@ module SimpleFeed
     end
   end
 end
-require_relative 'providers/provider'
-require_relative 'providers/redis'
+
+require_relative 'providers/base'
+require_relative 'redis/provider'

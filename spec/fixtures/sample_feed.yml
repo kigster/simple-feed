@@ -12,7 +12,7 @@ feeds:
         db: 1
 
     data:
-      - user_id: Jack
+      - user_id: afkj234
         activity:
           - { value: 'John liked Robert', at: "2016-11-20 23:32:56 -0800" }
           - { value: 'debbie liked Robert', at: '2016-11-20 23:35:56 -0800' }
@@ -36,7 +36,15 @@ feeds:
     per_page: 2
 
     provider:
-      <<: *mock_provider
+      klass: 'SimpleFeed::Redis::Provider'
+      opts:
+        redis:
+          host: '127.0.0.1'
+          port: 6379
+          namespace: :mock
+          db: 1
+          timeout: 0.05
+        pool_size: 10
 
     data:
       - user_id: 1

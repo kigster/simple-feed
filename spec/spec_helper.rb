@@ -1,20 +1,24 @@
 require 'simplecov'
 SimpleCov.start
 
-$LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
-require 'simplefeed'
 require 'yaml'
 require 'hashie'
+
+$LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
+
+require 'simplefeed'
+require 'simplefeed/providers/base'
 
 module SimpleFeed
   module Fixtures
 
     def self.sample_feed
-      @sample_feed ||= Hashie::Mash.new(YAML.load(File.read('spec/fixtures/sample_feed.yml')))
+      # noinspection RubyResolve
+      @sample_feed ||= Hashie::Mash.new(YAML.load(::File.read('spec/fixtures/sample_feed.yml')))
     end
 
     def self.mock_provider_props
-      @mock_provider_props ||= ::SimpleFeed.symbolize!(self.sample_feed.feeds.first.provider.to_hash)
+      @mock_provider_props ||= ::SimpleFeed.symbolize!(self.sample_feed[:feeds].first.provider.to_hash)
     end
 
     def self.follow_feed
@@ -22,11 +26,11 @@ module SimpleFeed
     end
 
     def self.define_feed(feed_name)
-      SimpleFeed.define(feed_name, **(::SimpleFeed.symbolize!(self.sample_feed.feeds.first.to_hash)))
+      SimpleFeed.define(feed_name, **(::SimpleFeed.symbolize!(self.sample_feed[:feeds].first.to_hash)))
     end
   end
 
-  class MockProvider < SimpleFeed::Providers::Provider
+  class MockProvider < SimpleFeed::Providers::Base
     attr_accessor :host, :port, :db, :namespace
 
     def initialize(host, port, db:, namespace: nil)
@@ -37,7 +41,7 @@ module SimpleFeed
     end
 
     SimpleFeed::Providers::REQUIRED_METHODS.each do |m|
-      define_method(m) do |*args, **opts, &block|
+      define_method(m) do |**opts, &block|
         puts "MockProvider -> in method #{m}"
       end
     end
