@@ -1,7 +1,7 @@
 
 module SimpleFeed
   class Feed
-    attr_accessor :name, :per_page, :max_size, :backend
+    attr_accessor :name, :per_page, :max_size, :provider
 
     def initialize(name)
       @name     = name.underscore.to_sym unless name.is_a?(Symbol)
