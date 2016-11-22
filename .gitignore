@@ -6,6 +6,7 @@
 /pkg/
 /doc/
 /spec/reports/
+/spec/coverage/
 /tmp/
 .idea
 .DS_Store

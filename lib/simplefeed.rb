@@ -1,5 +1,6 @@
 require 'simplefeed/version'
 require 'simplefeed/feed'
+require 'simplefeed/provider_proxy'
 
 module SimpleFeed
   @registry = {}

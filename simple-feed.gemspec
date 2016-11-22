@@ -24,6 +24,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'base62-rb'
   spec.add_dependency 'redis', '~> 3'
+  spec.add_dependency 'hashie'
   spec.add_dependency 'connection_pool', '~> 2'
   spec.add_dependency 'activesupport'
 

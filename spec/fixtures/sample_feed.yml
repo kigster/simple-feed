@@ -4,13 +4,12 @@ feeds:
     max_size: 5
     per_page: 2
 
-    provider: &redis_provider
-      klass: SimpleFeed::Providers::Redis
-      arguments:
-        host: 127.0.0.1
-        port: 6739
-        pool: 4
-        db: 2
+    provider: &mock_provider
+      klass: SimpleFeed::MockProvider
+      args: [ '127.0.0.1', '6379' ]
+      opts:
+        namespace: :mock
+        db: 1
 
     data:
       - user_id: Jack
@@ -37,7 +36,7 @@ feeds:
     per_page: 2
 
     provider:
-      <<: *redis_provider
+      <<: *mock_provider
 
     data:
       - user_id: 1
