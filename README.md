@@ -43,18 +43,18 @@ implementation and a name.
 
 #### Configuration
 
-Below we configure a feed called `:followed_activity`, which presumably
+Below we configure a feed called `:news_feed`, which presumably
 will be populated with the events coming from the followers.
 
 ```ruby
 require 'simplefeed'
-require 'simplefeed/providers/redis'
+require 'simplefeed/redis/provider'
 require 'yaml'
 
 # Let's configure backend provider via a Hash, although we can also
 # instantiate it directly (as shown in the second example below)
 provider_yaml = <<-eof
-  klass: SimpleFeed::Providers::Redis
+  klass: SimpleFeed::Redis::Provider
   opts:
     host: '127.0.0.1'
     port: 6379
@@ -62,7 +62,7 @@ provider_yaml = <<-eof
     db: 1
 eof
 
-SimpleFeed.define(:followed_activity) do |f|
+SimpleFeed.define(:news_feed) do |f|
   f.provider = YAML.load(provider_yaml) 
   f.max_size = 1000 # how many items can be in the feed
   f.per_page = 20 # default page size
@@ -71,23 +71,21 @@ end
 # Now let's define another feed, by wrapping Redis connection
 # in a +ConnectionPool+
 SimpleFeed.feed(:notifications) do |f|
-  f.provider = SimpleFeed::Providers::Redis.new(
-    redis: ::ConnectionPool.new(size: 5, timeout: 5) do
-      ::Redis.new(host: '192.168.10.10', port: 9000)
-    end
+  f.provider = SimpleFeed::Redis::Provider.new(
+    redis: -> { ::Redis.new(host: '192.168.10.10', port: 9000) },
+    pool_size: 10
   )
   f.per_page = 50
 end
-
 ```
 
 After the feed is defined, the gem creates a similarly named method
 under the `SimpleFeed` namespace to access the feed. For example, given
-a name such as `:friends_news` the following are all valid ways of
+a name such as `:news_feed` the following are all valid ways of
 accessing the feed:
 
- * `SimpleFeed.friends_news`
- * `SimpleFeed.get(:friends_news)`
+ * `SimpleFeed.news_feed`
+ * `SimpleFeed.get(:news_feed)`
 
 You can also get a full list of currently defined feeds with `SimpleFeed.feed_names` method.
 
@@ -98,7 +96,7 @@ order to read and write to a feed of a given user, you need to obtain a
 handle on a `UserActivity` instance for a given feed:
 
 ```ruby
-fa_feed = SimpleFeed.followed_activity
+fa_feed = SimpleFeed.news_feed
 @user_activity = fa_feed.user_activity(current_user.id)
 
 # A shorter alias for method #user_activity is #for
