@@ -1,4 +1,4 @@
-## SimpleFeed
+## SimpleFeed — Scalable, easy to use activity feed implementation.
 
 [![Gem Version](https://badge.fury.io/rb/simple-feed.svg)](https://badge.fury.io/rb/simple-feed)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kigster/simple-feed/master/LICENSE.txt)
