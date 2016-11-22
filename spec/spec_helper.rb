@@ -26,7 +26,7 @@ module SimpleFeed
     end
   end
 
-  class MockProvider
+  class MockProvider < SimpleFeed::Providers::Provider
     attr_accessor :host, :port, :db, :namespace
 
     def initialize(host, port, db:, namespace: nil)
@@ -35,7 +35,6 @@ module SimpleFeed
       self.db        = db
       self.namespace = namespace
     end
-
 
     SimpleFeed::Providers::REQUIRED_METHODS.each do |m|
       define_method(m) do |*args, **opts, &block|

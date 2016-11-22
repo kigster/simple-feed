@@ -5,11 +5,8 @@ module SimpleFeed
     attr_accessor :per_page, :max_size
     attr_reader :name
 
-    # Methods on the feed instance require user_id: parameter
-    SimpleFeed::Providers::REQUIRED_METHODS.each do |m|
-      define_method(m) do |*args, **opts, &block|
-        self.provider.send(m, *args, **opts, &block)
-      end
+    SimpleFeed::Providers.define_provider_methods(self) do |feed, method, opts, &block|
+      feed.provider.send(method, **opts, &block)
     end
 
     def initialize(name)
@@ -19,10 +16,13 @@ module SimpleFeed
       @per_page ||= 50
       @max_size ||= 1000
       @proxy    = nil
+
     end
 
     def provider=(definition)
       @proxy = ProviderProxy.from(definition)
+      @proxy.feed = self
+      @proxy
     end
 
     def provider

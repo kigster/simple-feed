@@ -17,7 +17,7 @@ describe 'SimpleFeed::UserActivity' do
 
   let(:user_id) { 19009845 }
 
-  let(:user_activity) { SimpleFeed::UserActivity.new(user_id: user_id, feed: feed) }
+  let(:user_activity) { feed.user_activity(user_id) }
 
   context 'method delegation' do
     SimpleFeed::Providers::REQUIRED_METHODS.each do |m|
