@@ -16,7 +16,6 @@ module SimpleFeed
       @per_page ||= 50
       @max_size ||= 1000
       @proxy    = nil
-
     end
 
     def provider=(definition)

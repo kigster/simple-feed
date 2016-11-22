@@ -49,15 +49,27 @@ will be populated with the events coming from the followers.
 ```ruby
 require 'simplefeed'
 require 'simplefeed/providers/redis'
+require 'yaml'
+
+# Let's configure backend provider via a Hash, although we can also
+# instantiate it directly (as shown in the second example below)
+provider_yaml = <<-eof
+  klass: SimpleFeed::Providers::Redis
+  opts:
+    host: '127.0.0.1'
+    port: 6379
+    namespace: :fa 
+    db: 1
+eof
 
 SimpleFeed.define(:followed_activity) do |f|
-  f.provider = SimpleFeed::Providers::Redis.new(
-    redis: -> { ::Redis.new(host: '127.0.0.1') },
-  )
+  f.provider = YAML.load(provider_yaml) 
   f.max_size = 1000 # how many items can be in the feed
   f.per_page = 20 # default page size
 end
 
+# Now let's define another feed, by wrapping Redis connection
+# in a +ConnectionPool+
 SimpleFeed.feed(:notifications) do |f|
   f.provider = SimpleFeed::Providers::Redis.new(
     redis: ::ConnectionPool.new(size: 5, timeout: 5) do
@@ -79,36 +91,52 @@ accessing the feed:
 
 You can also get a full list of currently defined feeds with `SimpleFeed.feed_names` method.
 
-#### Publishing Data to the Feed
+### Reading and Writing to the Feed for a given User
 
-When we publish events to the feeds, we typically (although not always) do it for many feeds at the same time. This is why the write operations expect a list of users, or an enumeration, or a block yielding batches of the users:
+Each feed consists of many user activities, mapped by `user_id`. In
+order to read and write to a feed of a given user, you need to obtain a
+handle on a `UserActivity` instance for a given feed:
 
 ```ruby
-require 'simplefeed'
-user_ids = current_user.followed.map(&:id) # => [ 123, 545, ... ]
-user_ids.each do |user_id|
-  SimpleFeed.followed_activity.store(user_id, 'Jon followed Igbis', Time.now)
-end
+fa_feed = SimpleFeed.followed_activity
+@user_activity = fa_feed.user_activity(current_user.id)
+
+# A shorter alias for method #user_activity is #for
+@user_activity = fa_feed.for(user_id)
+````
+
+#### Publishing Data to the Feed
+
+Once we have an instance of the `UserActivity` class, we can use one of
+the public methods to read and write into the feed:
+
+```ruby
+@user_activity.store(value: '{ "comment_id": 100, "author_id": 932424 }', at: Time.now)
+@user_activity.store(value: 'Jon liked Christen\'s post', at: Time.now)
 ```
+In the above example, we stored two separate events, one was stored as a `JSON` string, and the other as a human readable upate.
+
+How exactly you serialize your events is up to you, but a higher-level
+abstraction gem `activity-feed` decorates this library with additional
+compact serialization schemes for ruby and Rails applications.
 
 #### Reading the Feed
 
 ```ruby
 require 'simplefeed'
   
-user_feed = SimpleFeed.followed_activity.for(user_id)
-user_feed.unread_count
+@user_activity.unread_count
 #=> 12
-user_feed.paginate(page: 1, reset_last_read: false) 
+@user_activity.paginate(page: 1) 
 # => [ 
 # <SimpleFeed::Event#0x2134afa value='Jon followed Igbis' at='2016-11-20 23:32:56 -0800'>,
 # <SimpleFeed::Event#0xf98f234 value='George liked Jons post' at='2016-12-10 21:32:56 -0800'>
 # ....
 # ]
 # now, let's force-reset the last read timestamp
-user_feed.reset_last_read # defaults to Time.now
+@user_activity.reset_last_read # defaults to Time.now
 #=> 0
-user_feed.unread_count
+@user_activity.unread_count
 #=> 0
 ```
 
@@ -117,16 +145,16 @@ user_feed.unread_count
 Add this line to your application's Gemfile:
 
 ```ruby
-    gem 'simple-feed'
+gem 'simple-feed'
 ```
 
 And then execute:
 
-    $ bundle
+$ bundle
 
 Or install it yourself as:
 
-    $ gem install simple-feed
+$ gem install simple-feed
 
 ### Development
 
