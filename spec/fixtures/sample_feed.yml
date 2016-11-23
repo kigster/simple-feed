@@ -16,7 +16,7 @@ feeds:
         activity:
           - { value: 'John liked Robert', at: "2016-11-20 23:32:56 -0800" }
           - { value: 'debbie liked Robert', at: '2016-11-20 23:35:56 -0800' }
-        last_read_at: 2016-11-20 23:32:56 -0800
+        last_read_at: 2016-11-20 23:32h:56 -0800
         unread_count: 1
         count: 2
 

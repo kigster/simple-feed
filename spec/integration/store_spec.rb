@@ -31,23 +31,9 @@ context 'Integration' do
       end
     end
 
-    let(:user_id) { 1020945 }
+    include_examples :event_matrix
+
     let(:another_id) { 24989800 }
-
-    let(:event_matrix) { [
-      ['John was reported missing', at(1)],
-      ['{ "comment_id" : 1, "author_id": 1948985 }', at(6)],
-      ['Your wife had sent you divorce papers', at(4)],
-    ] }
-
-    let(:events) {
-      event_matrix.map do |args|
-        SimpleFeed::Event.new(user_id: user_id, value: args.first, at: args.last)
-      end
-    }
-
-    let(:first_event) { events.first }
-    let(:last_event) { events.last }
 
     context 'event list' do
       it 'should be correctly defined' do

@@ -58,15 +58,15 @@ RSpec.describe SimpleFeed::Redis::Driver do
     let(:adapter) { RedisAdapter.new(pool: ConnectionPool.new(size: 2) { Redis.new }) }
     include_examples :validate_adapter
   end
-  context 'passing :r as a proc' do
+  context 'passing :redis as a proc' do
     let(:adapter) { RedisAdapter.new(redis: -> { Redis.new }, pool_size: 2) }
     include_examples :validate_adapter
   end
-  context 'passing :r preinstantiated' do
+  context 'passing :redis preinstantiated' do
     let(:adapter) { RedisAdapter.new(redis: Redis.new) }
     include_examples :validate_adapter
   end
-  context 'passing :r via a hash' do
+  context 'passing :redis via a hash' do
     let(:adapter) { RedisAdapter.new(redis: { host: 'localhost', port: 6379, db: 1, timeout: 0.2 }, pool_size: 1) }
     include_examples :validate_adapter
   end

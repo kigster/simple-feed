@@ -11,7 +11,7 @@ module SimpleFeed
   end
 
   def self.define(name, **options, &block)
-    name   = name.to_sym unless name.is_a?(Symbol)
+    name = name.to_sym unless name.is_a?(Symbol)
     feed = registry[name] ? registry[name] : SimpleFeed::Feed.new(name)
     feed.configure(options) do
       block.call(feed) if block
@@ -24,10 +24,17 @@ module SimpleFeed
     registry[name.to_sym]
   end
 
+  class << self
+    # Forward all other method calls to Provider
+    def method_missing(name, *args, &block)
+      registry[name] || super
+    end
+  end
+
   # Returns list of class attributes based on the setter methods.
   # Not fool-proof, but works in this context.
   def self.class_attributes(klass)
-    klass.instance_methods.grep(%r{[^=!]=$}).map{ |m| m.to_s.gsub(/=/,'').to_sym}
+    klass.instance_methods.grep(%r{[^=!]=$}).map { |m| m.to_s.gsub(/=/, '').to_sym }
   end
 
   def self.symbolize!(hash)

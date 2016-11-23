@@ -14,9 +14,19 @@ describe SimpleFeed do
       expect(feed.max_size).to eq(100)
     end
 
-    it 'should fetch the same feed as defined' do
-      expect(feed).to eq(fetched)
+    context 'method #get' do
+      it 'should fetch the same feed as defined' do
+        expect(feed).to eq(fetched)
+      end
     end
+    context 'method named like the feed name' do
+      it 'should fetch the feed' do
+        expect(SimpleFeed.send(feed_name)).to eq(fetched)
+      end
 
+      it 'should raise NameError for a non-existing feed' do
+        expect { SimpleFeed.send(:Wookie) }.to raise_error(NameError)
+      end
+    end
   end
 end
