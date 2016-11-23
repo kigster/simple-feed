@@ -69,8 +69,8 @@ SimpleFeed.define(:news_feed) do |f|
 end
 
 # Now let's define another feed, by wrapping Redis connection
-# in a +ConnectionPool+
-SimpleFeed.feed(:notifications) do |f|
+# in a ConnectionPool
+SimpleFeed.define(:notifications) do |f|
   f.provider = SimpleFeed::Redis::Provider.new(
     redis: -> { ::Redis.new(host: '192.168.10.10', port: 9000) },
     pool_size: 10
@@ -93,7 +93,7 @@ You can also get a full list of currently defined feeds with `SimpleFeed.feed_na
 
 Each feed consists of many user activities, mapped by `user_id`. In
 order to read and write to a feed of a given user, you need to obtain a
-handle on a `UserActivity` instance for a given feed:
+handle on a `SimpleFeed::UserActivity` instance for a given feed:
 
 ```ruby
 @news_feed = SimpleFeed.news_feed
@@ -122,7 +122,9 @@ compact serialization schemes for ruby and Rails applications.
 
 ```ruby
 require 'simplefeed'
-  
+
+@user_activity.total_count
+#=> 412 
 @user_activity.unread_count
 #=> 12
 @user_activity.paginate(page: 1) 
