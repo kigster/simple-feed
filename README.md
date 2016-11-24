@@ -179,7 +179,7 @@ provider.total_count(user_id:)
 # Unread count
 provider.unread_count(user_id:)
 # Timestamp when the feed was last paginated
-provider.provider.last_read(user_id:)
+provider.last_read(user_id:)
 ```
 
 ### Installation
