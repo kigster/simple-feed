@@ -54,7 +54,7 @@ require 'yaml'
 # Let's configure backend provider via a Hash, although we can also
 # instantiate it directly (as shown in the second example below)
 provider_yaml = <<-eof
-  klass: SimpleFeed::Redis::Provider
+  klass: SimpleFeed::Providers::RedisProvider
   opts:
     host: '127.0.0.1'
     port: 6379
@@ -71,7 +71,7 @@ end
 # Now let's define another feed, by wrapping Redis connection
 # in a ConnectionPool
 SimpleFeed.define(:notifications) do |f|
-  f.provider = SimpleFeed::Redis::Provider.new(
+  f.provider = SimpleFeed::Providers::RedisProvider.new(
     redis: -> { ::Redis.new(host: '192.168.10.10', port: 9000) },
     pool_size: 10
   )
@@ -139,6 +139,22 @@ require 'simplefeed'
 @user_activity.unread_count
 #=> 0
 ```
+## Providers
+
+A provider is an underlying implementation that persists the events for each user, together with some meta-data for each feed.
+
+It is the intention of this gem that:
+
+ * it should be easy to swap providers
+ * it should be easy to add new providers
+
+Each provider must implement exactly the public API of a provider, but can optionally offer additional methods.
+
+Two providers are available with this gem:
+
+ * `SimpleFeed::Providers::RedisProvider` is the production-ready provider that uses ZSET operations to store events as a sorted set in Redis
+ * `SimpleFeed::Providers::HashProvider` is the pure Hash implementation of a provider that can be useful in unit tests of the host application. This provider may be used to push events within a single ruby process, but can be serialized to a YAML file in order to be restored later in another process.
+
 
 ### Installation
 
