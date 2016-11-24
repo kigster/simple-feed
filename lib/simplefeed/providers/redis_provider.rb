@@ -26,6 +26,9 @@ module SimpleFeed
         # def remove(user_id:, value:, at: nil)
         # end
         #
+        # def wipe(user_id:)
+        # end
+        #
         # def paginate(user_id:, page:, per_page: feed.per_page)
         # end
         #
@@ -39,6 +42,9 @@ module SimpleFeed
         # end
         #
         # def unread_count(user_id:)
+        # end
+        #
+        # def last_read(user_id:)
         # end
 
 

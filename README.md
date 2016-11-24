@@ -155,6 +155,32 @@ Two providers are available with this gem:
  * `SimpleFeed::Providers::RedisProvider` is the production-ready provider that uses ZSET operations to store events as a sorted set in Redis
  * `SimpleFeed::Providers::HashProvider` is the pure Hash implementation of a provider that can be useful in unit tests of the host application. This provider may be used to push events within a single ruby process, but can be serialized to a YAML file in order to be restored later in another process.
 
+### API: 
+
+The following the required Provider API:
+
+```ruby
+# Store an event for a user
+provider.store(user_id:, value:, at:)
+# Remove an event for a user
+provider.remove(user_id:, value:, at: nil)
+# Wipe the user's feed
+provider.wipe(user_id:)
+# Paginate events for the user, when peek: true is provided, 
+# do not reset #last_read, but otherwise reset it
+provider.paginate(user_id:, page:, per_page:, peek: true|false)
+# Return ALL events for the user
+provider.all(user_id:)
+# Reset last read timestamp for the user
+# (also should reset #unread_count)
+provider.reset_last_read(user_id:)
+# Total event count for the user
+provider.total_count(user_id:)
+# Unread count
+provider.unread_count(user_id:)
+# Timestamp when the feed was last paginated
+provider.provider.last_read(user_id:)
+```
 
 ### Installation
 
