@@ -19,9 +19,9 @@ module SimpleFeed
 
     # @param [Integer] page either nil or an Integer value greater than zero
     def events(page: nil, per_page: feed.per_page, &block)
-      @events ||= feed.all(user_id: user_id)
-      self.class.order_events(@events, &block)
-      (page && page > 0) ? @events[((page - 1) * per_page)...(page * per_page)] : @events
+      all_events = feed.all(user_id: user_id)
+      self.class.order_events(all_events, &block)
+      (page && page > 0) ? all_events[((page - 1) * per_page)...(page * per_page)] : all_events
     end
 
     def self.order_events(events, &block)

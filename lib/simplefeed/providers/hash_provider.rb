@@ -1,10 +1,11 @@
 require 'base62-rb'
 require 'hashie'
 require 'simplefeed/event'
+require 'set'
 
 module SimpleFeed
   module Providers
-    class HashProvider < Base
+    class HashProvider < BaseProvider
       attr_accessor :h
 
       def self.from_yaml(file)
@@ -25,18 +26,18 @@ module SimpleFeed
       end
 
       def wipe(user_id:)
-        user_activity(user_id, true)
+        activity(user_id, true)
       end
 
       def all(user_id:)
-        user_activity(user_id).map { |ea| ea.deserialize(user_id) }
+        activity(user_id).map { |ea| ea.deserialize(user_id) }
       end
 
       def paginate(user_id:, page:, per_page: feed.per_page, **options)
-        reset_last_read(user_id) unless options[:peek]
+        reset_last_read(user_id: user_id) unless options[:peek]
 
-        __all = all(user_id: user_id)
-        (page && page > 0) ? __all[((page - 1) * per_page)...(page * per_page)] : __all
+        activities  = all(user_id: user_id)
+        (page && page > 0) ? activities[((page - 1) * per_page)...(page * per_page)] : activities
       end
 
       def reset_last_read(user_id:, at: Time.now)
@@ -50,6 +51,10 @@ module SimpleFeed
 
       def unread_count(user_id:)
         user_record(user_id).unread_count
+      end
+
+      def last_read(user_id:)
+        user_record(user_id).last_read
       end
 
       def recalculate!
@@ -67,11 +72,15 @@ module SimpleFeed
           { total_count:        0,
             unread_count: 0,
             last_read:    nil,
-            activity:     [] }
+            activity:     SortedSet.new }
         )
       end
 
-      def increment_count(user_id, by = 1)
+      def activity(user_id, *args)
+        user_record(user_id, *args)[:activity]
+      end
+
+      def increment_counts(user_id, by = 1)
         %i(total_count unread_count).each do |field|
           if (user_record(user_id)[field] += by) < 0
             user_record(user_id)[field] = 0
@@ -79,24 +88,28 @@ module SimpleFeed
         end
       end
 
-      def user_activity(user_id, *args)
-        user_record(user_id, *args)[:activity]
-      end
-
       def push(ev)
-        ua = user_activity(ev.user_id)
-        ua << ev.serialize
-        increment_count(ev.user_id)
-        ua.sort!
-        ev
+        ua = activity(ev.user_id)
+        evs = ev.serialize
+        if ua.include?(evs)
+          nil
+        else
+          ua << evs
+          increment_counts(ev.user_id)
+          ua
+        end
       end
 
       def pop(ev)
         evs = ev.serialize
-        user_activity(ev.user_id).reject! do |existing|
-          existing.eql?(evs)
+        ua = activity(ev.user_id)
+        if ua.include?(evs)
+          ua.delete(evs)
+          increment_counts(ev.user_id, -1)
+          ua
+        else
+          nil
         end
-        increment_count(ev.user_id, -1)
       end
 
       def event(**opts)

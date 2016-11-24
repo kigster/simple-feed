@@ -1,6 +1,6 @@
 module SimpleFeed
   module Providers
-    class Base
+    class BaseProvider
       attr_accessor :feed
 
 

@@ -1,4 +1,3 @@
-
 module SimpleFeed
   module Fixtures
 
@@ -20,7 +19,7 @@ module SimpleFeed
     end
   end
 
-  class MockProvider < SimpleFeed::Providers::Base
+  class MockProvider < SimpleFeed::Providers::BaseProvider
     attr_accessor :host, :port, :db, :namespace
 
     def initialize(host, port, db:, namespace: nil)
@@ -32,7 +31,7 @@ module SimpleFeed
 
     SimpleFeed::Providers::REQUIRED_METHODS.each do |m|
       define_method(m) do |**opts, &block|
-        puts "MockProvider -> in method #{m}"
+        method_call(m, **opts)
       end
     end
 
@@ -40,6 +39,10 @@ module SimpleFeed
 
     def name
       NAME
+    end
+
+    def method_call(m, **opts)
+      puts "#{self.inspect}##{m}(#{opts.inspect})"
     end
   end
 end

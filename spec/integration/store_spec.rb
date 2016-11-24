@@ -1,10 +1,5 @@
 require 'spec_helper'
 
-# We'll be generating various times only seconds apart
-def at(sec)
-  Time.mktime(2016, 12, 01, 10, 00, sec)
-end
-
 context 'Integration' do
   context ' ➞ Setup' do
     let(:feed) { SimpleFeed::Fixtures.follow_feed }
@@ -38,8 +33,8 @@ context 'Integration' do
     context 'event list' do
       it 'should be correctly defined' do
         expect(events.size).to eq(3)
-        expect(events.last.value).to eq(event_matrix[2][0])
-        expect(events.last.at).to eq(event_matrix[2][1])
+        expect(events.last.value).to eq(EVENT_MATRIX[2][0])
+        expect(events.last.at).to eq(EVENT_MATRIX[2][1])
       end
     end
 
@@ -58,7 +53,7 @@ context 'Integration' do
 
       context '#events' do
         before do
-          expect(provider).to receive(:all).and_return(events.dup)
+          expect(provider).to receive(:all).exactly(4).times.and_return(events.dup)
         end
 
         it 'should correctly paginate events' do

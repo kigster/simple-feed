@@ -1,6 +1,6 @@
 module SimpleFeed
   module Providers
-    REQUIRED_METHODS = %i(store remove wipe reset_last_read paginate all total_count unread_count)
+    REQUIRED_METHODS = %i(store remove wipe reset_last_read last_read paginate all total_count unread_count)
 
     def self.define_provider_methods(klass, &block)
       # Methods on the class instance
@@ -15,5 +15,4 @@ module SimpleFeed
   end
 end
 
-require_relative 'providers/base'
-require_relative 'redis/provider'
+require_relative 'providers/base_provider'

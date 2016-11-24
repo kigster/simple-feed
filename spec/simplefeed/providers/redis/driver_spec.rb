@@ -1,10 +1,11 @@
 require 'spec_helper'
 require 'redis/connection/hiredis'
 require 'connection_pool'
+require 'simplefeed/providers/redis/driver'
 
-RSpec.describe SimpleFeed::Redis::Driver do
+RSpec.describe SimpleFeed::Providers::Redis::Driver do
   class RedisAdapter
-    include SimpleFeed::Redis::Driver
+    include SimpleFeed::Providers::Redis::Driver
   end
 
   shared_examples(:validate_adapter) do
@@ -53,9 +54,10 @@ RSpec.describe SimpleFeed::Redis::Driver do
   let(:key) { 'hello' }
   let(:value) { 'good bye' }
   let(:score) { Time.now.to_i }
+  let!(:redis) { Redis.new }
 
   context 'passing :pool directly' do
-    let(:adapter) { RedisAdapter.new(pool: ConnectionPool.new(size: 2) { Redis.new }) }
+    let(:adapter) { RedisAdapter.new(pool: ConnectionPool.new(size: 2) { redis }) }
     include_examples :validate_adapter
   end
   context 'passing :redis as a proc' do
@@ -69,5 +71,14 @@ RSpec.describe SimpleFeed::Redis::Driver do
   context 'passing :redis via a hash' do
     let(:adapter) { RedisAdapter.new(redis: { host: 'localhost', port: 6379, db: 1, timeout: 0.2 }, pool_size: 1) }
     include_examples :validate_adapter
+  end
+  context 'retrying an operation' do
+    let(:adapter) { RedisAdapter.new(redis: redis , pool_size: 1) }
+    it 'should retry and succeed' do
+      redis.del('retry')
+      expect(redis).to receive(:set).and_raise(::Redis::BaseConnectionError).once
+      expect(redis).to receive(:set).with('retry', 'connection')
+      adapter.set('retry', 'connection')
+    end
   end
 end
