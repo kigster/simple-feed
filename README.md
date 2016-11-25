@@ -139,6 +139,73 @@ require 'simplefeed'
 @user_activity.unread_count
 #=> 0
 ```
+
+### API & Usage 
+
+Below is the complete set of API methods that can be called on either
+the `Feed` class directly, for example:
+
+```ruby
+SimpleFeed.get(:news).store(user_id: 1, value: '123', at: Time.now)
+```
+
+Or via the `UserActivity` convenience class:
+
+```ruby
+@ua = SimpleFeed.get(:news).user_activity(1)
+@ua.store(value: '123', at: Time.now)
+puts @ua.all.inspect
+```
+
+#### Complete Feed API
+
+```ruby
+SimpleFeed.get(:feed_name).instance_eval do 
+  
+  store(user_id:, value:, at:)          # Store an event for a user
+  
+  remove(user_id:, value:, at: nil)     # Remove an event for a user
+  
+  wipe(user_id:)                        # Wipe the user's feed
+
+  paginate(user_id:,                    # Paginate events for the user, 
+              page:,                    # when peek: true is provided,
+          per_page:,                    # do not reset #last_read, 
+              peek:)                    # but otherwise reset it
+                                                           
+  
+  all(user_id:)                         # Return ALL events for the user
+
+  total_count(user_id:)                 # Total event count for the user
+  unread_count(user_id:)                # Unread count
+
+  last_read(user_id:)                   # Returns time when the feed was 
+                                        # read last
+                                        
+  reset_last_read(user_id:)             # Reset last read timestamp for the user
+                                        # (also should reset #unread_count)
+end
+    
+```
+
+#### Complete User Activity API
+
+Of course the recommended way to interface with the feed is via the
+`UserActivity` class:
+
+```ruby
+@ua = SimpleFeed.get(:feed_name).user_activity(1)
+@ua.store(value:, at:)
+@ua.remove(value:, at:)
+@ua.wipe
+@ua.paginate(page:, per_page:, peek: true|false)
+@ua.all
+@ua.reset_last_read
+@ua.total_count
+@ua.unread_count
+@ua.last_read
+```
+
 ## Providers
 
 A provider is an underlying implementation that persists the events for each user, together with some meta-data for each feed.
@@ -148,39 +215,17 @@ It is the intention of this gem that:
  * it should be easy to swap providers
  * it should be easy to add new providers
 
-Each provider must implement exactly the public API of a provider, but can optionally offer additional methods.
+Each provider must implement exactly the public API of a provider shown
+above (the `Feed` version, that receives `user_id:` as arguments).
 
 Two providers are available with this gem:
 
  * `SimpleFeed::Providers::RedisProvider` is the production-ready provider that uses ZSET operations to store events as a sorted set in Redis
- * `SimpleFeed::Providers::HashProvider` is the pure Hash implementation of a provider that can be useful in unit tests of the host application. This provider may be used to push events within a single ruby process, but can be serialized to a YAML file in order to be restored later in another process.
-
-### API: 
-
-The following the required Provider API:
-
-```ruby
-# Store an event for a user
-provider.store(user_id:, value:, at:)
-# Remove an event for a user
-provider.remove(user_id:, value:, at: nil)
-# Wipe the user's feed
-provider.wipe(user_id:)
-# Paginate events for the user, when peek: true is provided, 
-# do not reset #last_read, but otherwise reset it
-provider.paginate(user_id:, page:, per_page:, peek: true|false)
-# Return ALL events for the user
-provider.all(user_id:)
-# Reset last read timestamp for the user
-# (also should reset #unread_count)
-provider.reset_last_read(user_id:)
-# Total event count for the user
-provider.total_count(user_id:)
-# Unread count
-provider.unread_count(user_id:)
-# Timestamp when the feed was last paginated
-provider.last_read(user_id:)
-```
+* `SimpleFeed::Providers::HashProvider` is the pure Hash implementation
+  of a provider that can be useful in unit tests of the host
+  application. This provider may be used to push events within a single
+  ruby process, but can be serialized to a YAML file in order to be
+  restored later in another process.
 
 ### Installation
 
