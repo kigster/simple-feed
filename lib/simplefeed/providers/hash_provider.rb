@@ -24,14 +24,14 @@ module SimpleFeed
       def store(user_ids:, **opts)
         with_response_batched(:store, user_ids) do |response, key|
           push event(user_id: key, **opts)
-          response.for(key.user_id, :OK)
+          response.for(key.user_id, 1)
         end
       end
 
       def remove(user_ids:, **opts)
         with_response_batched(:remove, user_ids) do |response, key|
           result = pop(event(user_id: "#{key}", **opts))
-          response.for(key.user_id) { result ? :OK : nil }
+          response.for(key.user_id) { result ? 1 : nil }
         end
       end
 
@@ -64,7 +64,7 @@ module SimpleFeed
         with_response_batched(:reset_last_read, user_ids) do |response, key|
           user_record(key)[:last_read]    = at
           user_record(key)[:unread_count] = 0
-          response.for(key.user_id, :OK)
+          response.for(key.user_id, at)
         end
       end
 
