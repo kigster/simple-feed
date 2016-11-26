@@ -2,11 +2,15 @@ require 'base62-rb'
 require 'hashie'
 require 'simplefeed/event'
 require 'set'
+require_relative 'paginator'
+require_relative 'key'
 
 module SimpleFeed
   module Providers
     class HashProvider < BaseProvider
       attr_accessor :h
+
+      include SimpleFeed::Providers::Paginator
 
       def self.from_yaml(file)
         self.new(YAML.load(File.read(file)))
@@ -17,67 +21,94 @@ module SimpleFeed
         h.merge!(opts)
       end
 
-      def store(**opts)
-        push event(opts)
+      def store(user_ids:, **opts)
+        with_response_batched(:store, user_ids) do |response, key|
+          push event(user_id: key, **opts)
+          response.for(key.user_id, :OK)
+        end
       end
 
-      def remove(**opts)
-        pop event(opts)
+      def remove(user_ids:, **opts)
+        with_response_batched(:remove, user_ids) do |response, key|
+          result = pop(event(user_id: "#{key}", **opts))
+          response.for(key.user_id) { result ? :OK : nil }
+        end
       end
 
-      def wipe(user_id:)
-        activity(user_id, true)
+      def wipe(user_ids:)
+        with_response_batched(:remove, user_ids) do |response, key|
+          activity(key.to_s, true)
+          response.for(key.user_id, :OK)
+        end
       end
 
-      def all(user_id:)
-        activity(user_id).map { |ea| ea.deserialize(user_id) }
+      def all(user_ids:)
+        with_response_batched(:remove, user_ids) do |response, key|
+          response.for(key.user_id) do
+            activities(key)
+          end
+        end
       end
 
-      def paginate(user_id:, page:, per_page: feed.per_page, **options)
-        reset_last_read(user_id: user_id) unless options[:peek]
-
-        activities  = all(user_id: user_id)
-        (page && page > 0) ? activities[((page - 1) * per_page)...(page * per_page)] : activities
+      def paginate(user_ids:, page:, per_page: feed.per_page, **options)
+        reset_last_read(user_ids: user_ids) unless options[:peek]
+        with_response_batched(:remove, user_ids) do |response, key|
+          activities = activities(key)
+          response.for(key.user_id) do
+            (page && page > 0) ? activities[((page - 1) * per_page)...(page * per_page)] : activities
+          end
+        end
       end
 
-      def reset_last_read(user_id:, at: Time.now)
-        user_record(user_id).last_read    = at
-        user_record(user_id).unread_count = 0
+      def reset_last_read(user_ids:, at: Time.now)
+        with_response_batched(:reset_last_read, user_ids) do |response, key|
+          user_record(key)[:last_read]    = at
+          user_record(key)[:unread_count] = 0
+          response.for(key.user_id, :OK)
+        end
       end
 
-      def total_count(user_id:)
-        user_record(user_id).total_count
+      def total_count(user_ids:)
+        fetch_meta(:total_count, user_ids)
       end
 
-      def unread_count(user_id:)
-        user_record(user_id).unread_count
+      def unread_count(user_ids:)
+        fetch_meta(:unread_count, user_ids)
       end
 
-      def last_read(user_id:)
-        user_record(user_id).last_read
-      end
-
-      def recalculate!
-        raise ArgumentError, 'Not implemented yet'
+      def last_read(user_ids:)
+        fetch_meta(:last_read, user_ids)
       end
 
       private
 
-=begin
-      Sets up the user record in the hash and initializes it if needed.
-=end
-      def user_record(user_id, wipe = false)
-        h[Base62.encode(user_id)] = nil if wipe
-        h[Base62.encode(user_id)] ||= Hashie::Mash.new(
-          { total_count:        0,
+      def fetch_meta(name, user_ids)
+        name = name.to_sym unless name.is_a?(Symbol)
+        with_response_batched(name, user_ids) do |response, key|
+          response.for(key.user_id, user_record(key)[name])
+        end
+      end
+
+      #===================================================================
+      # Methods below operate on a single user only
+      #
+
+      def user_record(key, wipe = false)
+        h[key.to_s] = nil if wipe
+        h[key.to_s] ||= Hashie::Mash.new(
+          { total_count:  0,
             unread_count: 0,
             last_read:    nil,
             activity:     SortedSet.new }
         )
       end
 
-      def activity(user_id, *args)
-        user_record(user_id, *args)[:activity]
+      def activities(key)
+        activity(key).map { |ea| ea.deserialize(key.user_id) }
+      end
+
+      def activity(key, *args)
+        user_record(key, *args)[:activity]
       end
 
       def increment_counts(user_id, by = 1)
@@ -88,25 +119,25 @@ module SimpleFeed
         end
       end
 
-      def push(ev)
-        ua = activity(ev.user_id)
-        evs = ev.serialize
-        if ua.include?(evs)
+      def push(event)
+        user_activity    = activity(event.user_id)
+        event_serialized = event.serialize
+        if user_activity.include?(event_serialized)
           nil
         else
-          ua << evs
-          increment_counts(ev.user_id)
-          ua
+          user_activity << event_serialized
+          increment_counts(event.user_id)
+          user_activity
         end
       end
 
-      def pop(ev)
-        evs = ev.serialize
-        ua = activity(ev.user_id)
-        if ua.include?(evs)
-          ua.delete(evs)
-          increment_counts(ev.user_id, -1)
-          ua
+      def pop(event)
+        event_serialized = event.serialize
+        user_activity    = activity(event.user_id)
+        if user_activity.include?(event_serialized)
+          user_activity.delete(event_serialized)
+          increment_counts(event.user_id, -1)
+          user_activity
         else
           nil
         end

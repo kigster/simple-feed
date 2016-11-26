@@ -12,7 +12,7 @@ feeds:
         db: 1
 
     data:
-      - user_id: afkj234
+      - user_ids: afkj234
         activity:
           - { value: 'John liked Robert', at: "2016-11-20 23:32:56 -0800" }
           - { value: 'debbie liked Robert', at: '2016-11-20 23:35:56 -0800' }
@@ -20,7 +20,7 @@ feeds:
         unread_count: 1
         count: 2
 
-      - user_id: 2
+      - user_ids: 2
         activity:
           - { value: 'John is following Megan', at: "2016-11-20 23:32:56 -0800" }
           - { value: 'Konstantin is feeling great again', at: '2016-11-20 23:33:56 -0800' }
@@ -47,7 +47,7 @@ feeds:
         pool_size: 10
 
     data:
-      - user_id: 1
+      - user_ids: 1
         activity:
           - { value: 'you followed John', at: "2016-11-20 23:32:56 -0800" }
           - { value: 'your facebook friend D.Trump joined', at: '2016-11-20 23:35:56 -0800' }
@@ -55,7 +55,7 @@ feeds:
         unread_count: 2
         count: 2
 
-      - user_id: 2
+      - user_ids: 2
         activity:
           - { value: 'your facebook friend amy joined', at: "2016-11-20 23:34:56 -0800" }
           - { value: 'your divorce proposal was rejected by your wife', at: '2016-11-20 23:35:56 -0800' }

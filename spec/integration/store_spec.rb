@@ -38,37 +38,12 @@ context 'Integration' do
       end
     end
 
-    let(:user_activity) { feed.user_activity(user_id) }
-    let(:another_activity) { feed.user_activity(another_id) }
-
-    context ' ➞ UserActivity#events' do
-      let(:manually_sorted_events) { [events[1], events[2], events[0]] }
-
-      context 'event sorting' do
-        let(:auto_sorted_events) { SimpleFeed::UserActivity.order_events(events.dup) }
-        it 'should be sorted by reverse chronological order' do
-          expect(auto_sorted_events).to eq(manually_sorted_events)
-        end
-      end
-
-      context '#events' do
-        before do
-          expect(provider).to receive(:all).exactly(4).times.and_return(events.dup)
-        end
-
-        it 'should correctly paginate events' do
-          manually_sorted_events.each_with_index do |event, index|
-            page = index + 1
-            expect(user_activity.events(page: page, per_page: 1)).to eq([event])
-          end
-          expect(user_activity.events(page: 1, per_page: 2)).to eq [events[1], events[2]]
-        end
-      end
-    end
+    let(:user_ids) { [user_id, another_id] }
+    let(:user_activity) { feed.user_activity(user_ids) }
 
     context ' ➞ Store Events' do
       before do
-        events.each { |e| expect(provider).to receive(:store).with(user_id: user_id, value: e.value, at: e.at) }
+        events.each { |e| expect(provider).to receive(:store).with(user_ids: user_ids, value: e.value, at: e.at) }
       end
       it 'should call provider with :value and :at when supplied :event' do
         events.each { |e| user_activity.store(event: e) }

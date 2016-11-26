@@ -2,7 +2,7 @@ require_relative 'providers'
 module SimpleFeed
   class Feed
 
-    attr_accessor :per_page, :max_size
+    attr_accessor :per_page, :max_size, :meta, :namespace
     attr_reader :name
 
     SimpleFeed::Providers.define_provider_methods(self) do |feed, method, opts, &block|
@@ -10,16 +10,18 @@ module SimpleFeed
     end
 
     def initialize(name)
-      @name     = name
-      @name     = name.underscore.to_sym unless name.is_a?(Symbol)
+      @name      = name
+      @name      = name.underscore.to_sym unless name.is_a?(Symbol)
       # set the defaults if not passed in
-      @per_page ||= 50
-      @max_size ||= 1000
-      @proxy    = nil
+      @meta      = {}
+      @namespace = nil
+      @per_page  ||= 50
+      @max_size  ||= 1000
+      @proxy     = nil
     end
 
     def provider=(definition)
-      @proxy = ProviderProxy.from(definition)
+      @proxy      = ProviderProxy.from(definition)
       @proxy.feed = self
       @proxy
     end
@@ -28,8 +30,8 @@ module SimpleFeed
       @proxy
     end
 
-    def user_activity(user_id)
-      UserActivity.new(user_id: user_id, feed: self)
+    def user_activity(user_ids)
+      UserActivity.new(user_ids: user_ids, feed: self)
     end
 
     alias_method :for, :user_activity

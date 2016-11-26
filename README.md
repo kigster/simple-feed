@@ -54,7 +54,7 @@ require 'yaml'
 # Let's configure backend provider via a Hash, although we can also
 # instantiate it directly (as shown in the second example below)
 provider_yaml = <<-eof
-  klass: SimpleFeed::Providers::RedisProvider
+  klass: SimpleFeed::Providers::Redis::Provider
   opts:
     host: '127.0.0.1'
     port: 6379
@@ -71,7 +71,7 @@ end
 # Now let's define another feed, by wrapping Redis connection
 # in a ConnectionPool
 SimpleFeed.define(:notifications) do |f|
-  f.provider = SimpleFeed::Providers::RedisProvider.new(
+  f.provider = SimpleFeed::Providers::Redis::Provider.new(
     redis: -> { ::Redis.new(host: '192.168.10.10', port: 9000) },
     pool_size: 10
   )
@@ -91,7 +91,7 @@ You can also get a full list of currently defined feeds with `SimpleFeed.feed_na
 
 ### Reading and Writing to the Feed for a given User
 
-Each feed consists of many user activities, mapped by `user_id`. In
+Each feed consists of many user activities, mapped by `user_ids`. In
 order to read and write to a feed of a given user, you need to obtain a
 handle on a `SimpleFeed::UserActivity` instance for a given feed:
 
@@ -100,7 +100,7 @@ handle on a `SimpleFeed::UserActivity` instance for a given feed:
 @user_activity = @news_feed.user_activity(current_user.id)
 
 # A shorter alias for method #user_activity is #for
-@user_activity = @news_feed.for(user_id)
+@user_activity = @news_feed.for(user_ids)
 ````
 
 #### Publishing Data to the Feed
@@ -146,7 +146,7 @@ Below is the complete set of API methods that can be called on either
 the `Feed` class directly, for example:
 
 ```ruby
-SimpleFeed.get(:news).store(user_id: 1, value: '123', at: Time.now)
+SimpleFeed.get(:news).store(user_ids: 1, value: '123', at: Time.now)
 ```
 
 Or via the `UserActivity` convenience class:
@@ -162,27 +162,27 @@ puts @ua.all.inspect
 ```ruby
 SimpleFeed.get(:feed_name).instance_eval do 
   
-  store(user_id:, value:, at:)          # Store an event for a user
+  store(user_ids:, value:, at:)          # Store an event for a user
   
-  remove(user_id:, value:, at: nil)     # Remove an event for a user
+  remove(user_ids:, value:, at: nil)     # Remove an event for a user
   
-  wipe(user_id:)                        # Wipe the user's feed
+  wipe(user_ids:)                        # Wipe the user's feed
 
-  paginate(user_id:,                    # Paginate events for the user, 
+  paginate(user_ids:,                    # Paginate events for the user, 
               page:,                    # when peek: true is provided,
           per_page:,                    # do not reset #last_read, 
               peek:)                    # but otherwise reset it
                                                            
   
-  all(user_id:)                         # Return ALL events for the user
+  all(user_ids:)                         # Return ALL events for the user
 
-  total_count(user_id:)                 # Total event count for the user
-  unread_count(user_id:)                # Unread count
+  total_count(user_ids:)                 # Total event count for the user
+  unread_count(user_ids:)                # Unread count
 
-  last_read(user_id:)                   # Returns time when the feed was 
+  last_read(user_ids:)                   # Returns time when the feed was 
                                         # read last
                                         
-  reset_last_read(user_id:)             # Reset last read timestamp for the user
+  reset_last_read(user_ids:)             # Reset last read timestamp for the user
                                         # (also should reset #unread_count)
 end
     
@@ -216,11 +216,11 @@ It is the intention of this gem that:
  * it should be easy to add new providers
 
 Each provider must implement exactly the public API of a provider shown
-above (the `Feed` version, that receives `user_id:` as arguments).
+above (the `Feed` version, that receives `user_ids:` as arguments).
 
 Two providers are available with this gem:
 
- * `SimpleFeed::Providers::RedisProvider` is the production-ready provider that uses ZSET operations to store events as a sorted set in Redis
+ * `SimpleFeed::Providers::Redis::Provider` is the production-ready provider that uses ZSET operations to store events as a sorted set in Redis
 * `SimpleFeed::Providers::HashProvider` is the pure Hash implementation
   of a provider that can be useful in unit tests of the host
   application. This provider may be used to push events within a single
