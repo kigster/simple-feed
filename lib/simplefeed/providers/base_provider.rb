@@ -30,9 +30,9 @@ module SimpleFeed
       def with_response(operation)
         response = SimpleFeed::Response.new(operation)
         yield(response)
-        if self.respond_to?(:map_responses)
+        if self.respond_to?(:map_response)
           response.map do |key, result|
-            self.send(:map_responses, key, result)
+            self.send(:map_response, key, result)
           end
         end
         response

@@ -32,7 +32,7 @@ module SimpleFeed
 
         def store(user_ids:, value:, at:)
           with_response(:store) do |response|
-            batch(user_ids) do |redis, k|
+            batch_multi(user_ids) do |redis, k|
               added = redis.zadd(k.data, (1000.0 * at.to_f).to_i, value) ? 1 : 0
               removed = redis.zremrangebyrank(k.data, 0, -feed.max_size - 1) ? 1 : 0
               redis.hincrby(k.meta, 'total_count', (added - removed))
@@ -104,11 +104,11 @@ module SimpleFeed
           end
         end
 
-        private
 
         def map_response(*, result)
           result.is_a?(::Redis::Future) ? result.value : result
         end
+        private
 
         def fetch_meta(name, user_ids)
           with_response_pipelined(name.to_sym, user_ids) do |redis, key|
@@ -155,8 +155,6 @@ module SimpleFeed
             end
           end
         end
-
-
 
       end
 
