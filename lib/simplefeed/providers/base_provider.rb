@@ -3,6 +3,8 @@ module SimpleFeed
     class BaseProvider
       attr_accessor :feed
 
+      protected
+
       def key(user_id)
         Key.new(user_id, feed.namespace)
       end
@@ -31,8 +33,8 @@ module SimpleFeed
         response = SimpleFeed::Response.new(operation)
         yield(response)
         if self.respond_to?(:map_response)
-          response.map do |key, result|
-            self.send(:map_response, key, result)
+          response.map do |*, result|
+            self.send(:map_response, result)
           end
         end
         response

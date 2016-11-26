@@ -6,7 +6,7 @@ require 'redis/pipeline'
 require 'simplefeed/providers/base_provider'
 require 'simplefeed/providers/key'
 require_relative 'driver'
-
+require 'pp'
 module SimpleFeed
   module Providers
     module Redis
@@ -33,31 +33,74 @@ module SimpleFeed
         def store(user_ids:, value:, at:)
           with_response(:store) do |response|
             batch_multi(user_ids) do |redis, k|
-              added = redis.zadd(k.data, (1000.0 * at.to_f).to_i, value) ? 1 : 0
-              removed = redis.zremrangebyrank(k.data, 0, -feed.max_size - 1) ? 1 : 0
-              redis.hincrby(k.meta, 'total_count', (added - removed))
-              redis.hincrby(k.meta, 'unread_count', (added - removed))
-              response.for(k.user_id) { added - removed }
+              response.for(k.user_id) {
+                { added_count:  redis.zadd(k.data, -(1000.0 * at.to_f).to_i, value),
+                  total_count:  redis.hget(k.meta, 'total_count'),
+                  unread_count: redis.hget(k.meta, 'unread_count'),
+                }
+              }
+            end
+
+            batch_multi(user_ids) do |redis, k|
+              h  = response[k.user_id]
+              ac = h[:added_count].value ? 1 : 0
+              tc = h[:total_count].value.to_i
+              if tc >= feed.max_size
+                h[:removed_count] = redis.zremrangebyrank(k.data, -feed.max_size - 1, -1) ? 1 : 0
+              else
+                h[:total_count]  = redis.hincrby(k.meta, 'total_count', ac)
+                h[:unread_count] = redis.hincrby(k.meta, 'unread_count', ac)
+              end
+              h[:added_count] = ac
+              response.for(k.user_id) { h }
             end
           end
         end
 
         def remove(user_ids:, value:, **)
-          with_response(:remove) do |response|
-            batch_pipelined_multi(user_ids) do |redis, k|
-              last_read = redis.hget(k.meta, 'last_read')
-              timestamp = redis.zscore(k.data, value)
-              result    = redis.zrem(k.data, value)
-              response.for(k.user_id) { result }
-              redis.hincrby(k.meta, 'total_count', -result)
-              # if we removed the value, and it was among the unread, decrement the unread
-              # count
-              if last_read && result > 0 && timestamp && last_read < timestamp
-                redis.hincrby(k.meta, 'unread_count', -result)
+          resp = with_response(:remove) do |response|
+            batch(user_ids) do |k|
+              with_pipelined do |redis|
+                response.for(k.user_id) do
+                  { did_remove:   redis.zrem(k.data, value),
+                    timestamp:    redis.zscore(k.data, value),
+                    last_read:    redis.hget(k.meta, 'last_read'),
+                    unread_count: redis.hget(k.meta, 'unread_count'),
+                    total_count:  redis.hget(k.meta, 'total_count') }
+                end
+              end
+
+              with_multi do |redis|
+                h = response[k.user_id]
+                h.each { |k, v| h[k] = v.value }
+
+                tc = h[:total_count].to_i || 0
+                uc = h[:unread_count].to_i || 0
+                lr = h[:last_read].to_i || 0
+                ts = h[:timestamp].to_i || 0
+
+                did_remove   = h[:did_remove]
+                remove_count = did_remove ? 1 : 0
+
+                h.clear
+
+                h[:total_count] = redis.hincrby(k.meta, 'total_count', -remove_count) if did_remove && tc > 0
+                if did_remove && lr < ts && uc > 0
+                  h[:unread_count] = redis.hincrby(key.meta, 'unread_count', -remove_count)
+                end
+                response.for(k.user_id) { h }
               end
             end
           end
+          # pp resp
+          resp
         end
+
+        def update_meta(key, redis, total_count:, unread_count:)
+          redis.hset(key, 'total_count', total_count)
+          redis.hset(key, 'unread_count', unread_count)
+        end
+
 
         def wipe(user_ids:)
           with_response_pipelined(:wipe, user_ids) do |redis, k|
@@ -82,6 +125,7 @@ module SimpleFeed
         def reset_last_read(user_ids:, at: Time.now)
           with_response_pipelined(:all, user_ids) do |redis, key|
             redis.hset(key.meta, 'last_read', time_to_score(at))
+            at
           end
         end
 
@@ -104,10 +148,26 @@ module SimpleFeed
           end
         end
 
-
-        def map_response(*, result)
-          result.is_a?(::Redis::Future) ? result.value : result
+        def map_response(result)
+          # puts "checking #{result.class.name} — #{result.inspect}"
+          case result
+            when ::Redis::Future
+              map_response(result.value)
+            when Hash
+              result.each { |k, v| result[k] = map_response(v) }
+            when String
+              if result =~ /^\d+\.\d+$/
+                result.to_f
+              elsif result =~ /^\d+$/
+                result.to_i
+              else
+                result
+              end
+            else
+              result
+          end
         end
+
         private
 
         def fetch_meta(name, user_ids)
@@ -155,9 +215,7 @@ module SimpleFeed
             end
           end
         end
-
       end
-
     end
   end
 end

@@ -13,8 +13,7 @@ module SimpleFeed
 
     def initialize(user_ids:, feed:)
       @user_ids = user_ids
-      @feed    = feed
-      @events  = nil
+      @feed     = feed
     end
 
   end

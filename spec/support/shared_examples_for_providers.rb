@@ -1,11 +1,9 @@
 require 'spec_helper'
 
-shared_examples 'a provider' do
+# Requires the following variables set:
+#  * provider_opts
 
-  def validate_count(total, unread = total)
-    expect(activity.total_count.result(user_id)).to eq(total)
-    expect(activity.unread_count.result(user_id)).to eq(unread)
-  end
+shared_examples 'a provider' do
 
   subject(:feed) {
     SimpleFeed.define(:tested_feed) do |f|
@@ -20,54 +18,59 @@ shared_examples 'a provider' do
 
   context '#store two events' do
     let(:user_id) { 99119911991199 }
-    let(:activity) { SimpleFeed.tested_feed.user_activity([user_id]) }
-    let(:feed_op) {
-      ->(operation) {
-        ->(index) {
-          activity.send(operation, value: events[index].value, at: events[index].at)
-        }
-      }
-    }
+    let(:user_ids) { [user_id] }
+    let(:activity) { SimpleFeed.tested_feed.user_activity(user_ids) }
 
-    let(:feed_query) {
-      ->(operation, **opts) { activity.send(operation, **opts) }
-    }
+    def validate_count(user_id, total, unread = total)
+      expect(op_feed(:total_count, user_id)[user_id]).to eq(total)
+      expect(op_feed(:unread_count, user_id)[user_id].to_i).to eq(unread)
+    end
 
-    let(:store_two_events) {
+    def op_event(operation, user_ids, event)
+      op_feed(operation, user_ids, value: event.value, at: event.at)
+    end
+
+    def op_feed(operation, user_ids, **opts)
+      opts.empty? ? activity.send(operation, user_ids: user_ids) : activity.send(operation, user_ids: user_ids, **opts)
+    end
+
+    def store_two_events(user_id)
       activity.wipe
-      expect(activity.all.result(user_id).size).to eq(0)
-      feed_op[:store][0]
-      feed_op[:store][1]
-      expect(activity.all.result(user_id).size).to eq(2)
-    }
+      expect(op_feed(:all, user_ids)[user_id].size).to eq(0)
+      op_event(:store, user_id, events[0]).inspect
+      op_event(:store, user_id, events[1]).inspect
+      expect(op_feed(:all, user_ids)[user_id].size).to eq(2)
+    end
 
-    before { store_two_events }
+    before { store_two_events(user_id) }
 
-    it('has two events') { validate_count(2) }
+    it('has two events') { validate_count(user_id, 2, 2) }
 
-    context '#remove one event' do
-      before { expect(activity.all.result(user_id).size).to eq(2) }
-      it('has one event left') do
-        expect(feed_op[:remove][1]).to_not be_nil # this indicates removal was successful
-        validate_count(1)
+    context '#remove' do
+      before { store_two_events(user_id) }
+      context 'one event' do
+        it('has one event left') do
+          expect(op_event(:remove, user_id, events[1])[user_id]).to_not be_nil
+          validate_count(user_id, 1, 1)
+        end
+      end
+
+      context 'non-existing event' do
+        it 'has one event left still' do
+          expect(op_feed(:all, user_id)[user_id].size).to eq(2)
+          expect(op_event(:remove, user_id, events[1])[user_id]).to eq(1)
+          expect(op_event(:remove, user_id, events[1])[user_id]).to be_nil
+          validate_count(user_id, 1, 1)
+        end
       end
     end
 
-
-    context '#remove non-existent event' do
-      before { expect(activity.all.result(user_id).size).to eq(2) }
-      it 'has one event left still' do
-        expect(feed_op[:remove][1].result(user_id)).to eq(:OK)
-        expect(feed_op[:remove][1].result(user_id)).to be_nil
-        validate_count(1)
-      end
-    end
-
-    context '#paginate two events' do
-      before { expect(activity.all.result(user_id).size).to eq(2) }
-      it 'returns the first event as page 1' do
-        expect(feed_query[:paginate, page: 1, per_page: 1]).to_not be_nil #eq([events[0]]) # this indicates removal was successful
-        activity.last_read
+    context '#paginate' do
+      let(:ts) { Time.now }
+      it 'resets last read, and returns the first event as page 1' do
+        expect(op_feed(:reset_last_read, user_id, at: ts)[user_id]).to eq(ts)
+        expect(op_feed(:paginate, user_id, page: 1, per_page: 1)[user_id]).to_not be_empty
+        expect(op_feed(:last_read, user_id)[user_id]).not_to eq(ts)
       end
     end
 

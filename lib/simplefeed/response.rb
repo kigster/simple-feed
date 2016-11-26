@@ -2,10 +2,9 @@ require 'hashie'
 
 module SimpleFeed
   class Response
-    attr_accessor :user_ids, :operation
+    attr_accessor :operation
 
     def initialize(operation)
-      self.user_ids = []
       self.operation = operation
       @result = {}
     end
