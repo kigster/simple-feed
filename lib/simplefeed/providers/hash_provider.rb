@@ -37,16 +37,17 @@ module SimpleFeed
       # @return: Response.new( { user_id: true | false (added or not)
       def store(user_ids:, **opts)
         with_response_batched(user_ids) do |key, response|
-          push event(user_id: key, **opts)
-          response.for(key.user_id, 1)
+          response.for(key.user_id) {
+            push(event(user_id: key, **opts))
+          }
         end
       end
 
-
       def remove(user_ids:, **opts)
         with_response_batched(user_ids) do |key, response|
-          result = pop(event(user_id: "#{key}", **opts))
-          response.for(key.user_id) { result ? 1 : nil }
+          response.for(key.user_id) {
+            pop(event(user_id: "#{key}", **opts))
+          }
         end
       end
 
@@ -138,11 +139,11 @@ module SimpleFeed
         user_activity    = activity(event.user_id)
         event_serialized = event.serialize
         if user_activity.include?(event_serialized)
-          nil
+          false
         else
           user_activity << event_serialized
           increment_counts(event.user_id)
-          user_activity
+          true
         end
       end
 
@@ -152,9 +153,9 @@ module SimpleFeed
         if user_activity.include?(event_serialized)
           user_activity.delete(event_serialized)
           increment_counts(event.user_id, -1)
-          user_activity
+          true
         else
-          nil
+          false
         end
       end
 

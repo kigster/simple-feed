@@ -30,8 +30,8 @@ module SimpleFeed
       @proxy
     end
 
-    def user_activity(user_ids)
-      UserActivity.new(user_ids: user_ids, feed: self)
+    def user_activity(user_id)
+      UserActivity.new(user_id: user_id, feed: self)
     end
 
     alias_method :for, :user_activity

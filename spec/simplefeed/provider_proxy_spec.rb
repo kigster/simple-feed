@@ -3,7 +3,7 @@ require 'spec_helper'
 RSpec.shared_examples :validate_provider do
   subject(:provider) { proxy.provider }
   context 'instantiation' do
-    it('should be of a corract class') { is_expected.to be_kind_of(SimpleFeed::MockProvider) }
+    it('should be of a correct class') { is_expected.to be_kind_of(SimpleFeed::MockProvider) }
     it 'should correctly set all array args' do
       expect(provider.host).to eq(args.first)
       expect(provider.port).to eq(args.last)

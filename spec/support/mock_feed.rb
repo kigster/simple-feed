@@ -30,8 +30,10 @@ module SimpleFeed
     end
 
     SimpleFeed::Providers::REQUIRED_METHODS.each do |m|
-      define_method(m) do |**opts, &block|
-        method_call(m, **opts)
+      define_method(m) do |user_ids:, **opts, &block|
+        with_response_batched(user_ids) do |key, response|
+          response.for(key.user_id) { :hello }
+        end
       end
     end
 
