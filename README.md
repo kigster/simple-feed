@@ -107,9 +107,13 @@ handle on a `SimpleFeed::UserActivity` instance for a given feed:
 
 The API is offered in two approaches:
 
-2. Calling methods on the `SimpleFeed::Feed` instance, is optimized for
-   multi-user operations, the first API is recommended when dealing with
-   updates (or retrieval) of activity feed belonging to many users at
+1. Single-user API is accessed via the `SimpleFeed::Feed#user_activity` instance method.
+   Optimized for simplicity of data retrieval of a single-user,
+   this method allows performing multiple queries about the same
+   user in an optimized fashion sometimes avoiding unnecessary requests.
+
+2. Multi-user API is accessed via methods on the `SimpleFeed::Feed` instance.
+   This API is recommended when dealing with updates of activity feed belonging to many users at
    the same time.
     * The Redis Provider, for example, uses `pipelining` to send updates
       for different users asynchronously and concurrently.
@@ -117,10 +121,6 @@ The API is offered in two approaches:
       which can be used as a hash (keyed on user_id) to fetch the result
       of a given user.
 
-2. Calling via the `SimpleFeed::Feed#user_activity` instance method.
-   Optimized for simplicity and retrieval of a single-user activity,
-   this method allows also performing multiple queries about the same
-   user in an optimized fashion avoiding unnecessary requests.
 
 #### Publishing Data to the Feed
 
