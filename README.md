@@ -187,7 +187,38 @@ Or, for a single user, via the `UserActivity` convenience class:
 puts @ua.all.inspect
 ```
 
-#### Complete Feed API
+#### Single User API
+
+`UserActivity` class:
+
+```ruby
+@ua = SimpleFeed.get(:feed_name).user_activity(1)
+
+@ua.store(value:, at:)
+# => true if the value was stored, false if it wasn't.
+@ua.remove(value:, at:)
+# => true if the value was removed, false if it didn't exist
+@ua.wipe
+# => true
+@ua.paginate(page:, per_page:, peek: true|false)
+# => Array[ event, event, ...]
+@ua.all
+# => Array[ event, event, ...]
+@ua.reset_last_read
+# => last read
+@ua.total_count
+# => Integer count
+@ua.unread_count
+# => Integer count
+@ua.last_read
+# => Time last_read
+```
+
+#### Batch User API
+
+Each API call at this level expects an array of user IDs, therefore the
+return value is an object, `SimpleFeed::Response`, containing individual
+responses for each user, accessible via `response[user_id]` method.
 
 ```ruby
 SimpleFeed.get(:feed_name).instance_eval do 
@@ -215,24 +246,6 @@ SimpleFeed.get(:feed_name).instance_eval do
   reset_last_read(user_ids:)             # Reset last read timestamp for the user
                                          # (also should reset #unread_count)
 end
-```
-
-#### Complete User Activity API
-
-
-`UserActivity` class:
-
-```ruby
-@ua = SimpleFeed.get(:feed_name).user_activity(1)
-@ua.store(value:, at:)
-@ua.remove(value:, at:)
-@ua.wipe
-@ua.paginate(page:, per_page:, peek: true|false)
-@ua.all
-@ua.reset_last_read
-@ua.total_count
-@ua.unread_count
-@ua.last_read
 ```
 
 ## Providers
