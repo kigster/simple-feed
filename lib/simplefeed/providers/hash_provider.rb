@@ -21,29 +21,44 @@ module SimpleFeed
         h.merge!(opts)
       end
 
+      #——————————————————————————————————————————————————————————————
+      # Public API
+      #——————————————————————————————————————————————————————————————
+      # TODO: single user delegator
+      # def store_1u(user_id, **opts)
+      #   push event(user_id: user_id, **opts)
+      # end #
+
+      # @param [Array] user_ids array of user IDs for the operation
+      # @param [Hash] opts the options for the method
+      # @option opts [String] :value data to store in the backend
+      # @option opts [Time] :at time stamp when the story was created
+      #
+      # @return: Response.new( { user_id: true | false (added or not)
       def store(user_ids:, **opts)
-        with_response_batched(:store, user_ids) do |response, key|
+        with_response_batched(user_ids) do |key, response|
           push event(user_id: key, **opts)
           response.for(key.user_id, 1)
         end
       end
 
+
       def remove(user_ids:, **opts)
-        with_response_batched(:remove, user_ids) do |response, key|
+        with_response_batched(user_ids) do |key, response|
           result = pop(event(user_id: "#{key}", **opts))
           response.for(key.user_id) { result ? 1 : nil }
         end
       end
 
       def wipe(user_ids:)
-        with_response_batched(:remove, user_ids) do |response, key|
+        with_response_batched(user_ids) do |key, response|
           activity(key.to_s, true)
           response.for(key.user_id, :OK)
         end
       end
 
       def all(user_ids:)
-        with_response_batched(:remove, user_ids) do |response, key|
+        with_response_batched(user_ids) do |key, response|
           response.for(key.user_id) do
             activities(key)
           end
@@ -52,7 +67,7 @@ module SimpleFeed
 
       def paginate(user_ids:, page:, per_page: feed.per_page, **options)
         reset_last_read(user_ids: user_ids) unless options[:peek]
-        with_response_batched(:remove, user_ids) do |response, key|
+        with_response_batched(user_ids) do |key, response|
           activities = activities(key)
           response.for(key.user_id) do
             (page && page > 0) ? activities[((page - 1) * per_page)...(page * per_page)] : activities
@@ -61,7 +76,7 @@ module SimpleFeed
       end
 
       def reset_last_read(user_ids:, at: Time.now)
-        with_response_batched(:reset_last_read, user_ids) do |response, key|
+        with_response_batched(user_ids) do |key, response|
           user_record(key)[:last_read]    = at
           user_record(key)[:unread_count] = 0
           response.for(key.user_id, at)
@@ -84,7 +99,7 @@ module SimpleFeed
 
       def fetch_meta(name, user_ids)
         name = name.to_sym unless name.is_a?(Symbol)
-        with_response_batched(name, user_ids) do |response, key|
+        with_response_batched(user_ids) do |key, response|
           response.for(key.user_id, user_record(key)[name])
         end
       end

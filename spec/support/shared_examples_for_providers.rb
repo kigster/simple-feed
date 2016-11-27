@@ -40,7 +40,7 @@ shared_examples 'a provider' do
       op_event(:store, user_id, events[0]).inspect
       op_event(:store, user_id, events[1]).inspect
       expect(op_feed(:all, user_ids)[user_id].size).to eq(2)
-    end
+    end 
 
     before { store_two_events(user_id) }
 

@@ -70,7 +70,7 @@ SimpleFeed::Redis::Driver.new(redis: { host: 'localhost', port: 6379, db: 1, tim
             opts.delete :pipelined
             with_pipelined { |redis| send_proc.call(redis) }
           else
-            with { |redis| send_proc.call(redis) }
+            with_redis { |redis| send_proc.call(redis) }
           end
         end
 
@@ -80,7 +80,7 @@ SimpleFeed::Redis::Driver.new(redis: { host: 'localhost', port: 6379, db: 1, tim
           end
         end
 
-        def with
+        def with_redis
           with_retries do
             pool.with do |redis|
               yield(redis)
@@ -90,7 +90,7 @@ SimpleFeed::Redis::Driver.new(redis: { host: 'localhost', port: 6379, db: 1, tim
 
         def with_pipelined
           with_retries do
-            with do |redis|
+            with_redis do |redis|
               redis.pipelined do
                 yield(redis)
               end
@@ -100,7 +100,7 @@ SimpleFeed::Redis::Driver.new(redis: { host: 'localhost', port: 6379, db: 1, tim
 
         def with_multi
           with_retries do
-            with do |redis|
+            with_redis do |redis|
               redis.multi do
                 yield(redis)
               end

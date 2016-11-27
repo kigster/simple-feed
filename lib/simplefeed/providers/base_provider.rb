@@ -1,12 +1,42 @@
+require_relative 'key'
 module SimpleFeed
   module Providers
+
+    class ProviderMethodNotImplementedError < StandardError
+      def initialize(method)
+        super("Method #{method} from #{self.class} went to BaseProvider, because no single-user version was defined (#{method}_1u), nor a sub-class override.")
+      end
+    end
+
     class BaseProvider
       attr_accessor :feed
+
+      public
+
+      # TODO: single user delegator
+      #
+      # SimpleFeed::Providers.define_provider_methods(self) do |base, method, *args, **opts|
+      #   user_ids = opts.delete(:user_ids)
+      #   base.single_user_delegator(method, user_ids, **opts)
+      # end
+      #
+      # def single_user_delegator(method, user_ids, **opts)
+      #   single_user_method = "#{method}_1u".to_sym
+      #   if self.respond_to?(single_user_method)
+      #     with_response_batched(method, user_ids) do |key, response|
+      #       response.for(key.user_id) do
+      #         self.send(single_user_method, key.user_id, **opts)
+      #       end
+      #     end
+      #   else
+      #     raise ProviderMethodNotImplementedError, method
+      #   end
+      # end
 
       protected
 
       def key(user_id)
-        Key.new(user_id, feed.namespace)
+        ::SimpleFeed::Providers::Key.new(user_id, feed.namespace)
       end
 
       def time_to_score(at)
@@ -21,23 +51,12 @@ module SimpleFeed
         feed.meta[:batch_size] || 100
       end
 
-      def with_response_batched(operation, user_ids)
-        with_response(operation) do |response|
+      def with_response_batched(user_ids, response = nil)
+        with_response(response) do |_response|
           batch(user_ids) do |key|
-            yield(response, key)
+            yield(key, _response)
           end
         end
-      end
-
-      def with_response(operation)
-        response = SimpleFeed::Response.new(operation)
-        yield(response)
-        if self.respond_to?(:map_response)
-          response.map do |*, result|
-            self.send(:map_response, result)
-          end
-        end
-        response
       end
 
       def batch(user_ids)
@@ -48,21 +67,17 @@ module SimpleFeed
         end
       end
 
-      # def retry_block(times, &block)
-      #   count = 0
-      #   begin
-      #     block.call
-      #   rescue
-      #     if count < times
-      #       count += 1
-      #       retry
-      #     else
-      #       raise
-      #     end
-      #   end
-      #   return { retries: count }
-      # end
-
+      def with_response(response = nil)
+        response ||= SimpleFeed::Response.new
+        yield(response)
+        if self.respond_to?(:transform_response)
+          response.transform do |user_id, result|
+            # calling into a subclass
+            transform_response(user_id, result)
+          end
+        end
+        response
+      end
     end
   end
 end

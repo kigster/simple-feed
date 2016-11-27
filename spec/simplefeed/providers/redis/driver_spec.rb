@@ -64,7 +64,7 @@ RSpec.describe SimpleFeed::Providers::Redis::Driver do
     let(:adapter) { RedisAdapter.new(redis: -> { Redis.new }, pool_size: 2) }
     include_examples :validate_adapter
   end
-  context 'passing :redis preinstantiated' do
+  context 'passing :redis pre-instantiated' do
     let(:adapter) { RedisAdapter.new(redis: Redis.new) }
     include_examples :validate_adapter
   end
