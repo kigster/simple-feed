@@ -100,8 +100,27 @@ handle on a `SimpleFeed::UserActivity` instance for a given feed:
 @user_activity = @news_feed.user_activity(current_user.id)
 
 # A shorter alias for method #user_activity is #for
-@user_activity = @news_feed.for(user_ids)
+@user_activity = @news_feed.for(user_id)
 ````
+
+#### Two Versions of the API
+
+The API is offered in two approaches:
+
+2. Calling methods on the `SimpleFeed::Feed` instance, is optimized for
+   multi-user operations, the first API is recommended when dealing with
+   updates (or retrieval) of activity feed belonging to many users at
+   the same time.
+    * The Redis Provider, for example, uses `pipelining` to send updates
+      for different users asynchronously and concurrently.
+    * Multi-user operations return a `SimpleFeed::Response` object,
+      which can be used as a hash (keyed on user_id) to fetch the result
+      of a given user.
+
+2. Calling via the `SimpleFeed::Feed#user_activity` instance method.
+   Optimized for simplicity and retrieval of a single-user activity,
+   this method allows also performing multiple queries about the same
+   user in an optimized fashion avoiding unnecessary requests.
 
 #### Publishing Data to the Feed
 
@@ -109,8 +128,13 @@ Once we have an instance of the `UserActivity` class, we can use one of
 the public methods to read and write into the feed:
 
 ```ruby
-@user_activity.store(value: '{ "comment_id": 100, "author_id": 932424 }', at: Time.now)
-@user_activity.store(value: 'Jon liked Christen\'s post', at: Time.now)
+# Using the Feed API:
+SimpleFeed.get(:followers).store(user_ids: [1,2,3...], value: 'hello', at: Time.now)
+
+# Using UserActivity API:
+user_activity = SimpleFeed.get(:followers).user_activity(current_user.id)
+user_activity.store(value: '{ "comment_id": 100, "author_id": 932424 }', at: Time.now)
+user_activity.store(value: 'Jon liked Christen\'s post', at: Time.now)
 ```
 In the above example, we stored two separate events, one was stored as a `JSON` string, and the other as a human readable upate.
 
@@ -123,37 +147,43 @@ compact serialization schemes for ruby and Rails applications.
 ```ruby
 require 'simplefeed'
 
-@user_activity.total_count
+user_activity.total_count
 #=> 412 
-@user_activity.unread_count
+user_activity.unread_count
 #=> 12
-@user_activity.paginate(page: 1) 
+user_activity.paginate(page: 1) 
 # => [ 
 # <SimpleFeed::Event#0x2134afa value='Jon followed Igbis' at='2016-11-20 23:32:56 -0800'>,
 # <SimpleFeed::Event#0xf98f234 value='George liked Jons post' at='2016-12-10 21:32:56 -0800'>
 # ....
 # ]
 # now, let's force-reset the last read timestamp
-@user_activity.reset_last_read # defaults to Time.now
+user_activity.reset_last_read # defaults to Time.now
 #=> 0
-@user_activity.unread_count
+user_activity.unread_count
 #=> 0
 ```
 
 ### API & Usage 
 
 Below is the complete set of API methods that can be called on either
-the `Feed` class directly, for example:
+the `Feed` class directly (while providing an array of user_ids), for
+example:
 
 ```ruby
-SimpleFeed.get(:news).store(user_ids: 1, value: '123', at: Time.now)
+SimpleFeed.get(:news).store(user_ids: [1,2,....], value: '123', at: Time.now)
 ```
 
-Or via the `UserActivity` convenience class:
+Or, for a single user, via the `UserActivity` convenience class:
 
 ```ruby
 @ua = SimpleFeed.get(:news).user_activity(1)
 @ua.store(value: '123', at: Time.now)
+@ua.total_count
+#=> 342
+@ua.unread_count
+#=> 4
+
 puts @ua.all.inspect
 ```
 
@@ -169,9 +199,9 @@ SimpleFeed.get(:feed_name).instance_eval do
   wipe(user_ids:)                        # Wipe the user's feed
 
   paginate(user_ids:,                    # Paginate events for the user, 
-              page:,                    # when peek: true is provided,
-          per_page:,                    # do not reset #last_read, 
-              peek:)                    # but otherwise reset it
+               page:,                    # when peek: true is provided,
+           per_page:,                    # do not reset #last_read, 
+               peek:)                    # but otherwise reset it
                                                            
   
   all(user_ids:)                         # Return ALL events for the user
@@ -180,17 +210,16 @@ SimpleFeed.get(:feed_name).instance_eval do
   unread_count(user_ids:)                # Unread count
 
   last_read(user_ids:)                   # Returns time when the feed was 
-                                        # read last
+                                         # read last
                                         
   reset_last_read(user_ids:)             # Reset last read timestamp for the user
-                                        # (also should reset #unread_count)
+                                         # (also should reset #unread_count)
 end
-    
 ```
 
 #### Complete User Activity API
 
-Of course the recommended way to interface with the feed is via the
+
 `UserActivity` class:
 
 ```ruby
