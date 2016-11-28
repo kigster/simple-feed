@@ -1,11 +1,23 @@
 require 'hashie'
+require 'forwardable'
 
 module SimpleFeed
   class Response
+    extend Forwardable
+    def_delegators :@result, :delete, :key?, :value?, :values, :keys, :size, :merge!
+
+    include Enumerable
+    def each
+      @result.each_pair do |user_id, result|
+        yield(user_id, result)
+      end
+    end
+
 
     def initialize(data = {})
       @result = data.dup
     end
+
 
     def for(key_or_user_id, result = nil)
       user_id = key_or_user_id.is_a?(SimpleFeed::Providers::Key) ?
@@ -17,6 +29,10 @@ module SimpleFeed
 
     def user_ids
       @result.keys
+    end
+
+    def has_user?(user_id)
+      @result.key?(user_id)
     end
 
     # Passes results assigned to each user to a transformation
@@ -41,7 +57,6 @@ module SimpleFeed
         end
       end
     end
-
     alias_method :[], :result
   end
 end

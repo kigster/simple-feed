@@ -24,4 +24,7 @@ shared_context :event_matrix do
                               at:      args.last)
     end
   }
+
+  let!(:event) { events[0] }
+  let!(:another_event) { events[1] }
 end

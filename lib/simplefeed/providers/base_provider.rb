@@ -51,10 +51,10 @@ module SimpleFeed
         feed.meta[:batch_size] || 100
       end
 
-      def with_response_batched(user_ids, response = nil)
-        with_response(response) do |_response|
+      def with_response_batched(user_ids, external_response = nil)
+        with_response(external_response) do |response|
           batch(user_ids) do |key|
-            yield(key, _response)
+            response.for(key.user_id) { yield(key, response) }
           end
         end
       end

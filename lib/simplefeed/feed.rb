@@ -31,10 +31,19 @@ module SimpleFeed
     end
 
     def user_activity(user_id)
-      UserActivity.new(user_id: user_id, feed: self)
+      SingleUserActivity.new(user_id: user_id, feed: self)
     end
 
-    alias_method :for, :user_activity
+    def users_activity(user_ids)
+      MultiUserActivity.new(user_ids: user_ids, feed: self)
+    end
+
+    # Depending on the argument returns either +SingleUserActivity+ or +MultiUserActivity+
+    def for(one_or_more_users)
+      one_or_more_users.is_a?(Array) ?
+        users_activity(one_or_more_users) :
+        user_activity(one_or_more_users)
+    end
 
     def configure(hash = {})
       SimpleFeed.symbolize!(hash)

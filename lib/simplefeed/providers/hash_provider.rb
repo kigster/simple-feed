@@ -37,32 +37,26 @@ module SimpleFeed
       # @return: Response.new( { user_id: true | false (added or not)
       def store(user_ids:, **opts)
         with_response_batched(user_ids) do |key, response|
-          response.for(key.user_id) {
-            push(event(user_id: key, **opts))
-          }
+          push(event(user_id: key, **opts))
         end
       end
 
       def remove(user_ids:, **opts)
         with_response_batched(user_ids) do |key, response|
-          response.for(key.user_id) {
-            pop(event(user_id: "#{key}", **opts))
-          }
+          pop(event(user_id: "#{key}", **opts))
         end
       end
 
       def wipe(user_ids:)
         with_response_batched(user_ids) do |key, response|
           activity(key.to_s, true)
-          response.for(key.user_id, :OK)
+          true
         end
       end
 
       def all(user_ids:)
         with_response_batched(user_ids) do |key, response|
-          response.for(key.user_id) do
-            activities(key)
-          end
+          activities(key)
         end
       end
 
@@ -70,9 +64,7 @@ module SimpleFeed
         reset_last_read(user_ids: user_ids) unless options[:peek]
         with_response_batched(user_ids) do |key, response|
           activities = activities(key)
-          response.for(key.user_id) do
-            (page && page > 0) ? activities[((page - 1) * per_page)...(page * per_page)] : activities
-          end
+          (page && page > 0) ? activities[((page - 1) * per_page)...(page * per_page)] : activities
         end
       end
 
@@ -80,7 +72,7 @@ module SimpleFeed
         with_response_batched(user_ids) do |key, response|
           user_record(key)[:last_read]    = at
           user_record(key)[:unread_count] = 0
-          response.for(key.user_id, at)
+          at
         end
       end
 
@@ -101,7 +93,7 @@ module SimpleFeed
       def fetch_meta(name, user_ids)
         name = name.to_sym unless name.is_a?(Symbol)
         with_response_batched(user_ids) do |key, response|
-          response.for(key.user_id, user_record(key)[name])
+          user_record(key)[name]
         end
       end
 

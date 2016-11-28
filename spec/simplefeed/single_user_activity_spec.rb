@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'SimpleFeed::UserActivity' do
+describe 'SimpleFeed::SingleUserActivity' do
 
   let!(:feed) { SimpleFeed::Feed.new(:test) }
 
@@ -22,7 +22,7 @@ describe 'SimpleFeed::UserActivity' do
   context 'method delegation' do
     SimpleFeed::Providers::REQUIRED_METHODS.each do |m|
       it "should delegate method #{m}" do
-        expect(provider).to receive(m).with(user_ids: [user_id], hello: :goodbye).and_return(SimpleFeed::Response.new({ user_id: true }))
+        expect(provider).to receive(m).with(user_ids: [user_id], hello: :goodbye).and_return(SimpleFeed::Response.new({user_id => true}))
         user_activity.send(m, hello: :goodbye)
       end
     end

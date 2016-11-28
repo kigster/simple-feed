@@ -29,17 +29,27 @@ module SimpleFeed
         #
 
         include Driver
+        @debug = false
+
+        def self.debug?
+          @debug
+        end
 
         def store(user_ids:, value:, at:)
-          with_response do |response|
-            with_response_pipelined(user_ids, response) do |redis, key, _response|
-              _response.for(key.user_id) {
-                redis.zadd(key.data, (1000.0 * at.to_f).to_i, value)
-              }
-            end
-            with_response_pipelined(response.user_ids) do |redis, key, _response|
+          response = with_response_pipelined(user_ids) do |redis, key|
+            puts "zadd #{key.data} #{(1000.0 * at.to_f).to_i} '#{value}'" if self.class.debug?
+            {
+              add:   redis.zadd(key.data, at.to_f, value),
+              total: redis.zcard(key.data)
+            }
+          end
+          with_response_pipelined(response.user_ids, response) do |redis, key, _response|
+            puts _response[key.user_id].inspect if self.class.debug?
+            if _response[key.user_id][:total] >= feed.max_size
+              puts "zremrangebyrank #{key.data} #{-feed.max_size} -1" if self.class.debug?
               redis.zremrangebyrank(key.data, -feed.max_size - 1, -1)
             end
+            _response[key.user_id][:add]
           end
         end
 
@@ -55,9 +65,10 @@ module SimpleFeed
           end
         end
 
-        def paginate(user_ids:, page:, per_page: feed.per_page)
+        def paginate(user_ids:, page:, per_page: feed.per_page, peek: false)
           with_response_pipelined(user_ids) do |redis, key|
             redis.zrevrange(key.data, (page - 1) * per_page, page * per_page)
+            redis.hset(key.meta, 'last_read', Time.now) unless peek
           end
         end
 
@@ -81,19 +92,20 @@ module SimpleFeed
         end
 
         def unread_count(user_ids:)
-          with_response do |response|
-            with_response_pipelined(user_ids, response) do |redis, key|
-              redis.hget(key.meta, 'last_read')
-            end
-            with_response_pipelined(response.user_ids, response) do |redis, key, _response|
-              last_read = _response.delete[key.user_id]
-              redis.zcount(key.data, last_read, BigDecimal('Infinity'))
-            end
+          response = with_response_pipelined(user_ids) do |redis, key|
+            redis.hget(key.meta, 'last_read')
+          end
+
+          with_response_pipelined(response.user_ids, response) do |redis, key, _response|
+            last_read = _response.delete(key.user_id).to_f
+            redis.zcount(key.data, last_read, 0.0)
           end
         end
 
         def last_read(user_ids:)
-          fetch_meta(:last_read, user_ids)
+          with_response_pipelined(user_ids) do |redis, key, *|
+            redis.hget(key.meta, 'last_read')
+          end
         end
 
         def transform_response(user_id, result)
@@ -117,18 +129,6 @@ module SimpleFeed
         end
 
         private
-
-        def fetch_meta(user_ids, meta_key)
-          with_response_pipelined(user_ids) do |redis, key|
-            redis.hget(key.meta, meta_key)
-          end
-        end
-
-        def set_meta(user_ids, meta_key, value)
-          with_response_pipelined(user_ids) do |redis, key|
-            redis.hset(key.meta, meta_key, value)
-          end
-        end
 
         #——————————————————————————————————————————————————————————————————————————————————————
         # Operations with response

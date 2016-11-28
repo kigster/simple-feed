@@ -200,18 +200,19 @@ puts @ua.all.inspect
 # => true if the value was removed, false if it didn't exist
 @ua.wipe
 # => true
-@ua.paginate(page:, per_page:, peek: true|false)
-# => Array[ event, event, ...]
+@ua.paginate(page:, per_page:, peek: false)
+# => [Array]<Event>
+# with peak: true does not reset last_read
 @ua.all
-# => Array[ event, event, ...]
+# => [Array]<Event>
 @ua.reset_last_read
-# => last read
+# => [Time] last read
 @ua.total_count
-# => Integer count
+# => [Integer] count
 @ua.unread_count
-# => Integer count
+# => [Integer] count
 @ua.last_read
-# => Time last_read
+# => [Time] last_read
 ```
 
 #### Batch User API
