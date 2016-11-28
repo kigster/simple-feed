@@ -67,8 +67,8 @@ module SimpleFeed
 
         def paginate(user_ids:, page:, per_page: feed.per_page, peek: false)
           with_response_pipelined(user_ids) do |redis, key|
-            redis.zrevrange(key.data, (page - 1) * per_page, page * per_page)
             redis.hset(key.meta, 'last_read', Time.now) unless peek
+            redis.zrevrange(key.data, (page - 1) * per_page, page * per_page)
           end
         end
 
