@@ -9,7 +9,7 @@ module SimpleFeed
     end
 
     #
-    # Single-user API for the feeds.
+    # Multi-user API for the feeds.
     #
     # ```ruby
     # @multi = SimpleFeed.get(:feed_name).multi_user_activity(User.active.map(&:id))

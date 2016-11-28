@@ -1,4 +1,4 @@
-## SimpleFeed — Scalable, easy to use activity feed implementation.
+# SimpleFeed — Scalable, easy to use activity feed implementation.
 
 [![Gem Version](https://badge.fury.io/rb/simple-feed.svg)](https://badge.fury.io/rb/simple-feed)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kigster/simple-feed/master/LICENSE.txt)
@@ -7,7 +7,7 @@
 [![Test Coverage](https://codeclimate.com/repos/58339a5b3d9faa74ac006b36/badges/8b899f6df4fc1ed93759/coverage.svg)](https://codeclimate.com/repos/58339a5b3d9faa74ac006b36/coverage)
 [![Issue Count](https://codeclimate.com/repos/58339a5b3d9faa74ac006b36/badges/8b899f6df4fc1ed93759/issue_count.svg)](https://codeclimate.com/repos/58339a5b3d9faa74ac006b36/feed)
 
-This is a ruby implementation of a fast simple feed commonly used in a typical social network-like applications. The implementation is optimized for **read-time performance** and high concurrency (lots of users). A default Redis-based provider implementation is provided, with the API supporting new providers very easily. 
+This is a ruby implementation of a fast simple feed commonly used in a typical social network-like applications. The implementation is optimized for **read-time performance** and high concurrency (lots of users). A default Redis-based provider implementation is provided, with the API supporting new providers very easily.
 
 <div style="border: 2px solid #222; padding: 10px; background: #f5f5f5; font-family: 'HelveticaNeue-CondensedBold'; font-size: 14pt;">
 <ol>
@@ -15,7 +15,7 @@ This is a ruby implementation of a fast simple feed commonly used in a typical s
     <li>We thank <em><a href="http://simbi.com">Simbi, Inc.</a></em> for sponsoring the development of this open source library.</li>
 </div>
 
-### What's an Activity Feed?
+## What's an Activity Feed?
 
 Here is an example of a text-based simple feed that is very common today on social networking sites.
 
@@ -25,23 +25,23 @@ The _stories_ in the feed depend entirely on the application using this
 library, therefore to integrate with SimpleFeed requires implementing
 several _glue points_ in your code.
 
-### Overview
- 
+## Overview
+
  The feed library aims to address the following goals:
 
 * To define a minimalistic API for a typical event-based simple feed,
   without tying it to any concrete provider implementation
 * To make it easy to implement and plug in a new type of provider,
   eg.using Couchbase or MongoDB
-* To provide a scalable default provider implementation using Redis, which can support millions of users via sharding 
+* To provide a scalable default provider implementation using Redis, which can support millions of users via sharding
 * To support multiple simple feeds within the same application, but used for different purposes, eg. simple feed of my followers, versus simple feed of my own actions.
 
-### Usage
+## Usage
 
 First you need to configure the Feed with a valid provider
-implementation and a name. 
+implementation and a name.
 
-#### Configuration
+### Configuration
 
 Below we configure a feed called `:news_feed`, which presumably
 will be populated with the events coming from the followers.
@@ -58,12 +58,12 @@ provider_yaml = <<-eof
   opts:
     host: '127.0.0.1'
     port: 6379
-    namespace: :fa 
+    namespace: :fa
     db: 1
 eof
 
 SimpleFeed.define(:news_feed) do |f|
-  f.provider = YAML.load(provider_yaml) 
+  f.provider = YAML.load(provider_yaml)
   f.max_size = 1000 # how many items can be in the feed
   f.per_page = 20 # default page size
 end
@@ -89,21 +89,7 @@ accessing the feed:
 
 You can also get a full list of currently defined feeds with `SimpleFeed.feed_names` method.
 
-### Reading and Writing to the Feed for a given User
-
-Each feed consists of many user activities, mapped by `user_ids`. In
-order to read and write to a feed of a given user, you need to obtain a
-handle on a `SimpleFeed::UserActivity` instance for a given feed:
-
-```ruby
-@news_feed = SimpleFeed.news_feed
-@user_activity = @news_feed.user_activity(current_user.id)
-
-# A shorter alias for method #user_activity is #for
-@user_activity = @news_feed.for(user_id)
-````
-
-#### Two Versions of the API
+### Two Versions of the Feed API
 
 The API is offered in two approaches:
 
@@ -122,7 +108,9 @@ The API is offered in two approaches:
       of a given user.
 
 
-#### Publishing Data to the Feed
+### Publishing Data to the Feed
+
+#### Single User
 
 Once we have an instance of the `UserActivity` class, we can use one of
 the public methods to read and write into the feed:
@@ -142,17 +130,30 @@ How exactly you serialize your events is up to you, but a higher-level
 abstraction gem `activity-feed` decorates this library with additional
 compact serialization schemes for ruby and Rails applications.
 
-#### Reading the Feed
+#### Multiple Users
+
+```ruby
+# Using the Feed API:
+@user_ids = [1,2,4]
+@users_activities = SimpleFeed.get(:followers).for(@user_ids)
+
+@users_activities.store(value: 'hello', at: Time.now)
+# => [Response] { user_id => [Boolean], ... } true if the value was stored, false if it wasn't.
+```
+
+### Reading the Feed
+
+#### Single User
 
 ```ruby
 require 'simplefeed'
 
 user_activity.total_count
-#=> 412 
+#=> 412
 user_activity.unread_count
 #=> 12
-user_activity.paginate(page: 1) 
-# => [ 
+user_activity.paginate(page: 1)
+# => [
 # <SimpleFeed::Event#0x2134afa value='Jon followed Igbis' at='2016-11-20 23:32:56 -0800'>,
 # <SimpleFeed::Event#0xf98f234 value='George liked Jons post' at='2016-12-10 21:32:56 -0800'>
 # ....
@@ -164,53 +165,42 @@ user_activity.unread_count
 #=> 0
 ```
 
-### API & Usage 
+## Complete API
 
-Below is the complete set of API methods that can be called on either
-the `Feed` class directly (while providing an array of user_ids), for
-example:
+### Single User
 
-```ruby
-SimpleFeed.get(:news).store(user_ids: [1,2,....], value: '123', at: Time.now)
-```
-
-Or, for a single user, via the `UserActivity` convenience class:
+For a single user, via the `UserActivity` convenience class:
 
 ```ruby
-@ua = SimpleFeed.get(:news).user_activity(1)
-@ua.store(value: '123', at: Time.now)
-@ua.total_count
-#=> 342
-@ua.unread_count
-#=> 4
+require 'simplefeed'
 
-puts @ua.all.inspect
-```
-
-#### Single User API
-
-`UserActivity` class:
-
-```ruby
-@ua = SimpleFeed.get(:feed_name).user_activity(1)
+@ua = SimpleFeed.get(:news).user_activity(current_user.id)
 
 @ua.store(value:, at:)
-# => true if the value was stored, false if it wasn't.
+# => [Boolean] true if the value was stored, false if it wasn't.
+
 @ua.remove(value:, at:)
-# => true if the value was removed, false if it didn't exist
+# => [Boolean] true if the value was removed, false if it didn't exist
+
 @ua.wipe
-# => true
+# => [Boolean] true
+
 @ua.paginate(page:, per_page:, peek: false)
 # => [Array]<Event>
 # with peak: true does not reset last_read
+
 @ua.all
 # => [Array]<Event>
+
 @ua.reset_last_read
-# => [Time] last read
+# => [Time] last_read
+
 @ua.total_count
-# => [Integer] count
+# => [Integer] total_count
+
 @ua.unread_count
-# => [Integer] count
+# => [Integer] unread_count
+
 @ua.last_read
 # => [Time] last_read
 ```
@@ -222,31 +212,38 @@ return value is an object, `SimpleFeed::Response`, containing individual
 responses for each user, accessible via `response[user_id]` method.
 
 ```ruby
-SimpleFeed.get(:feed_name).instance_eval do 
-  
-  store(user_ids:, value:, at:)          # Store an event for a user
-  
-  remove(user_ids:, value:, at: nil)     # Remove an event for a user
-  
-  wipe(user_ids:)                        # Wipe the user's feed
+@multi = SimpleFeed.get(:feed_name).for(User.active.map(&:id))
 
-  paginate(user_ids:,                    # Paginate events for the user, 
-               page:,                    # when peek: true is provided,
-           per_page:,                    # do not reset #last_read, 
-               peek:)                    # but otherwise reset it
-                                                           
-  
-  all(user_ids:)                         # Return ALL events for the user
+@multi.store(value:, at:)
+@multi.store(event:)
+# => [Response] { user_id => [Boolean], ... } true if the value was stored, false if it wasn't.
 
-  total_count(user_ids:)                 # Total event count for the user
-  unread_count(user_ids:)                # Unread count
+@multi.remove(value:, at:)
+@multi.remove(event:)
+# => [Response] { user_id => [Boolean], ... } true if the value was removed, false if it didn't exist
 
-  last_read(user_ids:)                   # Returns time when the feed was 
-                                         # read last
-                                        
-  reset_last_read(user_ids:)             # Reset last read timestamp for the user
-                                         # (also should reset #unread_count)
-end
+@multi.wipe
+# => [Response] { user_id => [Boolean], ... } true if user activity was found and deleted, false otherwise
+
+@multi.paginate(page:, per_page:, peek: false)
+# => [Response] { user_id => [Array]<Event>, ... }
+# With (peak: true) does not reset last_read, otherwise it does.
+
+@multi.all
+# => [Response] { user_id => [Array]<Event>, ... }
+
+@multi.reset_last_read
+# => [Response] { user_id => [Time] last_read, ... }
+
+@multi.total_count
+# => [Response] { user_id => [Integer] total_count, ... }
+
+@multi.unread_count
+# => [Response] { user_id => [Integer] unread_count, ... }
+
+@multi.last_read
+# => [Response] { user_id => [Time] last_read, ... }
+
 ```
 
 ## Providers
@@ -309,4 +306,4 @@ The gem is available as open source under the terms of the [MIT License](http://
  * This project is conceived and sponsored by [Simbi, Inc.](https://simbi.com).
  * Author's personal experience at [Wanelo, Inc.](https://wanelo.com) has served as an inspiration.
 
- 
+
