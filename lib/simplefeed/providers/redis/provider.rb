@@ -38,12 +38,13 @@ module SimpleFeed
         def store(user_ids:, value:, at:)
           response = with_response_pipelined(user_ids) do |redis, key|
             puts "zadd #{key.data} #{(1000.0 * at.to_f).to_i} '#{value}'" if self.class.debug?
-            [redis.zadd(key.data, at.to_f, value),
-             redis.zcard(key.data)]
+            { a: redis.zadd(key.data, at.to_f, value),
+              t: redis.zcard(key.data) }
           end
           with_response_pipelined(response.user_ids, response) do |redis, key, _response|
             puts _response[key.user_id].inspect if self.class.debug?
-            add_result, total_count = _response[key.user_id]
+            total_count = _response[key.user_id][:t]
+            add_result  = _response[key.user_id][:a]
             if total_count >= feed.max_size
               puts "zremrangebyrank #{key.data} #{-feed.max_size} -1" if self.class.debug?
               redis.zremrangebyrank(key.data, -feed.max_size - 1, -1)
@@ -119,7 +120,11 @@ module SimpleFeed
             when Hash
               result.each { |k, v| result[k] = transform_response(user_id, v) }
             when Array
-              result.map { |v| transform_response(user_id, v) }
+              if result.size == 2
+                SimpleFeed::Event.new(*result)
+              else
+                result.map { |v| transform_response(user_id, v) }
+              end
             when String
               if result =~ /^\d+\.\d+$/
                 result.to_f
