@@ -38,18 +38,17 @@ module SimpleFeed
         def store(user_ids:, value:, at:)
           response = with_response_pipelined(user_ids) do |redis, key|
             puts "zadd #{key.data} #{(1000.0 * at.to_f).to_i} '#{value}'" if self.class.debug?
-            {
-              add:   redis.zadd(key.data, at.to_f, value),
-              total: redis.zcard(key.data)
-            }
+            [redis.zadd(key.data, at.to_f, value),
+             redis.zcard(key.data)]
           end
           with_response_pipelined(response.user_ids, response) do |redis, key, _response|
             puts _response[key.user_id].inspect if self.class.debug?
-            if _response[key.user_id][:total] >= feed.max_size
+            add_result, total_count = _response[key.user_id]
+            if total_count >= feed.max_size
               puts "zremrangebyrank #{key.data} #{-feed.max_size} -1" if self.class.debug?
               redis.zremrangebyrank(key.data, -feed.max_size - 1, -1)
             end
-            _response[key.user_id][:add]
+            add_result
           end
         end
 
@@ -65,10 +64,14 @@ module SimpleFeed
           end
         end
 
-        def paginate(user_ids:, page:, per_page: feed.per_page, peek: false)
+        def paginate(user_ids:, page:, per_page: feed.per_page, peek: false, with_total: false)
           with_response_pipelined(user_ids) do |redis, key|
             redis.hset(key.meta, 'last_read', Time.now) unless peek
-            redis.zrevrange(key.data, (page - 1) * per_page, page * per_page)
+            _events = redis.zrevrange(key.data, (page - 1) * per_page, page * per_page, withscores: true)
+            with_total ?
+              { events:      _events,
+                total_count: redis.zcard(key.data) } :
+              _events
           end
         end
 
@@ -98,7 +101,7 @@ module SimpleFeed
 
           with_response_pipelined(response.user_ids, response) do |redis, key, _response|
             last_read = _response.delete(key.user_id).to_f
-            redis.zcount(key.data, last_read, 0.0)
+            redis.zcount(key.data, last_read, Time.now.to_f)
           end
         end
 
@@ -115,6 +118,8 @@ module SimpleFeed
               transform_response(user_id, result.value)
             when Hash
               result.each { |k, v| result[k] = transform_response(user_id, v) }
+            when Array
+              result.map { |v| transform_response(user_id, v) }
             when String
               if result =~ /^\d+\.\d+$/
                 result.to_f

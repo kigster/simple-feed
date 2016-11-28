@@ -46,6 +46,7 @@ RSpec.describe SimpleFeed::Providers::BaseProvider do
   end
 
   let(:provider) { TestProvider.new }
+  let(:feed) { SimpleFeed.define(:test, provider: provider) }
   let(:user_ids) { [1, 2, 3, 4] }
   before do
     provider.feed = Hashie::Mash.new({ namespace: :tp })
@@ -53,16 +54,20 @@ RSpec.describe SimpleFeed::Providers::BaseProvider do
 
   context 'transforming values' do
     context '#store' do
-      let(:response) { provider.store(user_ids: user_ids, value: true, at: Time.now) }
+      let(:response) { feed.for(user_ids).store(value: true, at: Time.now) }
       it 'should transform result' do
         expect(response.result.values.all? { |v| v == :ADD }).to be_truthy
       end
     end
 
     context '#remove' do
-      let(:response) { provider.remove(user_ids: user_ids, value: true, at: Time.now) }
+      let(:ts) { Time.now }
+      before do
+        feed.for(user_ids).store(event: SimpleFeed::Event.new(:hello, ts))
+      end
+      let(:response) { feed.for(user_ids).remove(value: :hello, at: ts) }
       it 'should transform the result' do
-        puts response.result.inspect
+        #puts response.result.inspect
       end
     end
   end
