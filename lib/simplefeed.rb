@@ -5,6 +5,15 @@ require 'simplefeed/version'
 
 require 'simplefeed/providers/redis'
 require 'simplefeed/providers/hash'
+require 'simplefeed/dsl'
+
+Float.class_eval do
+  def near_eql?(other)
+    delta = 0.001
+    n     = (other - self).abs
+    delta >= n
+  end
+end
 
 module SimpleFeed
   @registry = {}
@@ -26,7 +35,15 @@ module SimpleFeed
   def self.get(name)
     registry[name.to_sym]
   end
-  
+
+  def self.dsl(object, **opts, &block)
+    if object.kind_of?(SimpleFeed::Activity::Base)
+      SimpleFeed::DSL.for_activity(object, **opts, &block)
+    else
+      raise TypeError, 'Only SimpleFeed::Activity classes are wrapped by the DSL...'
+    end
+  end
+
   def self.provider(provider_name, *args, **opts, &block)
     provider_class = SimpleFeed::Providers.registry[provider_name]
     raise ArgumentError, "No provider named #{provider_name} was found, #{SimpleFeed::Providers.registry.inspect}" unless provider_class

@@ -5,6 +5,7 @@ require 'simplefeed'
 module SimpleFeed
   class Response
     extend Forwardable
+
     def_delegators :@result, :delete, :key?, :value?, :values, :keys, :size, :merge!
 
     include Enumerable
@@ -14,18 +15,16 @@ module SimpleFeed
       end
     end
 
-
     def initialize(data = {})
       @result = data.dup
     end
-
 
     def for(key_or_user_id, result = nil)
       user_id = key_or_user_id.is_a?(SimpleFeed::Providers::Serialization::Key) ?
         key_or_user_id.user_id :
         key_or_user_id
 
-      @result[user_id] = result ? result : yield
+      @result[user_id] = result ? result : yield(@result[user_id])
     end
 
     def user_ids
@@ -34,6 +33,10 @@ module SimpleFeed
 
     def has_user?(user_id)
       @result.key?(user_id)
+    end
+
+    def to_h
+      @result.to_h
     end
 
     # Passes results assigned to each user to a transformation
@@ -59,6 +62,7 @@ module SimpleFeed
         end
       end
     end
+
     alias_method :[], :result
   end
 end

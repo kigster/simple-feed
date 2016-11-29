@@ -1,4 +1,5 @@
 require_relative 'providers'
+require_relative 'activity/base'
 module SimpleFeed
   class Feed
 
@@ -21,7 +22,7 @@ module SimpleFeed
     end
 
     def provider=(definition)
-      @proxy      = ProviderProxy.from(definition)
+      @proxy      = Providers::Proxy.from(definition)
       @proxy.feed = self
       @proxy
     end
@@ -31,11 +32,11 @@ module SimpleFeed
     end
 
     def user_activity(user_id)
-      SingleUserActivity.new(user_id: user_id, feed: self)
+      Activity::SingleUser.new(user_id: user_id, feed: self)
     end
 
     def users_activity(user_ids)
-      MultiUserActivity.new(user_ids: user_ids, feed: self)
+      Activity::MultiUser.new(user_ids: user_ids, feed: self)
     end
 
     # Depending on the argument returns either +SingleUserActivity+ or +MultiUserActivity+

@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'SimpleFeed::MultiUserActivity' do
+describe 'SimpleFeed::Activity::MultiUserActivity' do
 
   let!(:feed) { SimpleFeed::Feed.new(:test) }
 
@@ -19,18 +19,18 @@ describe 'SimpleFeed::MultiUserActivity' do
   let(:user_id_2) { 32423049 }
 
   let(:user_ids) { [user_id_1, user_id_2] }
-  let(:multi_user_activity) { feed.for(user_ids) }
+  let(:user_activity) { feed.for(user_ids) }
 
   context 'method delegation' do
-    it 'should correctly assign the type of multi_user_activity' do
-      expect(multi_user_activity.class).to eq(SimpleFeed::MultiUserActivity)
-      expect(multi_user_activity.user_ids).to eq(user_ids)
+    it 'should correctly assign the type of user_activity' do
+      expect(user_activity.class).to eq(SimpleFeed::Activity::MultiUser)
+      expect(user_activity.user_ids).to eq(user_ids)
     end
 
 
     context 'Enumeration of users' do
       it 'should enumerate users' do
-        multi_user_activity.each do |user_id|
+        user_activity.each do |user_id|
           expect(user_ids.include?(user_id)).to be(true)
         end
       end
@@ -59,12 +59,12 @@ describe 'SimpleFeed::MultiUserActivity' do
           end
 
           it 'should call the provider' do
-            multi_user_activity.send(m, **opts)
+            user_activity.send(m, **opts)
           end
 
           context '#Enumeration' do
             it 'should enumerate response' do
-              multi_user_activity.send(m, **opts).each do |user_id, result|
+              user_activity.send(m, **opts).each do |user_id, result|
                 expect(user_ids.include?(user_id)).to be(true)
                 expect(result).to be(true)
               end

@@ -34,9 +34,9 @@ SimpleFeed::Redis::Driver.new(redis: { host: 'localhost', port: 6379, db: 1, tim
             redis      = opts[:redis]
             redis_proc = nil
 
-            if redis.is_a?(Hash)
+            if redis.is_a?(::Hash)
               redis_proc = -> { ::Redis.new(**opts[:redis]) }
-            elsif redis.is_a?(Proc)
+            elsif redis.is_a?(::Proc)
               redis_proc = redis
             elsif redis.is_a?(::Redis)
               redis_proc = -> { redis }

@@ -51,7 +51,7 @@ class Formatter
 
     def p(message = nil, pp: false, &block)
       duration, result = run(&block)
-      if self.ua && ua.is_a?(SimpleFeed::MultiUserActivity)
+      if self.ua && ua.is_a?(SimpleFeed::Activity::MultiUser)
         ua.each { |id| single_user_print(message, id, result, duration / ua.size, pp) }
       else
         raise ArgumentError, 'Do what? ' + message

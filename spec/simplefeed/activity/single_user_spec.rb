@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'SimpleFeed::SingleUserActivity' do
+describe 'SimpleFeed::Activity::SingleUser' do
 
   let!(:feed) { SimpleFeed::Feed.new(:test) }
 

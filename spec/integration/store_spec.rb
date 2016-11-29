@@ -11,7 +11,7 @@ context 'Integration' do
         expect(feed).to_not be_nil
         expect(feed).to be_kind_of(SimpleFeed::Feed)
         expect(feed.name).to eq :follow_feed
-        expect(proxy).to be_kind_of(SimpleFeed::ProviderProxy)
+        expect(proxy).to be_kind_of(SimpleFeed::Providers::Proxy)
         expect(provider).to be_kind_of(SimpleFeed::MockProvider)
       end
 
@@ -34,7 +34,7 @@ context 'Integration' do
       it 'should be correctly defined' do
         expect(events.size).to eq(3)
         expect(events.last.value).to eq(EVENT_MATRIX[2][0])
-        expect(events.last.at).to eq(EVENT_MATRIX[2][1])
+        expect(Time.at(events.last.at)).to eq(EVENT_MATRIX[2][1])
       end
     end
 

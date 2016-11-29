@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'simplefeed/providers/hash_provider'
+require 'simplefeed/providers/hash/provider'
 
-RSpec.describe SimpleFeed::Providers::HashProvider do
+RSpec.describe SimpleFeed::Providers::Hash::Provider do
   before :all do
     SimpleFeed.registry.delete(:tested_feed)
   end

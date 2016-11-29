@@ -17,7 +17,7 @@ shared_context :event_matrix do
     ]
   end
 
-  let!(:events) {
+  let(:events) {
     EVENT_MATRIX.map do |args|
       ::SimpleFeed::Event.new(user_id: user_id,
                               value:   args.first,
@@ -25,6 +25,6 @@ shared_context :event_matrix do
     end
   }
 
-  let!(:event) { events[0] }
-  let!(:another_event) { events[1] }
+  let(:event) { events[0] }
+  let(:another_event) { events[1] }
 end

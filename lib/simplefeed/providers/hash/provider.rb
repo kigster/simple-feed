@@ -52,12 +52,13 @@ module SimpleFeed
 
         def wipe(user_ids:)
           with_response_batched(user_ids) do |key, response|
+            deleted = activity(key).size > 0
             activity(key.to_s, true)
-            true
+            deleted
           end
         end
 
-        def all(user_ids:)
+        def fetch(user_ids:)
           with_response_batched(user_ids) do |key, response|
             activities(key)
           end
@@ -155,7 +156,7 @@ module SimpleFeed
         end
 
         def event(**opts)
-          ::SimpleFeed::Event.new(opts)
+          ::SimpleFeed::Event.new(**opts)
         end
 
       end

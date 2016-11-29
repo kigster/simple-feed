@@ -27,12 +27,12 @@ RSpec.shared_examples :validate_provider do
 
 end
 
-RSpec.describe SimpleFeed::ProviderProxy do
+RSpec.describe SimpleFeed::Providers::Proxy do
   context 'direct instantiation' do
     let(:klass) { 'SimpleFeed::MockProvider' }
     let(:args) { %w(127.0.0.1 6379) }
     let(:opts) { { db: 1, namespace: :mock } }
-    let(:proxy) { SimpleFeed::ProviderProxy.new(klass, *args, **opts) }
+    let(:proxy) { SimpleFeed::Providers::Proxy.new(klass, *args, **opts) }
 
     include_examples :validate_provider
   end
@@ -44,7 +44,7 @@ RSpec.describe SimpleFeed::ProviderProxy do
     let(:opts) { props[:opts] }
 
     context 'directly instantiating' do
-      let(:proxy) { SimpleFeed::ProviderProxy.new(klass, *args, **opts) }
+      let(:proxy) { SimpleFeed::Providers::Proxy.new(klass, *args, **opts) }
 
       it 'should correctly read the fixtures' do
         expect(klass).to eq('SimpleFeed::MockProvider')
@@ -60,7 +60,7 @@ RSpec.describe SimpleFeed::ProviderProxy do
     end
 
     context 'self.from' do
-      let(:proxy) { SimpleFeed::ProviderProxy.from(props) }
+      let(:proxy) { SimpleFeed::Providers::Proxy.from(props) }
 
       include_examples :validate_provider
 

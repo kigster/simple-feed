@@ -19,13 +19,13 @@ describe 'SimpleFeed::Feed' do
 
     it('sets per_page') { expect(feed.per_page).to eq(2) }
     it('sets max_size') { expect(feed.max_size).to eq(10) }
-    it('sets provider proxy') { expect(feed.provider.class).to eq(SimpleFeed::ProviderProxy) }
+    it('sets provider proxy') { expect(feed.provider.class).to eq(SimpleFeed::Providers::Proxy) }
     it('sets proxys provider') { expect(feed.provider.provider.class).to eq(SimpleFeed::MockProvider) }
     it('has feed set on provider') { expect(feed.provider.provider.feed).to eq(feed) }
 
     context 'with a pre configured provider' do
-      let(:pre_instantiated_provider) { SimpleFeed::ProviderProxy.from(SimpleFeed::Fixtures.mock_provider_props).provider }
-      let(:provider) { SimpleFeed::ProviderProxy.from(pre_instantiated_provider).provider }
+      let(:pre_instantiated_provider) { SimpleFeed::Providers::Proxy.from(SimpleFeed::Fixtures.mock_provider_props).provider }
+      let(:provider) { SimpleFeed::Providers::Proxy.from(pre_instantiated_provider).provider }
 
       it 'should be one and the same' do
         expect(pre_instantiated_provider).to eq(provider)

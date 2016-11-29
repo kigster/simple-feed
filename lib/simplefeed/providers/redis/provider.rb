@@ -34,28 +34,18 @@ module SimpleFeed
         include Driver
         
         @debug = false
+        class << self
+          attr_accessor :debug
+        end
 
         def self.debug?
           @debug
         end
 
         def store(user_ids:, value:, at: Time.now)
-          response = with_response_pipelined(user_ids) do |redis, key|
-            puts "zadd #{key.data} #{(1000.0 * at.to_f).to_i} '#{value}'" if self.class.debug?
-            { 
-              a: redis.zadd(key.data, at.to_f, value),  
-              t: redis.zcard(key.data) 
-            }
-          end
-          
-          with_response_pipelined(user_ids, response) do |redis, key|
-            total_count = response[key.user_id][:t]
-            add_result  = response[key.user_id][:a]
-            if total_count >= feed.max_size
-              puts "zremrangebyrank #{key.data} #{-feed.max_size} -1" if self.class.debug?
-              redis.zremrangebyrank(key.data, -feed.max_size - 1, -1)
-            end
-            add_result
+          with_response_pipelined(user_ids) do |redis, key|
+            redis.zremrangebyrank(key.data, feed.max_size, -1)
+            redis.zadd(key.data, at.to_f, value)
           end
         end
 
@@ -85,7 +75,7 @@ module SimpleFeed
           end
         end
 
-        def all(user_ids:)
+        def fetch(user_ids:)
           with_response_pipelined(user_ids) do |redis, key|
             redis.zrevrange(key.data, 0, -1)
           end
@@ -122,8 +112,6 @@ module SimpleFeed
         end
 
         def transform_response(user_id, result)
-          # puts "checking #{result.class.name} — #{result.inspect}"
-          puts "transform_response: transforming #{result.inspect} of type #{result.class.name}" if self.class.debug?
           case result
             when ::Redis::Future
               transform_response(user_id, result.value)
