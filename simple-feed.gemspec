@@ -29,6 +29,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'connection_pool', '~> 2'
   spec.add_dependency 'activesupport'
 
+  spec.add_development_dependency 'awesome_print'
   spec.add_development_dependency 'yard'
   spec.add_development_dependency 'simplecov', '~> 0.12'
   spec.add_development_dependency 'codeclimate-test-reporter', '~> 1.0'

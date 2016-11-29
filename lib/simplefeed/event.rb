@@ -1,4 +1,6 @@
 
+require 'json'
+
 module SimpleFeed
 
   class Event
@@ -34,6 +36,14 @@ module SimpleFeed
         self.value == other.value &&
         self.at == other.at
     end
+    
+    def to_json
+      { value: value, at: at.to_f }.to_json
+    end
+    
+    def inspect
+      to_json
+    end
 
     private
 
@@ -42,7 +52,6 @@ module SimpleFeed
       copy.instance_eval(&block)
       copy
     end
-
-
+    
   end
 end

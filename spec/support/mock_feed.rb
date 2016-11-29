@@ -19,7 +19,7 @@ module SimpleFeed
     end
   end
 
-  class MockProvider < SimpleFeed::Providers::BaseProvider
+  class MockProvider < SimpleFeed::Providers::Base::Provider
     attr_accessor :host, :port, :db, :namespace
 
     def initialize(host, port, db:, namespace: nil)

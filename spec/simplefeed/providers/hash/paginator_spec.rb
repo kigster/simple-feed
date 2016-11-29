@@ -1,10 +1,11 @@
 require 'spec_helper'
-require 'simplefeed/providers/paginator'
 
-RSpec.describe SimpleFeed::Providers::Paginator do
+require 'simplefeed/providers/hash/paginator'
 
-  class TestClass < SimpleFeed::Providers::BaseProvider
-    include SimpleFeed::Providers::Paginator
+RSpec.describe SimpleFeed::Providers::Hash::Paginator do
+
+  class TestClass < SimpleFeed::Providers::Base::Provider
+    include SimpleFeed::Providers::Hash::Paginator
     def initialize(feed)
       self.feed = feed
     end

@@ -1,12 +1,15 @@
 require 'redis'
 require 'base62-rb'
 require 'forwardable'
-require 'redis/pipeline'
+require 'redis/pipeline' # defines Redis::Future
 
-require 'simplefeed/providers/base_provider'
-require 'simplefeed/providers/key'
+require 'simplefeed/providers/base/provider'
+require 'simplefeed/providers/serialization/key'
+
 require_relative 'driver'
+
 require 'pp'
+
 module SimpleFeed
   module Providers
     module Redis
@@ -18,7 +21,7 @@ module SimpleFeed
       #       - [ 'Debbie liked Robert', '2016-11-20 23:35:56 -0800' ]
       #     u.afkj234.meta: { total: 2, unread: 2, last_read: 2016-11-20 22:00:34 -08:00 GMT }
       #   ```
-      class Provider < ::SimpleFeed::Providers::BaseProvider
+      class Provider < ::SimpleFeed::Providers::Base::Provider
 
         # SimpleFeed::Providers.define_provider_methods(self) do |provider, method, **opts, &block|
         #   users = Users.new(provider: provider, user_ids: opts.delete(:user_ids))
@@ -29,22 +32,25 @@ module SimpleFeed
         #
 
         include Driver
+        
         @debug = false
 
         def self.debug?
           @debug
         end
 
-        def store(user_ids:, value:, at:)
+        def store(user_ids:, value:, at: Time.now)
           response = with_response_pipelined(user_ids) do |redis, key|
             puts "zadd #{key.data} #{(1000.0 * at.to_f).to_i} '#{value}'" if self.class.debug?
-            { a: redis.zadd(key.data, at.to_f, value),
-              t: redis.zcard(key.data) }
+            { 
+              a: redis.zadd(key.data, at.to_f, value),  
+              t: redis.zcard(key.data) 
+            }
           end
-          with_response_pipelined(response.user_ids, response) do |redis, key, _response|
-            puts _response[key.user_id].inspect if self.class.debug?
-            total_count = _response[key.user_id][:t]
-            add_result  = _response[key.user_id][:a]
+          
+          with_response_pipelined(user_ids, response) do |redis, key|
+            total_count = response[key.user_id][:t]
+            add_result  = response[key.user_id][:a]
             if total_count >= feed.max_size
               puts "zremrangebyrank #{key.data} #{-feed.max_size} -1" if self.class.debug?
               redis.zremrangebyrank(key.data, -feed.max_size - 1, -1)
@@ -61,7 +67,10 @@ module SimpleFeed
 
         def wipe(user_ids:)
           with_response_pipelined(user_ids) do |redis, key|
+            redis.del(key.meta)
             redis.del(key.data)
+          end.transform do |user_id, result|
+            result == 1 ? true : false 
           end
         end
 
@@ -114,18 +123,32 @@ module SimpleFeed
 
         def transform_response(user_id, result)
           # puts "checking #{result.class.name} — #{result.inspect}"
+          puts "transform_response: transforming #{result.inspect} of type #{result.class.name}" if self.class.debug?
           case result
             when ::Redis::Future
               transform_response(user_id, result.value)
-            when Hash
-              result.each { |k, v| result[k] = transform_response(user_id, v) }
-            when Array
-              if result.size == 2
-                SimpleFeed::Event.new(*result)
+              
+            when ::Hash
+              
+              if result.values.any? { |v| transformable_type?(v) }
+                result.each { |k, v| result[k] = transform_response(user_id, v) }
               else
-                result.map { |v| transform_response(user_id, v) }
+                result
               end
-            when String
+
+            when ::Array
+              
+              if result.any? { |v| transformable_type?(v) }
+                result = result.map { |v| transform_response(user_id, v) }
+              end
+              
+              if result.size == 2 && result[1].is_a?(Float)
+                SimpleFeed::Event.new(value: result[0], at: Time.at(result[1]), user_id: user_id)
+              else
+                result
+              end
+            when ::String
+              
               if result =~ /^\d+\.\d+$/
                 result.to_f
               elsif result =~ /^\d+$/
@@ -133,9 +156,18 @@ module SimpleFeed
               else
                 result
               end
+              
             else
               result
           end
+        end
+
+        def transformable_type?(value)
+          [
+            ::Redis::Future,
+            ::Hash,
+            ::Array
+          ].any? { |klass| value.is_a?(klass) }
         end
 
         private

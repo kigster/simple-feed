@@ -1,5 +1,6 @@
 require 'hashie'
 require 'forwardable'
+require 'simplefeed'
 
 module SimpleFeed
   class Response
@@ -20,7 +21,7 @@ module SimpleFeed
 
 
     def for(key_or_user_id, result = nil)
-      user_id = key_or_user_id.is_a?(SimpleFeed::Providers::Key) ?
+      user_id = key_or_user_id.is_a?(SimpleFeed::Providers::Serialization::Key) ?
         key_or_user_id.user_id :
         key_or_user_id
 
@@ -44,6 +45,7 @@ module SimpleFeed
           @result[user_id] = yield(user_id, value)
         end
       end
+      self
     end
 
     def result(user_id = nil)

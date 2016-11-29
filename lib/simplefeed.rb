@@ -3,6 +3,9 @@ require 'simplefeed/version'
 
 ::Dir.glob(::File.expand_path('../simplefeed/*.rb', __FILE__)).each { |f| require_relative(f) }
 
+require 'simplefeed/providers/redis'
+require 'simplefeed/providers/hash'
+
 module SimpleFeed
   @registry = {}
 
@@ -22,6 +25,12 @@ module SimpleFeed
 
   def self.get(name)
     registry[name.to_sym]
+  end
+  
+  def self.provider(provider_name, *args, **opts, &block)
+    provider_class = SimpleFeed::Providers.registry[provider_name]
+    raise ArgumentError, "No provider named #{provider_name} was found, #{SimpleFeed::Providers.registry.inspect}" unless provider_class
+    provider_class.new(*args, **opts, &block)
   end
 
   class << self
