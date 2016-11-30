@@ -1,4 +1,3 @@
-
 module SimpleFeed
   module Providers
     module Base

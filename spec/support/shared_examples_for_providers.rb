@@ -17,7 +17,7 @@ shared_examples 'a provider' do
 
   include_context :event_matrix
 
-  let(:user_id) { 99119911991199 }
+  let(:user_id) { 99119911 }
 
   # UserActivity (or UsersActivity)
   let(:ua) { ->(id_or_array) { SimpleFeed.tested_feed.for(id_or_array) } }
@@ -33,11 +33,13 @@ shared_examples 'a provider' do
 
         SimpleFeed.dsl(feed.for([user_id]),
                        user_id: user_id,
-                       events: events,
-                       verify: verify) do |*|
+                       events:  events,
+                       verify:  verify) do |*|
 
           store(event: events[1])
+
           wipe { |r| verify[r, true] }
+
           wipe { |r| verify[r, false] }
           store(event: events[1]) { |r| verify[r, true] }
           store(event: events[0]) { |r| verify[r, true] }

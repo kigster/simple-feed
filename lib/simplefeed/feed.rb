@@ -46,6 +46,8 @@ module SimpleFeed
         user_activity(one_or_more_users)
     end
 
+    alias_method :activity, :for
+
     def configure(hash = {})
       SimpleFeed.symbolize!(hash)
       class_attrs.each do |attr|

@@ -148,29 +148,43 @@ Feed operations for a given user:
 ```ruby
 require 'simplefeed'
 
-# First we get the Feed instance, and call #for on it to setup for the 
-# feed operations for this user: 
-activity = SimpleFeed.get(:followers).for(@current_user.id)
-
-# Now we can simply retrieve the counts:
+# Define the feed
+SimpleFeed.define(:notifications) do |f|
+  f.provider = SimpleFeed.provider(
+      :redis,  redis: -> { ::Redis.new(host: '192.168.10.10', port: 9000) },
+               pool_size: 10
+  )
+  f.per_page = 50
+  f.per_page = 2
+end
+# Get the Feed instance, and call #activity on it to setup for the 
+# feed operations for this user (an alias for this method is #for)
+activity = SimpleFeed.get(:notifications).activity(user_id)
+# let's clear out this feed to ensure it's empty
+activity.wipe
+# Let's verify that the counts for this feed are at zero
 activity.total_count
-#=> 412
-activity.unread_count
-#=> 12
-# Or paginate the events:
-activity.paginate(page: 1)
-# => [
-# <SimpleFeed::Event#0x2134afa value='Jon followed Igbis' at='2016-11-20 23:32:56 -0800'>,
-# <SimpleFeed::Event#0xf98f234 value='George liked Jons post' at='2016-12-10 21:32:56 -0800'>
-# ....
-# ]
-# now, let's force-reset the last read timestamp
-activity.reset_last_read # defaults to Time.now
 #=> 0
-# Now the unread_count should return 0
+activity.unread_count
+#=> 0
+# Store some events
+activity.store(value: 'hello')
+activity.store(value: 'goodbye')
+# Now we can paginate the events, which by default resets "last_read" timestamp
+# the user
+activity.paginate(page: 1)
+# [
+#     [0] #<SimpleFeed::Event#70138821650220 {"value":"goodbye","at":1480475294.0579991,"user_id":539789787}>,
+#     [1] #<SimpleFeed::Event#70138821649420 {"value":"hello","at":1480475294.057138,"user_id":539789787}>
+# ]
+# Now the unread_count should return 0 since the user just "viewed" the feed.
 activity.unread_count
 #=> 0
 ```
+
+You can fetch all items in the feed using `#fetch`, and you can
+`#paginate` without resetting the `last_read` timestamp by passing the
+`peek: true` as a parameter.
 
 <a name="batch-api"/>
 
@@ -201,7 +215,6 @@ user.
   
   # => [Response] { user_id1 => [Boolean], user_id2 => [Boolean]... } 
   # true if the value was stored, false if it wasn't.
-
 end
 ```
 
@@ -305,10 +318,12 @@ Two providers are available with this gem:
 
  * `SimpleFeed::Providers::Redis::Provider` is the production-ready provider that uses the [sorted set Redis data type](https://redislabs.com/ebook/redis-in-action/part-2-core-concepts-2/chapter-3-commands-in-redis/3-5-sorted-sets) and their operations operations to store the events, scored by their time typically (but not necessarily). This provider is highly optimized for massive writes and can be sharded by using a Twemproxy backend, and many small Redis shards.
 
-* `SimpleFeed::Providers::HashProvider` is a pure Hash implementatin
-  of a provider that can be useful in unit tests of the host
-  application. This provider may be used to push events within a single
-  ruby process, can be serialized to and from a YAML file, and is therefore intended primarily for Feed emulations in automated tests.
+* `SimpleFeed::Providers::HashProvider` is a pure Hash-like
+  implementation of a provider that can be useful in unit tests of a
+  host application. This provider could be used to write and read events
+  within a single ruby process, can be serialized to and from a YAML
+  file, and is therefore intended primarily for Feed emulations in
+  automated tests.
   
 ## Examples
 
