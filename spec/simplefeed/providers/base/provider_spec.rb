@@ -62,7 +62,7 @@ RSpec.describe SimpleFeed::Providers::Base::Provider do
 
     context 'transforming values' do
       context '#store' do
-        let(:response) { feed.for(user_ids).store(value: true, at: Time.now) }
+        let(:response) { feed.activity(user_ids).store(value: true, at: Time.now) }
         it 'should transform result' do
           expect(response.result.values.all? { |v| v == :ADD }).to be_truthy
         end
@@ -71,9 +71,9 @@ RSpec.describe SimpleFeed::Providers::Base::Provider do
       context '#remove' do
         let(:ts) { Time.now }
         before do
-          feed.for(user_ids).store(event: SimpleFeed::Event.new(:hello, ts))
+          feed.activity(user_ids).store(event: SimpleFeed::Event.new(:hello, ts))
         end
-        let(:response) { feed.for(user_ids).remove(value: :hello, at: ts) }
+        let(:response) { feed.activity(user_ids).remove(value: :hello, at: ts) }
         it 'should transform the result' do
           #puts response.result.inspect
         end

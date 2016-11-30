@@ -20,7 +20,7 @@ shared_examples 'a provider' do
   let(:user_id) { 99119911 }
 
   # UserActivity (or UsersActivity)
-  let(:ua) { ->(id_or_array) { SimpleFeed.tested_feed.for(id_or_array) } }
+  let(:ua) { ->(id_or_array) { SimpleFeed.tested_feed.activity(id_or_array) } }
   let(:verify) { ->(result, value) { expect(result[user_id]).to eq(value) } }
 
   let(:dsl) { SimpleFeed::DSL.new }
@@ -31,7 +31,7 @@ shared_examples 'a provider' do
     context 'storing and removing events' do
       it 'returns valid responses back from each operation' do
 
-        SimpleFeed.dsl(feed.for([user_id]),
+        SimpleFeed.dsl(feed.activity([user_id]),
                        user_id: user_id,
                        events:  events,
                        verify:  verify) do |*|
@@ -84,7 +84,7 @@ shared_examples 'a provider' do
     # context '#paginate' do
     #   let(:ts) { Time.now }
     #   it 'resets last read, and returns the first event as page 1' do
-    #     SimpleFeed.dsl(feed.for([user_id]), events: events, ts: ts) do |*|
+    #     SimpleFeed.dsl(feed.activity([user_id]), events: events, ts: ts) do |*|
     #       reset_last_read                 { |r| verify[r][ts] }
     #       paginate(page: 1, per_page: 1)  { |r| verify[r][false]}
     #     end

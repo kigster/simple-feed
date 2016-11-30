@@ -19,7 +19,7 @@ describe 'SimpleFeed::Activity::MultiUserActivity' do
   let(:user_id_2) { 32423049 }
 
   let(:user_ids) { [user_id_1, user_id_2] }
-  let(:user_activity) { feed.for(user_ids) }
+  let(:user_activity) { feed.activity(user_ids) }
 
   context 'method delegation' do
     it 'should correctly assign the type of user_activity' do

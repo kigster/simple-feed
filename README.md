@@ -89,14 +89,13 @@ accessing the feed:
 
 You can also get a full list of currently defined feeds with `SimpleFeed.feed_names` method.
 
-### Reading to and Writing from the Feed
+### Reading and writing from/to the Feed
 
-For the impatient here is a quick way to get started with the `SimpleFeed`:
-
-First we'll publish an event to someone's feed:
+For the impatient here is a quick way to get started with the
+`SimpleFeed`.
 
 ```ruby
-activity = SimpleFeed.get(:followers).for(@current_user.id)
+activity = SimpleFeed.get(:followers).activity(@current_user.id)
 
 # Store directly the value and the optional time stamp
 activity.store(value: 'hello')
@@ -210,7 +209,7 @@ user.
 @event_producer.followers.find_in_batches do |group|
  
   # Convert a group to the array of IDs and get ready to store
-  activity = SimpleFeed.get(:followers).for(group.map(&:id))
+  activity = SimpleFeed.get(:followers).activity(group.map(&:id))
   activity.store(value: "#{@event_producer.name} liked an article")
   
   # => [Response] { user_id1 => [Boolean], user_id2 => [Boolean]... } 
@@ -268,7 +267,7 @@ return value is an object, `SimpleFeed::Response`, containing individual
 responses for each user, accessible via `response[user_id]` method.
 
 ```ruby
-@multi = SimpleFeed.get(:feed_name).for(User.active.map(&:id))
+@multi = SimpleFeed.get(:feed_name).activity(User.active.map(&:id))
 
 @multi.store(value:, at:)
 @multi.store(event:)

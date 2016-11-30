@@ -40,13 +40,17 @@ module SimpleFeed
     end
 
     # Depending on the argument returns either +SingleUserActivity+ or +MultiUserActivity+
-    def for(one_or_more_users)
+    def activity(one_or_more_users)
       one_or_more_users.is_a?(Array) ?
         users_activity(one_or_more_users) :
         user_activity(one_or_more_users)
     end
 
-    alias_method :activity, :for
+    # @deprecated Please use {#activity} instead
+    def for(*args)
+      STDERR.puts 'WARNING: method #for is deprecated, please use #activity'
+      activity(*args)
+    end
 
     def configure(hash = {})
       SimpleFeed.symbolize!(hash)
