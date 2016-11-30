@@ -116,15 +116,10 @@ case for the "toy" `Hash::Provider`.
 
 ```ruby
 activity.paginate(page: 1)
-# => [
-# <SimpleFeed::Event#0x2134afa value='Jon followed Igbis' at='2016-11-20 23:32:56 -0800'>,
-# <SimpleFeed::Event#0xf98f234 value='George liked Jons post' at='2016-12-10 21:32:56 -0800'>
-# ....
-# ]
+# => [ <SimpleFeed::Event#0x2134afa value='hello' at='2016-11-20 23:32:56 -0800'> ]
 ```
 
 ### The Two Forms of the API
-
 
 The feed API is offered in a single-user and a batch (multi-user) forms.
 
@@ -136,7 +131,7 @@ In the multi-user case, the return is a `SimpleFeed::Response` instance,
 that can be thought of as a `Hash`, that has the user IDs as the keys,
 and return results for each user as a value.
 
-Please see further below the details about the [Batch API](#bach-api)  
+Please see further below the details about the [Batch API](#bach-api).
 
 <a name="single-user-api"/>
 
@@ -200,7 +195,8 @@ user.
 # Using the Feed API with, eg #find_in_batches
 @event_producer.followers.find_in_batches do |group|
  
-  activity = SimpleFeed.get(:followers).for(group)
+  # Convert a group to the array of IDs and get ready to store
+  activity = SimpleFeed.get(:followers).for(group.map(&:id))
   activity.store(value: "#{@event_producer.name} liked an article")
   
   # => [Response] { user_id1 => [Boolean], user_id2 => [Boolean]... } 
@@ -307,12 +303,49 @@ above (the `Feed` version, that receives `user_ids:` as arguments).
 
 Two providers are available with this gem:
 
- * `SimpleFeed::Providers::Redis::Provider` is the production-ready provider that uses ZSET operations to store events as a sorted set in Redis
-* `SimpleFeed::Providers::HashProvider` is the pure Hash implementation
+ * `SimpleFeed::Providers::Redis::Provider` is the production-ready provider that uses the [sorted set Redis data type](https://redislabs.com/ebook/redis-in-action/part-2-core-concepts-2/chapter-3-commands-in-redis/3-5-sorted-sets) and their operations operations to store the events, scored by their time typically (but not necessarily). This provider is highly optimized for massive writes and can be sharded by using a Twemproxy backend, and many small Redis shards.
+
+* `SimpleFeed::Providers::HashProvider` is a pure Hash implementatin
   of a provider that can be useful in unit tests of the host
   application. This provider may be used to push events within a single
-  ruby process, but can be serialized to a YAML file in order to be
-  restored later in another process.
+  ruby process, can be serialized to and from a YAML file, and is therefore intended primarily for Feed emulations in automated tests.
+  
+## Examples
+
+Source code for the gem contains the `examples` folder with an example file that can be used to measure the performance of the Redis-based provider.
+
+To run it, checkout the source of the library, and then:
+
+```bash
+git clone https://github.com/kigster/simple-feed.git
+cd simple-feed
+bundle
+be rspec  # make sure tests are passing
+ruby examples/redis_provider_example.rb 
+```
+
+The above command will help you download, setup all dependencies, and run the examples for a single user. To run examples for multiple users, just __just pass a number as a second argument__:, for example:
+
+``` bash
+ruby examples/redis_provider_example.rb  10
+```
+
+Or to measure the time:
+```bash
+time ruby examples/redis_provider_example.rb  1000 > /dev/null
+```
+
+Below is a an example output shown for a single user:
+
+[![Example](https://raw.githubusercontent.com/kigster/simple-feed/master/man/running-the-example.png)](https://raw.githubusercontent.com/kigster/simple-feed/master/man/running-the-example.png)
+
+### Generating Ruby API Documentation
+
+```bash
+rake doc
+```
+
+This should use Yard to generate the documentation, and open your browser once it's finished.
 
 ### Installation
 
