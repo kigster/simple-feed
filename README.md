@@ -156,26 +156,32 @@ SimpleFeed.define(:notifications) do |f|
   f.per_page = 50
   f.per_page = 2
 end
-# Get the Feed instance, and call #activity on it to setup for the 
-# feed operations for this user (an alias for this method is #for)
+# Let's get the Activity instance that wraps this user_id
 activity = SimpleFeed.get(:notifications).activity(user_id)
+# => [... complex object removed for brevity ]
+
 # let's clear out this feed to ensure it's empty
 activity.wipe
+# => true
+
 # Let's verify that the counts for this feed are at zero
 activity.total_count
 #=> 0
+
 activity.unread_count
 #=> 0
+
 # Store some events
 activity.store(value: 'hello')
 activity.store(value: 'goodbye')
-# Now we can paginate the events, which by default resets "last_read" timestamp
-# the user
+
+# Now we can paginate the events, which by default resets "last_read" timestamp the user
 activity.paginate(page: 1)
 # [
 #     [0] #<SimpleFeed::Event#70138821650220 {"value":"goodbye","at":1480475294.0579991,"user_id":539789787}>,
 #     [1] #<SimpleFeed::Event#70138821649420 {"value":"hello","at":1480475294.057138,"user_id":539789787}>
 # ]
+
 # Now the unread_count should return 0 since the user just "viewed" the feed.
 activity.unread_count
 #=> 0
