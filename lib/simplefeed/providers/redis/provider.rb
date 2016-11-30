@@ -32,7 +32,7 @@ module SimpleFeed
         #
 
         include Driver
-        
+
         @debug = false
         class << self
           attr_accessor :debug
@@ -59,19 +59,18 @@ module SimpleFeed
           with_response_pipelined(user_ids) do |redis, key|
             redis.del(key.meta)
             redis.del(key.data)
-          end.transform do |user_id, result|
-            result == 1 ? true : false 
+          end.transform do |*, result|
+            result == 1 ? true : false
           end
         end
 
         def paginate(user_ids:, page:, per_page: feed.per_page, peek: false, with_total: false)
           with_response_pipelined(user_ids) do |redis, key|
             redis.hset(key.meta, 'last_read', Time.now) unless peek
-            _events = redis.zrevrange(key.data, (page - 1) * per_page, page * per_page, withscores: true)
-            with_total ?
-              { events:      _events,
-                total_count: redis.zcard(key.data) } :
-              _events
+            events = redis.zrevrange(key.data, (page - 1) * per_page, page * per_page - 1, withscores: true)
+
+            with_total ? { events:      events,
+                           total_count: redis.zcard(key.data) } : events
           end
         end
 
@@ -115,9 +114,9 @@ module SimpleFeed
           case result
             when ::Redis::Future
               transform_response(user_id, result.value)
-              
+
             when ::Hash
-              
+
               if result.values.any? { |v| transformable_type?(v) }
                 result.each { |k, v| result[k] = transform_response(user_id, v) }
               else
@@ -125,18 +124,18 @@ module SimpleFeed
               end
 
             when ::Array
-              
+
               if result.any? { |v| transformable_type?(v) }
                 result = result.map { |v| transform_response(user_id, v) }
               end
-              
+
               if result.size == 2 && result[1].is_a?(Float)
                 SimpleFeed::Event.new(value: result[0], at: Time.at(result[1]), user_id: user_id)
               else
                 result
               end
             when ::String
-              
+
               if result =~ /^\d+\.\d+$/
                 result.to_f
               elsif result =~ /^\d+$/
@@ -144,7 +143,7 @@ module SimpleFeed
               else
                 result
               end
-              
+
             else
               result
           end

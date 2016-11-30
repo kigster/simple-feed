@@ -69,9 +69,9 @@ SimpleFeed.define(:news_feed) do |f|
 end
 
 # Now let's define another feed, by wrapping Redis connection
-# in a ConnectionPool
+# in a ConnectionPool. Also notice the SimpleFeed.provider(:symbol) helper.
 SimpleFeed.define(:notifications) do |f|
-  f.provider = SimpleFeed::Providers::Redis::Provider.new(
+  f.provider = SimpleFeed.provider(:redis, 
     redis: -> { ::Redis.new(host: '192.168.10.10', port: 9000) },
     pool_size: 10
   )
@@ -89,87 +89,132 @@ accessing the feed:
 
 You can also get a full list of currently defined feeds with `SimpleFeed.feed_names` method.
 
-### Two Versions of the Feed API
+### Reading to and Writing from the Feed
 
-The API is offered in two approaches:
+For the impatient here is a quick way to get started with the `SimpleFeed`:
 
-1. Single-user API is accessed via the `SimpleFeed::Feed#user_activity` instance method.
-   Optimized for simplicity of data retrieval of a single-user,
-   this method allows performing multiple queries about the same
-   user in an optimized fashion sometimes avoiding unnecessary requests.
-
-2. Multi-user API is accessed via methods on the `SimpleFeed::Feed` instance.
-   This API is recommended when dealing with updates of activity feed belonging to many users at
-   the same time.
-    * The Redis Provider, for example, uses `pipelining` to send updates
-      for different users asynchronously and concurrently.
-    * Multi-user operations return a `SimpleFeed::Response` object,
-      which can be used as a hash (keyed on user_id) to fetch the result
-      of a given user.
-
-
-### Publishing Data to the Feed
-
-#### Single User
-
-Once we have an instance of the `UserActivity` class, we can use one of
-the public methods to read and write into the feed:
+First we'll publish an event to someone's feed:
 
 ```ruby
-# Using the Feed API:
-SimpleFeed.get(:followers).store(user_ids: [1,2,3...], value: 'hello', at: Time.now)
+activity = SimpleFeed.get(:followers).for(@current_user.id)
 
-# Using UserActivity API:
-user_activity = SimpleFeed.get(:followers).user_activity(current_user.id)
-user_activity.store(value: '{ "comment_id": 100, "author_id": 932424 }', at: Time.now)
-user_activity.store(value: 'Jon liked Christen\'s post', at: Time.now)
+# Store directly the value and the optional time stamp
+activity.store(value: 'hello')
+# => true
+
+# or equivalent:
+@event = SimpleFeed::Event.new(value: 'hello', at: Time.now)
+activity.store(event: @event)
+# => false # false indicates that the same event is already in the feed.
 ```
-In the above example, we stored two separate events, one was stored as a `JSON` string, and the other as a human readable upate.
 
-How exactly you serialize your events is up to you, but a higher-level
-abstraction gem `activity-feed` decorates this library with additional
-compact serialization schemes for ruby and Rails applications.
-
-#### Multiple Users
+As we've added events for this user, we can request them back, sorted by
+the time and paginated. If you are using a distributed provider, such as
+`Redis`, the events can be retrieved by any ruby process in your
+application, not just the one that published the event (which is the
+case for the "toy" `Hash::Provider`.
 
 ```ruby
-# Using the Feed API:
-@user_ids = [1,2,4]
-@users_activities = SimpleFeed.get(:followers).for(@user_ids)
-
-@users_activities.store(value: 'hello', at: Time.now)
-# => [Response] { user_id => [Boolean], ... } true if the value was stored, false if it wasn't.
+activity.paginate(page: 1)
+# => [
+# <SimpleFeed::Event#0x2134afa value='Jon followed Igbis' at='2016-11-20 23:32:56 -0800'>,
+# <SimpleFeed::Event#0xf98f234 value='George liked Jons post' at='2016-12-10 21:32:56 -0800'>
+# ....
+# ]
 ```
 
-### Reading the Feed
+### The Two Forms of the API
 
-#### Single User
+
+The feed API is offered in a single-user and a batch (multi-user) forms.
+
+The only and primary difference is in what the methods return. In the
+single user case, the return of, say, `#total_count` is an `Integer`
+value representing the total count for this user.
+
+In the multi-user case, the return is a `SimpleFeed::Response` instance,
+that can be thought of as a `Hash`, that has the user IDs as the keys,
+and return results for each user as a value.
+
+Please see further below the details about the [Batch API](#bach-api)  
+
+<a name="single-user-api"/>
+
+#####  Single-User API 
+
+This API should be used typically for _read_ operations, and is accessed
+via the `SimpleFeed::Feed#for` instance method. Optimized for simplicity
+of data retrieval of a single-user, this method strives for simplicity
+and ease of use.
+
+Below is a user session that demonstrates simple return values from the
+Feed operations for a given user:
 
 ```ruby
 require 'simplefeed'
 
-user_activity.total_count
+# First we get the Feed instance, and call #for on it to setup for the 
+# feed operations for this user: 
+activity = SimpleFeed.get(:followers).for(@current_user.id)
+
+# Now we can simply retrieve the counts:
+activity.total_count
 #=> 412
-user_activity.unread_count
+activity.unread_count
 #=> 12
-user_activity.paginate(page: 1)
+# Or paginate the events:
+activity.paginate(page: 1)
 # => [
 # <SimpleFeed::Event#0x2134afa value='Jon followed Igbis' at='2016-11-20 23:32:56 -0800'>,
 # <SimpleFeed::Event#0xf98f234 value='George liked Jons post' at='2016-12-10 21:32:56 -0800'>
 # ....
 # ]
 # now, let's force-reset the last read timestamp
-user_activity.reset_last_read # defaults to Time.now
+activity.reset_last_read # defaults to Time.now
 #=> 0
-user_activity.unread_count
+# Now the unread_count should return 0
+activity.unread_count
 #=> 0
+```
+
+<a name="batch-api"/>
+
+#####  Batch (Multi-User) API 
+
+This API should be used when dealing with an array of users (or, in the
+future, a Proc or an ActiveRecord relation). 
+
+> There are several reasons why this API should be preferred for
+> operations that perform a similar action across a range of users:
+> _various provider implementations can be heavily optimized for
+> concurrency, and performance_.
+> 
+> The Redis Provider, for example, uses a notion of `pipelining` to send
+> updates for different users asynchronously and concurrently.
+
+Multi-user operations return a `SimpleFeed::Response` object, which can
+be used as a hash (keyed on user_id) to fetch the result of a given
+user.
+
+```ruby
+# Using the Feed API with, eg #find_in_batches
+@event_producer.followers.find_in_batches do |group|
+ 
+  activity = SimpleFeed.get(:followers).for(group)
+  activity.store(value: "#{@event_producer.name} liked an article")
+  
+  # => [Response] { user_id1 => [Boolean], user_id2 => [Boolean]... } 
+  # true if the value was stored, false if it wasn't.
+
+end
 ```
 
 ## Complete API
 
 ### Single User
 
-For a single user, via the `UserActivity` convenience class:
+For a single user, via the instance of 
+`SimpleFeed::Activity::UserActivity` class:
 
 ```ruby
 require 'simplefeed'
@@ -185,12 +230,14 @@ require 'simplefeed'
 @ua.wipe
 # => [Boolean] true
 
-@ua.paginate(page:, per_page:, peek: false)
+@ua.paginate(page:, per_page:, peek: false, with_total: false)
 # => [Array]<Event>
 # with peak: true does not reset last_read
+# with_total: true:
+# => { events: [Array]<Event, total_count: 3242 }
 
-@ua.all
-# => [Array]<Event>
+@ua.fetch
+# => [Array]<Event> – returns all events up to Feed.max_size
 
 @ua.reset_last_read
 # => [Time] last_read
@@ -229,7 +276,7 @@ responses for each user, accessible via `response[user_id]` method.
 # => [Response] { user_id => [Array]<Event>, ... }
 # With (peak: true) does not reset last_read, otherwise it does.
 
-@multi.all
+@multi.fetch
 # => [Response] { user_id => [Array]<Event>, ... }
 
 @multi.reset_last_read

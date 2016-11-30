@@ -27,7 +27,6 @@ describe 'SimpleFeed::Activity::MultiUserActivity' do
       expect(user_activity.user_ids).to eq(user_ids)
     end
 
-
     context 'Enumeration of users' do
       it 'should enumerate users' do
         user_activity.each do |user_id|
