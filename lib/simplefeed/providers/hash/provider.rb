@@ -31,15 +31,20 @@ module SimpleFeed
           end
         end
 
-
-        def remove(user_ids:, value:, at: nil)
+        def delete(user_ids:, value:, at: nil)
           event = create_event(value, at)
           with_response_batched(user_ids) do |key|
-            ua          = activity(key)
-            size_before = ua.size
-            delete(key, event)
-            size_after = activity(key).size
-            (size_before > size_after) # returns true if it was deleted
+            changed_activity_size?(key) do
+              __delete(key, event)
+            end
+          end
+        end
+
+        def delete_if(user_ids:, &block)
+          with_response_batched(user_ids) do |key|
+            activity(key).each do |event|
+              __delete(key, event) if yield(key.user_id, event)
+            end
           end
         end
 
@@ -80,7 +85,7 @@ module SimpleFeed
 
         def unread_count(user_ids:)
           with_response_batched(user_ids) do |key|
-            activity(key).count { |event| event.at > user_record(key).last_read.to_f}
+            activity(key).count { |event| event.at > user_record(key).last_read.to_f }
           end
         end
 
@@ -90,9 +95,20 @@ module SimpleFeed
           end
         end
 
+        private
+
         #===================================================================
         # Methods below operate on a single user only
         #
+
+
+        def changed_activity_size?(key)
+          ua          = activity(key)
+          size_before = ua.size
+          yield(key, ua)
+          size_after = activity(key).size
+          (size_before > size_after)
+        end
 
         def create_user_record
           Hashie::Mash.new(
@@ -126,11 +142,11 @@ module SimpleFeed
           end
         end
 
-        def last_read(key, value = nil)
+        def __last_read(key, value = nil)
           user_record(key)[:last_read]
         end
 
-        def delete(key, event)
+        def __delete(key, event)
           user_record(key)[:activity].delete(event)
         end
 

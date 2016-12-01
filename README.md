@@ -256,7 +256,6 @@ require 'simplefeed'
 # @return: [Array]<Event> (without options[:with_total])
 # @return: { events: [Array]<Event, total_count: 3242 }
 
-
 @ua.fetch
 # => [Array]<Event> – returns all events up to Feed.max_size
 

@@ -44,7 +44,7 @@ Formatter.with_timing(ua: @ua) do
   p('#unread_count for %user% is now')          { ua.unread_count }
   p('#last_read for %user% is now')             { ua.last_read }
 
-  p("#remove value 'goodbye' for %user%")       { ua.remove(value: 'goodbye') }
+  p("#delete value 'goodbye' for %user%")       { ua.delete(value: 'goodbye') }
 
   p('#total_count for %user% is now')           { ua.total_count }
   p('#unread_count for %user% is now')          { ua.unread_count }

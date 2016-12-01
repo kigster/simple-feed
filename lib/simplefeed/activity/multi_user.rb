@@ -22,9 +22,9 @@ module SimpleFeed
       # @multi.store(event:)
       # # => [Response] { user_id => [Boolean], ... } true if the value was stored, false if it wasn't.
       #
-      # @multi.remove(value:, at:)
-      # @multi.remove(event:)
-      # # => [Response] { user_id => [Boolean], ... } true if the value was removed, false if it didn't exist
+      # @multi.delete(value:, at:)
+      # @multi.delete(event:)
+      # # => [Response] { user_id => [Boolean], ... } true if the value was deleted, false if it didn't exist
       #
       # @multi.wipe
       # # => [Response] { user_id => [Boolean], ... } true if user activity was found and deleted, false otherwise
@@ -56,7 +56,7 @@ module SimpleFeed
           opts.merge!(value: opts[:event].value, at: opts[:event].at)
           opts.delete(:event)
         end
-        response = instance.feed.send(method, **opts, &block)
+        response = instance.feed.send(method, *args, **opts, &block)
         yield(response) if block_given?
         raise StandardError, "Nil response from provider #{instance.feed.provider&.provider&.class}, method #{method}(#{opts})" unless response
         response

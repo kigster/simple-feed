@@ -21,7 +21,7 @@ module SimpleFeed
         end
 
         SimpleFeed::Providers::REQUIRED_METHODS.each do |m|
-          raise ArgumentError, "Invalid provider type #{provider.class} does not support required method #{m}" unless provider.respond_to?(m)
+          raise ArgumentError, "Invalid provider #{provider.class}\nMethod '#{m}' is required." unless provider.respond_to?(m)
         end
       end
 

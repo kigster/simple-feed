@@ -18,8 +18,8 @@ module SimpleFeed
       # @ua.store(value:, at:)
       # # => [Boolean] true if the value was stored, false if it wasn't.
       #
-      # @ua.remove(value:, at:)
-      # # => [Boolean] true if the value was removed, false if it didn't exist
+      # @ua.delete(value:, at:)
+      # # => [Boolean] true if the value was deleted, false if it didn't exist
       #
       # @ua.wipe
       # # => [Boolean] true
@@ -45,7 +45,7 @@ module SimpleFeed
       # ```
 
       SimpleFeed::Providers.define_provider_methods(self) do |instance, method, *args, **opts, &block|
-        response = instance.user_activity.send(method, **opts)
+        response = instance.user_activity.send(method, *args, **opts, &block)
         unless response.has_user?(instance.user_id)
           raise StandardError, "Nil response from provider #{instance.feed.provider&.provider&.class}, method #{method}(#{opts}) — user_id #{instance.user_id}"
         end

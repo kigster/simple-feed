@@ -52,7 +52,7 @@ module SimpleFeed
         end
 
         def batch_size
-          feed.meta[:batch_size] || 100
+          feed.meta[:batch_size] || 10
         end
 
         def with_response_batched(user_ids, external_response = nil)

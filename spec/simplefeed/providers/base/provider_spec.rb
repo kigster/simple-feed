@@ -41,7 +41,7 @@ RSpec.describe SimpleFeed::Providers::Base::Provider do
         end
       end
 
-      def remove(user_ids:, **opts)
+      def delete(user_ids:, **opts)
         with_response_batched(user_ids) do |key, response|
           response.for(key, { total: 'unknown' })
         end
@@ -68,12 +68,12 @@ RSpec.describe SimpleFeed::Providers::Base::Provider do
         end
       end
 
-      context '#remove' do
+      context '#delete' do
         let(:ts) { Time.now }
         before do
           feed.activity(user_ids).store(event: SimpleFeed::Event.new(:hello, ts))
         end
-        let(:response) { feed.activity(user_ids).remove(value: :hello, at: ts) }
+        let(:response) { feed.activity(user_ids).delete(value: :hello, at: ts) }
         it 'should transform the result' do
           #puts response.result.inspect
         end

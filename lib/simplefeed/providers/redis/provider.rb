@@ -40,9 +40,20 @@ module SimpleFeed
           end
         end
 
-        def remove(user_ids:, value:, **)
+        def delete(user_ids:, value:, **)
           with_response_pipelined(user_ids) do |redis, key|
             redis.zrem(key.data, value)
+          end
+        end
+
+        def delete_if(user_ids:)
+          raise ArgumentError, '#delete_if must be called with a block that receives (user_id, event) as arguments.' unless block_given?
+          with_response_batched(user_ids) do |key|
+            fetch(user_ids: [key.user_id])[key.user_id].each do |event|
+              with_redis do |redis|
+                yield(key.user_id, event) ? redis.zrem(key.data, event.value) : false
+              end
+            end
           end
         end
 
@@ -58,7 +69,7 @@ module SimpleFeed
         def paginate(user_ids:, page:, per_page: feed.per_page, peek: false, with_total: false)
           with_response_pipelined(user_ids) do |redis, key|
             redis.hset(key.meta, 'last_read', Time.now) unless peek
-            events = redis.zrevrange(key.data, (page - 1) * per_page, page * per_page - 1, withscores: true)
+            events = events(page, per_page, redis, key)
 
             with_total ? { events:      events,
                            total_count: redis.zcard(key.data) } : events
@@ -149,6 +160,10 @@ module SimpleFeed
         end
 
         private
+
+        def events(page, per_page, redis, key)
+          redis.zrevrange(key.data, (page - 1) * per_page, page * per_page - 1, withscores: true)
+        end
 
         #——————————————————————————————————————————————————————————————————————————————————————
         # Operations with response

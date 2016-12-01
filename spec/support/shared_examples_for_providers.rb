@@ -56,15 +56,28 @@ shared_examples 'a provider' do
         end
       end
 
-      context '#remove' do
+      context '#delete' do
         it('has one event left') do
           SimpleFeed.dsl(feed.activity(user_id),
                          events:  events,
                          context: self) do |*|
 
-            remove(events.first) { |r| expect(r).to eq(true) }
+            delete(events.first) { |r| expect(r).to eq(true) }
             total_count { |r| expect(r).to eq(1) }
           end
+        end
+      end
+
+      context '#delete_if' do
+        let(:activity) { feed.activity(user_id) }
+        it 'should delete events that match' do
+          expect(activity.total_count).to eq(2)
+          activity.delete_if do |user_id, evt|
+            evt == events.first
+          end
+          expect(activity.total_count).to eq(1)
+          expect(activity.fetch).to include(events.last)
+          expect(activity.fetch).not_to include(events.first)
         end
       end
 
@@ -97,11 +110,11 @@ shared_examples 'a provider' do
         let(:ts) { Time.now }
         it 'resets last read, and returns the first event as page 1' do
           SimpleFeed.dsl(feed.activity(user_id),
-                                  events:  events,
-                                  context: self) do |*|
-            unread_count { |r| expect(r).to eq(2)}
+                         events:  events,
+                         context: self) do |*|
+            unread_count { |r| expect(r).to eq(2) }
             reset_last_read { |r| expect(r.to_f).to be_within(0.1).of(Time.now.to_f) }
-            unread_count { |r| expect(r).to eq(0)}
+            unread_count { |r| expect(r).to eq(0) }
           end
         end
       end
