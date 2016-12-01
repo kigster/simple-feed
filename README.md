@@ -223,6 +223,8 @@ user.
 end
 ```
 
+<a name="api"/>
+
 ## Complete API
 
 ### Single User
@@ -235,20 +237,25 @@ require 'simplefeed'
 
 @ua = SimpleFeed.get(:news).activity(current_user.id)
 
+@ua.store(event:)
 @ua.store(value:, at:)
 # => [Boolean] true if the value was stored, false if it wasn't.
 
-@ua.remove(value:, at:)
+@ua.delete(event:)
+@ua.delete(value:, at:)
 # => [Boolean] true if the value was removed, false if it didn't exist
 
 @ua.wipe
 # => [Boolean] true
 
-@ua.paginate(page:, per_page:, peek: false, with_total: false)
-# => [Array]<Event>
-# with peak: true does not reset last_read
-# with_total: true:
-# => { events: [Array]<Event, total_count: 3242 }
+# Options:
+# with options[:peak] = true it does not reset last_read
+# with options[:with_total] = true it returns a hash with a total:
+# @return: 
+@ua.paginate(page:, per_page:, **options)
+# @return: [Array]<Event> (without options[:with_total])
+# @return: { events: [Array]<Event, total_count: 3242 }
+
 
 @ua.fetch
 # => [Array]<Event> – returns all events up to Feed.max_size
@@ -279,8 +286,8 @@ responses for each user, accessible via `response[user_id]` method.
 @multi.store(event:)
 # => [Response] { user_id => [Boolean], ... } true if the value was stored, false if it wasn't.
 
-@multi.remove(value:, at:)
-@multi.remove(event:)
+@multi.delete(value:, at:)
+@multi.delete(event:)
 # => [Response] { user_id => [Boolean], ... } true if the value was removed, false if it didn't exist
 
 @multi.wipe
