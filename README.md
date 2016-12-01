@@ -233,7 +233,7 @@ For a single user, via the instance of
 ```ruby
 require 'simplefeed'
 
-@ua = SimpleFeed.get(:news).user_activity(current_user.id)
+@ua = SimpleFeed.get(:news).activity(current_user.id)
 
 @ua.store(value:, at:)
 # => [Boolean] true if the value was stored, false if it wasn't.
