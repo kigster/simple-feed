@@ -1,17 +1,38 @@
 require 'redis'
 require 'redis/connection/hiredis'
 require 'connection_pool'
+require 'colored2'
 module SimpleFeed
   module Providers
     module Redis
+      @debug = ENV['REDIS_DEBUG']
+
+      def self.debug?
+        self.debug
+      end
+
+      class << self
+        attr_accessor :debug
+      end
+
       module Driver
-        @enabled = true
-
-        def self.enabled;  @enabled end
-        def self.enable!;  @enabled = true; end
-        def self.disable!; @enabled = false; end
-
         class Error < StandardError;
+        end
+
+        class LoggingRedis < Struct.new(:redis)
+          def method_missing(m, *args, &block)
+            if redis.respond_to?(m)
+              result = redis.send(m, *args, &block)
+              STDERR.printf "%40s %s\n", "#{m.to_s.upcase.bold.red}", "#{args.inspect.gsub(/[\[\]]/, '').magenta}"
+              result
+            else
+              super
+            end
+          end
+        end
+
+        def debug?
+          SimpleFeed::Providers::Redis.debug?
         end
 
         attr_accessor :pool
@@ -76,14 +97,14 @@ SimpleFeed::Redis::Driver.new(redis: { host: 'localhost', port: 6379, db: 1, tim
 
         class MockRedis
           def method_missing(name, *args, &block)
-            puts "calling redis.#{name}(#{args.to_s.gsub(/[\[\]]/,'')}) { #{block ? block.call : nil} }"
+            puts "calling redis.#{name}(#{args.to_s.gsub(/[\[\]]/, '')}) { #{block ? block.call : nil} }"
           end
         end
 
         def with_redis
           with_retries do
             pool.with do |redis|
-              yield(redis)
+              yield(self.debug? ? LoggingRedis.new(redis) : redis)
             end
           end
         end

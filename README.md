@@ -178,8 +178,8 @@ activity.store(value: 'goodbye')
 # Now we can paginate the events, which by default resets "last_read" timestamp the user
 activity.paginate(page: 1)
 # [
-#     [0] #<SimpleFeed::Event#70138821650220 {"value":"goodbye","at":1480475294.0579991,"user_id":539789787}>,
-#     [1] #<SimpleFeed::Event#70138821649420 {"value":"hello","at":1480475294.057138,"user_id":539789787}>
+#     [0] #<SimpleFeed::Event#70138821650220 {"value":"goodbye","at":1480475294.0579991}>,
+#     [1] #<SimpleFeed::Event#70138821649420 {"value":"hello","at":1480475294.057138}>
 # ]
 
 # Now the unread_count should return 0 since the user just "viewed" the feed.
@@ -321,14 +321,14 @@ above (the `Feed` version, that receives `user_ids:` as arguments).
 
 Two providers are available with this gem:
 
- * `SimpleFeed::Providers::Redis::Provider` is the production-ready provider that uses the [sorted set Redis data type](https://redislabs.com/ebook/redis-in-action/part-2-core-concepts-2/chapter-3-commands-in-redis/3-5-sorted-sets) and their operations operations to store the events, scored by their time typically (but not necessarily). This provider is highly optimized for massive writes and can be sharded by using a Twemproxy backend, and many small Redis shards.
+ * `SimpleFeed::Providers::Redis::Provider` is the production-ready provider that uses the [sorted set Redis data type](https://redislabs.com/ebook/redis-in-action/part-2-core-concepts-2/chapter-3-commands-in-redis/3-5-sorted-sets) and their operations operations to store the events, scored by their time typically (but not necessarily). This provider is highly optimized for massive writes and can be sharded by using a _Twemproxy_ backend, and many small Redis shards.
 
-* `SimpleFeed::Providers::HashProvider` is a pure Hash-like
-  implementation of a provider that can be useful in unit tests of a
-  host application. This provider could be used to write and read events
-  within a single ruby process, can be serialized to and from a YAML
-  file, and is therefore intended primarily for Feed emulations in
-  automated tests.
+ * `SimpleFeed::Providers::HashProvider` is a pure Hash-like implementation of a provider that can be useful in unit tests of a host application. This provider could be used to write and read events within a single ruby process, can be serialized to and from a YAML file, and is therefore intended primarily for Feed emulations in automated tests.
+  
+
+### Redis Provider
+
+If you set environment variable `REDIS_DEBUG` and run the example (see below) you will see every operation redis performs. This could be useful in debugging an issue or submitting a bug report.
   
 ## Examples
 

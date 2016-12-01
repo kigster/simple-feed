@@ -23,17 +23,6 @@ module SimpleFeed
       #   ```
       class Provider < ::SimpleFeed::Providers::Base::Provider
 
-        class LoggingRedis < Struct.new(:redis)
-          def method_missing(m, *args, &block)
-            if redis.respond_to?(m)
-              result = redis.send(m, *args, &block)
-              puts "#{m.to_s.downcase}(#{args.inspect.gsub(/[\[\]]/, '')})" if ::SimpleFeed::Providers::Redis::Provider.debug?
-              result
-            else
-              super
-            end
-          end
-        end
         # SimpleFeed::Providers.define_provider_methods(self) do |provider, method, **opts, &block|
         #   users = Users.new(provider: provider, user_ids: opts.delete(:user_ids))
         #   opts.empty? ?
@@ -43,15 +32,6 @@ module SimpleFeed
         #
 
         include Driver
-
-        @debug = true
-        class << self
-          attr_accessor :debug
-        end
-
-        def self.debug?
-          @debug || ENV['REDIS_DEBUG']
-        end
 
         def store(user_ids:, value:, at: Time.now)
           with_response_pipelined(user_ids) do |redis, key|
@@ -177,7 +157,7 @@ module SimpleFeed
         def with_response_pipelined(user_ids, response = nil)
           with_response(response) do |response|
             batch_pipelined(user_ids) do |redis, key|
-              response.for(key.user_id) { yield(LoggingRedis.new(redis), key, response) }
+              response.for(key.user_id) { yield(redis, key, response) }
             end
           end
         end
@@ -185,7 +165,7 @@ module SimpleFeed
         def with_response_multi(user_ids, response = nil)
           with_response(response) do |response|
             batch_multi(user_ids) do |redis, key|
-              response.for(key.user_id) { yield(LoggingRedis.new(redis), key, response) }
+              response.for(key.user_id) { yield(redis, key, response) }
             end
           end
         end
