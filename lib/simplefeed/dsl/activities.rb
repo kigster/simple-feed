@@ -25,19 +25,33 @@ module SimpleFeed
       # end
       # etc...
       SimpleFeed::Providers.define_provider_methods(self) do |instance, method, *args, **opts, &block|
-        event = opts.delete(:event)
-        opts.merge!(value: event.value, at: event.at) if event
+        if args&.first
+          event = args.shift
+          if !event.is_a?(SimpleFeed::Event) && args.size == 1
+            event = SimpleFeed::Event(value: event, at: args[1] || Time.now)
+          end
+        else
+          event = opts.delete(:event)
+        end
 
-        printf " #{instance.feed.name.to_s.blue}.#{sprintf("%-16s", method.to_s).magenta}(#{opts.to_s.gsub(/[{}]/, '').blue}) \n\t\t\t" if SimpleFeed::DSL.debug?
+        opts.merge!(value: event.value, at: event.at) if event
+        brackets = opts.empty? ? ['', ''] : %w{( )}
+
+        printf "\n#{instance.feed.name.to_s.blue}.#{method.to_s.cyan.bold}#{brackets[0]}#{opts.to_s.gsub(/[{}]/, '').blue}#{brackets[1]} \n" if SimpleFeed::DSL.debug?
+
         response = instance.ua.send(method, *args, **opts)
 
-        puts '———> ' + response.inspect.green if SimpleFeed::DSL.debug?
-        block.call(response) if block
-        response
-      end
+        puts response.inspect.yellow if SimpleFeed::DSL.debug?
 
-      def counts
-        return ua.total_count, ua.unread_count
+        if block
+          if instance.context
+            instance.context.instance_exec(response, &block)
+          else
+            block.call(response)
+          end
+        end
+
+        response
       end
 
     end

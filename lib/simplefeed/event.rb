@@ -3,28 +3,21 @@ require 'json'
 module SimpleFeed
 
   class Event
-    attr_accessor :user_id, :value, :at
+    attr_accessor :value, :at
 
-    def initialize(*args, value: nil, at: nil, user_id: nil)
-      if args && args.size == 2
+    def initialize(*args, value: nil, at: Time.now)
+      if args && args.size > 0
         self.value = args[0]
-        self.at    = args[1]
+        self.at    = args[1] || Time.now
       else
-        self.value   = value
-        self.at      = at
-        self.user_id = user_id
+        self.value = value
+        self.at    = at
       end
-      self.at = self.at.to_f if self.at.is_a?(Time)
-      raise ArgumentError, 'either pass arguments as hash: { value: <value>, at: <value> } or array: [ value, at ],' +
+
+      self.at = self.at.to_f unless self.at.is_a?(Float)
+
+      raise ArgumentError, 'either pass arguments as hash: { value:, at: <Time.now> } or args array: [ value, at = Time.now ],' +
         "Got #{self.inspect.blue}, args=#{args}" unless self.value && self.at
-    end
-
-    def self.deserialize(user_id, hash)
-      self.class.new(user_id: user_id, value: hash[:value], at: Time.at(hash[:at] / 1000))
-    end
-
-    def serialize
-      { value: value, at: (1000.0 * at.to_f).to_i }
     end
 
     def <=>(other)
@@ -37,23 +30,27 @@ module SimpleFeed
 
     def ==(other)
       other.is_a?(SimpleFeed::Event) &&
-        self.user_id == other.user_id &&
-        self.value == other.value &&
-        sprintf('%.3f', self.at) == sprintf('%.3f', other.at)
+        self.value == other.value
     end
 
     def to_h
-      { value: value, at: at}
+      { value: value, at: at }
+    end
+
+    def hash
+      self.value.hash
     end
 
     def to_json
-      h = self.to_h
-      h.merge!({ user_id: user_id }) if user_id
-      h.to_json
+      to_h.to_json
     end
 
     def inspect
       "#<#{self.class.name}##{object_id} #{to_json}>"
+    end
+
+    def to_s
+      inspect
     end
 
     private

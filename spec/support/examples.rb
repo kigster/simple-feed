@@ -1,8 +1,10 @@
 require 'spec_helper'
 
+FROZEN_TIME = Time.now.freeze
+
 Kernel.module_eval do
   def at(seconds = 0)
-    Time.mktime(2017, 01, 01, 0, 0, seconds)
+    FROZEN_TIME - 3600 + seconds
   end
 end
 
@@ -19,8 +21,7 @@ shared_context :event_matrix do
 
   let(:events) {
     EVENT_MATRIX.map do |args|
-      ::SimpleFeed::Event.new(user_id: user_id,
-                              value:   args.first,
+      ::SimpleFeed::Event.new(value:   args.first,
                               at:      args.last)
     end
   }

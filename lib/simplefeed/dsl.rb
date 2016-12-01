@@ -1,4 +1,3 @@
-
 require_relative 'providers'
 require_relative 'dsl/activities'
 

@@ -24,80 +24,69 @@ module SimpleFeed
           h.merge!(opts)
         end
 
-        #——————————————————————————————————————————————————————————————
-        # Public API
-        #——————————————————————————————————————————————————————————————
-        # TODO: single user delegator
-        # def store_1u(user_id, **opts)
-        #   push event(user_id: user_id, **opts)
-        # end #
-
-        # @param [Array] user_ids array of user IDs for the operation
-        # @param [Hash] opts the options for the method
-        # @option opts [String] :value data to store in the backend
-        # @option opts [Time] :at time stamp when the story was created
-        #
-        # @return: Response.new( { user_id: true | false (added or not)
-        def store(user_ids:, **opts)
-          with_response_batched(user_ids) do |key, response|
-            push(event(user_id: key, **opts))
+        def store(user_ids:, value:, at: Time.now)
+          event = create_event(value, at)
+          with_response_batched(user_ids) do |key|
+            add_event(event, key)
           end
         end
 
-        def remove(user_ids:, **opts)
-          with_response_batched(user_ids) do |key, response|
-            pop(event(user_id: "#{key}", **opts))
+
+        def remove(user_ids:, value:, at: nil)
+          event = create_event(value, at)
+          with_response_batched(user_ids) do |key|
+            ua          = activity(key)
+            size_before = ua.size
+            delete(key, event)
+            size_after = activity(key).size
+            (size_before > size_after) # returns true if it was deleted
           end
         end
 
         def wipe(user_ids:)
-          with_response_batched(user_ids) do |key, response|
+          with_response_batched(user_ids) do |key|
             deleted = activity(key).size > 0
-            activity(key.to_s, true)
+            wipe_user_record(key)
             deleted
           end
         end
 
         def fetch(user_ids:)
-          with_response_batched(user_ids) do |key, response|
-            activities(key)
+          with_response_batched(user_ids) do |key|
+            activity(key)
           end
         end
 
         def paginate(user_ids:, page:, per_page: feed.per_page, **options)
           reset_last_read(user_ids: user_ids) unless options[:peek]
-          with_response_batched(user_ids) do |key, response|
-            activities = activities(key)
-            (page && page > 0) ? activities[((page - 1) * per_page)...(page * per_page)] : activities
+          with_response_batched(user_ids) do |key|
+            activity = activity(key)
+            (page && page > 0) ? activity[((page - 1) * per_page)...(page * per_page)] : activity
           end
         end
 
         def reset_last_read(user_ids:, at: Time.now)
-          with_response_batched(user_ids) do |key, response|
-            user_record(key)[:last_read]    = at
-            user_record(key)[:unread_count] = 0
+          with_response_batched(user_ids) do |key|
+            user_record(key)[:last_read] = at
             at
           end
         end
 
         def total_count(user_ids:)
-          fetch_meta(:total_count, user_ids)
+          with_response_batched(user_ids) do |key|
+            activity(key).size
+          end
         end
 
         def unread_count(user_ids:)
-          fetch_meta(:unread_count, user_ids)
+          with_response_batched(user_ids) do |key|
+            activity(key).count { |event| event.at > user_record(key).last_read.to_f}
+          end
         end
 
         def last_read(user_ids:)
-          fetch_meta(:last_read, user_ids)
-        end
-
-        private
-
-        def fetch_meta(name, user_ids)
-          name = name.to_sym unless name.is_a?(Symbol)
-          with_response_batched(user_ids) do |key, response|
-            user_record(key)[name]
+          with_response_batched(user_ids) do |key|
+            user_record(key).last_read
           end
         end
 
@@ -105,60 +94,49 @@ module SimpleFeed
         # Methods below operate on a single user only
         #
 
-        def user_record(key, wipe = false)
-          h[key.to_s] = nil if wipe
-          h[key.to_s] ||= Hashie::Mash.new(
-            { total_count:  0,
-              unread_count: 0,
-              last_read:    nil,
-              activity:     SortedSet.new }
+        def create_user_record
+          Hashie::Mash.new(
+            { last_read: 0, activity: SortedSet.new }
           )
         end
 
-        def activities(key)
-          activity(key).map { |ea| ea.deserialize(key.user_id) }
+        def user_record(key)
+          h[key.data] ||= create_user_record
         end
 
-        def activity(key, *args)
-          user_record(key, *args)[:activity]
+        def wipe_user_record(key)
+          h[key.data] = create_user_record
         end
 
-        def increment_counts(user_id, by = 1)
-          %i(total_count unread_count).each do |field|
-            if (user_record(user_id)[field] += by) < 0
-              user_record(user_id)[field] = 0
+        def activity(key, event = nil)
+          user_record(key)[:activity] << event if event
+          user_record(key)[:activity].to_a
+        end
+
+        def add_event(event, key)
+          uas = user_record(key)[:activity]
+          if uas.include?(event)
+            false
+          else
+            uas << event.dup
+            if uas.size > feed.max_size
+              uas.delete(uas.first)
             end
-          end
-        end
-
-        def push(event)
-          user_activity    = activity(event.user_id)
-          event_serialized = event.serialize
-          if user_activity.include?(event_serialized)
-            false
-          else
-            user_activity << event_serialized
-            increment_counts(event.user_id)
             true
           end
         end
 
-        def pop(event)
-          event_serialized = event.serialize
-          user_activity    = activity(event.user_id)
-          if user_activity.include?(event_serialized)
-            user_activity.delete(event_serialized)
-            increment_counts(event.user_id, -1)
-            true
-          else
-            false
-          end
+        def last_read(key, value = nil)
+          user_record(key)[:last_read]
         end
 
-        def event(**opts)
-          ::SimpleFeed::Event.new(**opts)
+        def delete(key, event)
+          user_record(key)[:activity].delete(event)
         end
 
+        def create_event(*args, **opts)
+          ::SimpleFeed::Event.new(*args, **opts)
+        end
       end
     end
   end

@@ -34,7 +34,7 @@ context 'Integration' do
       it 'should be correctly defined' do
         expect(events.size).to eq(3)
         expect(events.last.value).to eq(EVENT_MATRIX[2][0])
-        expect(Time.at(events.last.at)).to eq(EVENT_MATRIX[2][1])
+        expect(Time.at(events.last.at)).to be_within(0.001).of(EVENT_MATRIX[2][1])
       end
     end
 
