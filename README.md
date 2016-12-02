@@ -68,14 +68,11 @@ will be populated with the events coming from the followers.
 require 'simplefeed'
 require 'simplefeed/providers/redis'
 
-# Now let's define another feed, by wrapping Redis connection
-# in a ConnectionPool. Also notice the SimpleFeed.provider(:symbol) helper.
+# Let's define a Redis-based feed, and wrap Redis in a in a ConnectionPool. 
 SimpleFeed.define(:newsfeed) do |f|
   f.provider   = SimpleFeed.provider(:redis, 
-                    redis: -> { ::Redis.new(host: '192.168.10.10', 
-                                            port: 9000,
-                                            db: 1) },
-                    pool_size: 10)
+                                      redis: -> { ::Redis.new },
+                                      pool_size: 10)
   f.per_page   = 50
   f.batch_size = 10 # default batch size
   f.namespace  = 'nf'
