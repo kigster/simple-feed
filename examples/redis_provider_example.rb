@@ -4,12 +4,15 @@
 # events for various users.
 # 
 # DEPENDENCIES: 
-#  gem install colored2
-#  gem install awesome_print
+#   gem install colored2
+#   gem install awesome_print
 #
 # RUNNING
-#  ruby redis-feed.rb
+#   ruby examples/redis-feed.rb [ number_of_users ] 
 #
+# TO SEE ALL REDIS COMMANDS:
+#   export REDIS_DEBUG=1
+#   ruby examples/redis-feed.rb
 
 $LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
 
