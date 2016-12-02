@@ -21,7 +21,7 @@ RSpec.describe SimpleFeed::Providers::Base::Provider do
             elsif result =~ /^\d+$/
               result.to_i
             else
-              result
+              result.upcase
             end
           else
             raise TypeError, 'Invalid response type'
@@ -51,9 +51,9 @@ RSpec.describe SimpleFeed::Providers::Base::Provider do
         2
       end
     end
-  
+
     let(:provider) { TestProvider.new }
-    let(:feed) { SimpleFeed.define(:test, provider: provider) }
+    let(:feed) { SimpleFeed.define(:test, provider: provider, namespace: 'ns') }
     let(:user_ids) { [1, 2, 3, 4] }
 
     before do
@@ -75,8 +75,14 @@ RSpec.describe SimpleFeed::Providers::Base::Provider do
         end
         let(:response) { feed.activity(user_ids).delete(value: :hello, at: ts) }
         it 'should transform the result' do
-          #puts response.result.inspect
+          response.values.all?{|v| expect(v[:total]).to eq('UNKNOWN') }
         end
+      end
+    end
+
+    context 'key with namespace' do
+      it 'should create a key with a namespace' do
+        expect(provider.send(:key, 1).meta).to match /tp\|/
       end
     end
   end
