@@ -9,19 +9,19 @@ module SimpleFeed
         def initialize(user_id, namespace = nil)
           self.user_id      = user_id
           self.compacted_id =::Base62.encode(user_id)
-          self.namespace    = namespace
+          self.namespace    = namespace ? "#{namespace}|" : ''
         end
 
         def data
-          ns "u.#{compacted_id}.d"
+          @data ||= "#{prefix}.d"
         end
 
         def meta
-          ns "u.#{compacted_id}.m"
+          @meta ||= "#{prefix}.m"
         end
 
         def for(type)
-          ns "u.#{compacted_id}.#{type.to_s}"
+          "#{prefix}.#{type.to_s}"
         end
 
         def to_s
@@ -30,9 +30,10 @@ module SimpleFeed
 
         private
 
-        def ns(key)
-          namespace ? "#{namespace}/#{key}" : key
+        def prefix
+          @prefix ||= "#{namespace}u.#{compacted_id}"
         end
+
       end
     end
   end
