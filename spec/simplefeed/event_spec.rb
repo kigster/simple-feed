@@ -1,28 +1,34 @@
 require 'spec_helper'
 
 RSpec.describe SimpleFeed::Event do
-  context '#eql?' do
-    let(:ts1) { Time.now }
-    let(:ts2) { Time.now - 10 }
+  let(:event1) { described_class.new(value: '1', at: Time.now) }
+  let(:event2) { described_class.new(value: '2', at: Time.now - 10) }
+  let(:event3) { described_class.new(value: '3', at: Time.now + 10) }
+  let(:events_manually_sorted) { [ event3, event1, event2 ] }
 
-    let(:event1) { described_class.new(value: 'hello', at: ts1) }
-    let(:event2) { described_class.new(value: 'hello', at: ts2) }
+  context '#eql?' do
+    let(:identical) { described_class.new(value: '1', at: Time.now - 60) }
 
     it 'should make a duplicate equal' do
       expect(event1).to eq(event1.dup)
     end
 
+    it 'should be only using value in equality and in uniqeness' do
+      expect(event1).to eq(identical)
+      expect(event1.hash).to eq(identical.hash)
+    end
+
+  end
+
+  context '#to_json' do
     it 'should properly generate JSON' do
       expect(event1.to_json).to eq({ value: event1.value, at: event1.at }.to_json)
     end
+  end
 
+  context '#sorting' do
     it 'should correctly compare to another event by time' do
-      expect(event1 <=> event2).to eq(1) # more recent event first
-    end
-
-    it 'should be only using value in equality and in uniqeness' do
-      expect(event1).to eq(event2)
-      expect(event1.hash).to eq(event2.hash)
+      expect(event1 <=> event2).to eq(-1) # more recent event first
     end
 
     context 'inside a sorted set' do
@@ -30,10 +36,14 @@ RSpec.describe SimpleFeed::Event do
       before do
         events << event1
         events << event2
+        events << event3
       end
       it 'should already exist in the set' do
-        expect(events.size).to eq(1)
+        expect(events.size).to eq(3)
         expect(events.include?(event2)).to eq(true)
+      end
+      it 'should automatically sort events based on Time desc' do
+        expect(events.to_a.map(&:value)).to eq(events_manually_sorted.map(&:value))
       end
     end
   end

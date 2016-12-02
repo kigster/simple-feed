@@ -4,7 +4,7 @@ module SimpleFeed
 
   class Event
     attr_accessor :value, :at
-
+    include Comparable
     def initialize(*args, value: nil, at: Time.now)
       if args && args.size > 0
         self.value = args[0]
@@ -20,8 +20,12 @@ module SimpleFeed
         "Got #{self.inspect.blue}, args=#{args}" unless self.value && self.at
     end
 
+    def time
+      Time.at(at)
+    end
+
     def <=>(other)
-      self.at <=> other.at
+      -self.at <=> -other.at
     end
 
     def eql?(other)
