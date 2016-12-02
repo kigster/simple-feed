@@ -23,7 +23,8 @@ This is a ruby implementation of a fast simple feed commonly used in a typical s
 > * filtered by a certain characteristic, such as, eg.
 >   * the source of the events — i.e. people you follow
 >   * type of event (i.e. posts, likes, and updates)
-> * the target of the event i.e. my own activity as opposed to from those I follow.
+>   * the target of the event i.e. my own activity as opposed to from those I follow.
+> * aggregated across several actors for a similar event type, eg. "John, Mary, etc.. followed George"
 
 Here is an example of a text-based simple feed that is very common today on social networking sites.
 
@@ -33,9 +34,18 @@ The _stories_ in the feed depend entirely on the application using this
 library, therefore to integrate with SimpleFeed requires implementing
 several _glue points_ in your code.
 
+## Challenges
+
+Activity feeds tend to be challenging due to the large number of event types that it typically includes, and the requirement for it to scale to massive numbers of concurrent users.  Therefore common implementations tend to focus on either:
+
+ * optimizing the read time performance by pre-computing the feed for each user ahead of time
+ * OR optimizing the various ranking algorithms by computing the feed at read time, with complex forms of caching addressing the performance requirements.
+ 
+The first type of feed is much simpler to implement on a large scale (up to a point), and it scales well if the data is stored in a light-weight in-memory storage such as Redis. This is exactly the approach this library takes.
+
 ## Overview
 
- The feed library aims to address the following goals:
+The feed library aims to address the following goals:
 
 * To define a minimalistic API for a typical event-based simple feed,
   without tying it to any concrete provider implementation
