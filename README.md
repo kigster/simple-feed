@@ -51,53 +51,34 @@ implementation and a name.
 
 ### Configuration
 
-Below we configure a feed called `:news_feed`, which presumably
+Below we configure a feed called `:newsfeed`, which presumably
 will be populated with the events coming from the followers.
 
 ```ruby
 require 'simplefeed'
-require 'simplefeed/redis/provider'
+require 'simplefeed/providers/redis'
 
 # Now let's define another feed, by wrapping Redis connection
 # in a ConnectionPool. Also notice the SimpleFeed.provider(:symbol) helper.
-SimpleFeed.define(:notifications) do |f|
+SimpleFeed.define(:newsfeed) do |f|
   f.provider   = SimpleFeed.provider(:redis, 
-    redis: -> { ::Redis.new(host: '192.168.10.10', port: 9000) },
-    pool_size: 10
-  )
+                    redis: -> { ::Redis.new(host: '192.168.10.10', 
+                                            port: 9000,
+                                            db: 1) },
+                    pool_size: 10)
   f.per_page   = 50
   f.batch_size = 10 # default batch size
   f.namespace  = 'nf'
 end
-
-# Let's configure another Redis provider using a Hash.
-require 'yaml'
-provider_yaml = <<-eof
-  klass: SimpleFeed::Providers::Redis::Provider
-  opts:
-    host: '127.0.0.1'
-    port: 6379
-    namespace: :fa
-    db: 1
-eof
-
-SimpleFeed.define(:news_feed) do |f|
-  f.provider   = YAML.load(provider_yaml)
-  f.max_size   = 1000 # how many items can be in the feed
-  f.per_page   = 50 # default page size
-  f.batch_size = 20 # default batch size
-  f.namespace  = 'nf'
-end
-
 ```
 
 After the feed is defined, the gem creates a similarly named method
 under the `SimpleFeed` namespace to access the feed. For example, given
-a name such as `:news_feed` the following are all valid ways of
+a name such as `:newsfeed` the following are all valid ways of
 accessing the feed:
 
- * `SimpleFeed.news_feed`
- * `SimpleFeed.get(:news_feed)`
+ * `SimpleFeed.newsfeed`
+ * `SimpleFeed.get(:newsfeed)`
 
 You can also get a full list of currently defined feeds with `SimpleFeed.feed_names` method.
 
@@ -159,15 +140,14 @@ Feed operations for a given user:
 ```ruby
 require 'simplefeed'
 
-# Define the feed
+# Define the feed using an in-memory Hash provider, which uses
+# SortedSet to keep user's events sorted.
 SimpleFeed.define(:notifications) do |f|
-  f.provider = SimpleFeed.provider(
-      :redis,  redis: -> { ::Redis.new(host: '192.168.10.10', port: 9000) },
-               pool_size: 10
-  )
+  f.provider = SimpleFeed.provider(:hash)
   f.per_page = 50
   f.per_page = 2
 end
+
 # Let's get the Activity instance that wraps this user_id
 activity = SimpleFeed.get(:notifications).activity(user_id)
 # => [... complex object removed for brevity ]
@@ -232,6 +212,41 @@ user.
   
   # => [Response] { user_id1 => [Boolean], user_id2 => [Boolean]... } 
   # true if the value was stored, false if it wasn't.
+end
+```
+
+##### DSL 
+
+The library offers a convenient DSL for adding feed functionality into
+your current scope.
+
+To use the module, just include `SimpleFeed::DSL` where needed, which
+exports just one primary method `with_activity'. You call this method
+and pass an activity object created for a set of users (or a single
+user), like so:
+
+```ruby
+require 'simplefeed/dsl'
+include SimpleFeed::DSL
+
+feed = SimpleFeed.newsfeed
+activity = feed.activity(current_user.id)
+data_to_store = %w(France Germany England)
+
+def report(value)
+  puts value
+end
+
+with_activity(activity, countries: data_to_store) do
+  # we can use countries as a variable because it was passed above in **opts
+  countries.each do |country|
+    # we can call #store without a receiver because the block is passed to 
+    # instance_eval
+    store(value: country) { |result| report(result ? 'success' : 'failure') }
+    # we can call #report inside the proc because it is evaluated in the 
+    # outside context of the #with_activity
+  end  
+  printf "Activity counts are: %d unread of %d total\n", unread_count, total_count
 end
 ```
 
