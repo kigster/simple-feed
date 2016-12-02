@@ -279,6 +279,10 @@ require 'simplefeed'
 @ua.delete(value:, at:)
 # => [Boolean] true if the value was removed, false if it didn't exist
 
+@ua.delete_if do |user_id, event|
+  # if the block returns true, the event is deleted
+end
+
 @ua.wipe
 # => [Boolean] true
 
@@ -322,6 +326,10 @@ responses for each user, accessible via `response[user_id]` method.
 @multi.delete(value:, at:)
 @multi.delete(event:)
 # => [Response] { user_id => [Boolean], ... } true if the value was removed, false if it didn't exist
+
+@multi.delete_if do |user_id, event|
+  # if the block returns true, the event is deleted
+end
 
 @multi.wipe
 # => [Response] { user_id => [Boolean], ... } true if user activity was found and deleted, false otherwise
