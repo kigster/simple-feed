@@ -3,7 +3,7 @@ require_relative 'activity/base'
 module SimpleFeed
   class Feed
 
-    attr_accessor :per_page, :max_size, :meta, :namespace
+    attr_accessor :per_page, :max_size, :batch_size, :meta, :namespace
     attr_reader :name
 
     SimpleFeed::Providers.define_provider_methods(self) do |feed, method, opts, &block|
@@ -18,6 +18,7 @@ module SimpleFeed
       @namespace = nil
       @per_page  ||= 50
       @max_size  ||= 1000
+      @batch_size||= 10
       @proxy     = nil
     end
 
