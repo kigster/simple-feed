@@ -2,6 +2,16 @@ require 'spec_helper'
 require 'colored2'
 require 'simplefeed/dsl'
 
+def ensure_descending(r)
+  last_event = nil
+  r.each do |event|
+    if last_event
+      expect(event.time).to be <= last_event.time
+    end
+    last_event = event
+  end
+end
+
 # Requires the following variables set:
 #  * provider_opts
 
@@ -18,16 +28,12 @@ shared_examples 'a provider' do
   include_context :event_matrix
 
   let(:user_id) { 99119911 }
-  let(:ua) { ->(id_or_array) { SimpleFeed.tested_feed.activity(id_or_array) } }
-  let(:dsl) { SimpleFeed::DSL.new }
+  let(:activity) { feed.activity(user_id) }
 
   context '#store' do
     context 'storing events and wiping feed' do
       it 'returns valid responses back from each operation' do
-        SimpleFeed.dsl(feed.activity(user_id),
-                       events:  events,
-                       context: self) do |*|
-
+        with_activity(activity, events: events) do
           wipe
           total_count { |r| expect(r).to eq(0) }
 
@@ -44,11 +50,8 @@ shared_examples 'a provider' do
 
     context 'storing and removing events' do
       before do
-        SimpleFeed.dsl(feed.activity(user_id),
-                       events:  events,
-                       context: self) do |*|
+        with_activity(activity, events: events) do
           wipe
-
           store(events.first) { |r| expect(r).to eq(true) }
           store(events.first) { |r| expect(r).to eq(false) }
           store(events.last) { |r| expect(r).to eq(true) }
@@ -58,10 +61,7 @@ shared_examples 'a provider' do
 
       context '#delete' do
         it('has one event left') do
-          SimpleFeed.dsl(feed.activity(user_id),
-                         events:  events,
-                         context: self) do |*|
-
+          with_activity(activity, events: events) do
             delete(events.first) { |r| expect(r).to eq(true) }
             total_count { |r| expect(r).to eq(1) }
           end
@@ -82,26 +82,22 @@ shared_examples 'a provider' do
       end
 
       context 'hitting #max_size of the feed' do
-        it('pushes the latest one or') do
-          SimpleFeed.dsl(feed.activity(user_id),
-                         events:  events,
-                         context: self) do |*|
+        it('pushes the oldest one out') do
+          with_activity(activity, events: events) do
+            wipe
+            reset_last_read
+            store(value: 'new story') { |r| expect(r).to be(true) }
+            store(value: 'old one', at: Time.now - 7200) { |r| expect(r).to be(true) }
+            store(value: 'older one', at: Time.now - 8000) { |r| expect(r).to be(true) }
+            store(value: 'and one more') { |r| expect(r).to be(true) }
+            store(value: 'the oldest', at: Time.now - 20000) { |r| expect(r).to be(true) }
+            store(value: 'and two more', at: Time.now + 10) { |r| expect(r).to be(true) }
 
-            total_count { |r| expect(r).to eq(2) }
-
-            4.times do |i|
-              store(value: "number #{i}", at: Time.now + 3600) { |r| expect(r).to eq(true) }
+            fetch do |r|
+              ensure_descending(r)
+              expect(r.size).to eq(5)
             end
-
-            total_count { |r| expect(r).to eq(5) }
-
-            fetch { |r| expect(r.size).to eq(5) }
-            fetch { |r| expect(r).to include(events[2]) }
-            fetch { |r| expect(r).not_to include(events[1]) }
-          end
-
-          feed.activity(user_id).fetch.each do |event|
-            expect(event).to be_kind_of(::SimpleFeed::Event)
+            fetch { |r| expect(r.map(&:value)).not_to include('the oldest') }
           end
         end
       end
@@ -109,14 +105,62 @@ shared_examples 'a provider' do
       context '#paginate' do
         let(:ts) { Time.now }
         it 'resets last read, and returns the first event as page 1' do
-          SimpleFeed.dsl(feed.activity(user_id),
-                         events:  events,
-                         context: self) do |*|
+          with_activity(activity, events: events) do
             unread_count { |r| expect(r).to eq(2) }
-            reset_last_read { |r| expect(r.to_f).to be_within(0.1).of(Time.now.to_f) }
+            reset_last_read { |r| expect(r.to_f).to be_within(0.01).of(Time.now.to_f) }
             unread_count { |r| expect(r).to eq(0) }
+            store(value: 'new story') { |r| expect(r).to be(true) }
+            unread_count { |r| expect(r).to eq(1) }
           end
         end
+      end
+
+      context '#fetch' do
+        it 'fetches all elements sorted by time desc' do
+          with_activity(activity, events: events) do
+            reset_last_read
+            store(value: 'new story') { |r| expect(r).to be(true) }
+            store(value: 'and another', at: Time.now - 7200) { |r| expect(r).to be(true) }
+            store(value: 'and one more') { |r| expect(r).to be(true) }
+            store(value: 'and two more') { |r| expect(r).to be(true) }
+
+            fetch { |r| ensure_descending(r) }
+          end
+        end
+      end
+    end
+
+    context '#namespace' do
+      let(:feed_proc) { ->(namespace) {
+        SimpleFeed.define("#{namespace}") do |f|
+          f.max_size  = 5
+          f.namespace = namespace
+          f.provider  = described_class.new(provider_opts)
+        end
+      } }
+
+      let(:feed_ns1) { feed_proc.call(:ns1) }
+      let(:feed_ns2) { feed_proc.call(:ns2) }
+
+      let(:ua_ns1) { feed_ns1.activity(user_id) }
+      let(:ua_ns2) { feed_ns2.activity(user_id) }
+
+      before do
+        ua_ns1.wipe
+        ua_ns1.store(value: 'ns1')
+
+        ua_ns2.wipe
+        ua_ns2.store(value: 'ns2')
+      end
+
+      it 'properly sets namespace on each feed' do
+        expect(feed_ns1.namespace).to eq(:ns1)
+        expect(feed_ns2.namespace).to eq(:ns2)
+      end
+
+      it 'does not conflict if namespaces are distinct' do
+        expect(ua_ns1.fetch.map(&:value)).to eq(%w(ns1))
+        expect(ua_ns2.fetch.map(&:value)).to eq(%w(ns2))
       end
     end
   end

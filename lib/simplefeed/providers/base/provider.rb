@@ -15,36 +15,15 @@ module SimpleFeed
           SimpleFeed::Providers.register(class_to_registry(klass), klass)
         end
 
-        public
-
-        # TODO: single user delegator
-        #
-        # SimpleFeed::Providers.define_provider_methods(self) do |base, method, *args, **opts|
-        #   user_ids = opts.delete(:user_ids)
-        #   base.single_user_delegator(method, user_ids, **opts)
-        # end
-        #
-        # def single_user_delegator(method, user_ids, **opts)
-        #   single_user_method = "#{method}_1u".to_sym
-        #   if self.respond_to?(single_user_method)
-        #     with_response_batched(method, user_ids) do |key, response|
-        #       response.for(key.user_id) do
-        #         self.send(single_user_method, key.user_id, **opts)
-        #       end
-        #     end
-        #   else
-        #     raise ProviderMethodNotImplementedError, method
-        #   end
-        # end
-
         protected
+
+        def tap(value)
+          yield
+          value
+        end
 
         def key(user_id)
           ::SimpleFeed::Providers.key(user_id, feed.namespace)
-        end
-
-        def time_to_score(at)
-          (1000 * at.to_f).to_i
         end
 
         def to_array(user_ids)

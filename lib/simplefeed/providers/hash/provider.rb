@@ -136,7 +136,7 @@ module SimpleFeed
           else
             uas << event.dup
             if uas.size > feed.max_size
-              uas.delete(uas.first)
+              uas.delete(uas.to_a.last)
             end
             true
           end

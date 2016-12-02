@@ -33,6 +33,5 @@ module SimpleFeed
   end
 end
 
-require_relative 'providers/base'
 require_relative 'providers/hash'
 require_relative 'providers/redis'

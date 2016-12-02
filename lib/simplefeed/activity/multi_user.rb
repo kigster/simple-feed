@@ -5,10 +5,10 @@ module SimpleFeed
   module Activity
     class MultiUser < Base
 
+      attr_reader :user_ids
+
       extend Forwardable
       def_delegators :user_ids, :size, :each, :select, :delete_if, :inject
-
-      attr_reader :user_ids
 
       include Enumerable
 

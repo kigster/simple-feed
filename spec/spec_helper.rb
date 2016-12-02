@@ -13,3 +13,6 @@ require 'simplefeed'
 SimpleFeed::DSL.debug = false
 SimpleFeed::Providers::Redis.debug = false
 
+RSpec.configure do |config|
+  config.include(SimpleFeed::DSL)
+end

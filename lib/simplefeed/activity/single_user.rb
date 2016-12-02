@@ -10,6 +10,12 @@ module SimpleFeed
       attr_reader :user_id
       attr_accessor :user_activity
 
+      include Enumerable
+
+      def each
+        yield(user_id)
+      end
+
       #
       # Single-user API for the feeds.
       #

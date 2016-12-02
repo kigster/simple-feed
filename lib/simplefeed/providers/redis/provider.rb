@@ -35,8 +35,9 @@ module SimpleFeed
 
         def store(user_ids:, value:, at: Time.now)
           with_response_pipelined(user_ids) do |redis, key|
-            redis.zremrangebyrank(key.data, feed.max_size - 1, -1)
-            redis.zadd(key.data, at.to_f, value)
+            tap redis.zadd(key.data, at.to_f, value)  do
+              redis.zremrangebyrank(key.data, 0, -feed.max_size - 1)
+            end
           end
         end
 
@@ -84,7 +85,7 @@ module SimpleFeed
 
         def reset_last_read(user_ids:, at: Time.now)
           with_response_pipelined(user_ids) do |redis, key, *|
-            redis.hset(key.meta, 'last_read', time_to_score(at))
+            redis.hset(key.meta, 'last_read', at.to_f)
             at
           end
         end

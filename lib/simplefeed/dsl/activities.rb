@@ -1,11 +1,15 @@
+require_relative 'formatter'
 module SimpleFeed
   module DSL
     class Activities
-      attr_accessor :ua, :feed
 
-      def initialize(ua, **opts)
-        self.ua   = ua
-        self.feed = ua.feed
+      include SimpleFeed::DSL::Formatter
+
+      attr_accessor :activity, :feed
+
+      def initialize(activity, **opts)
+        self.activity   = activity
+        self.feed = activity.feed
         opts.each_pair do |key, value|
           self.class.instance_eval do
             attr_accessor key
@@ -14,14 +18,10 @@ module SimpleFeed
         end
       end
 
-      def execute(&block)
-        instance_eval(&block)
-      end
-
       # Creates wrapper methods around the API and optionally prints both calls and return values
       #
       # def store(event: .., | value:, at: )
-      #   ua.store(**opts)
+      #   activity.store(**opts)
       # end
       # etc...
       SimpleFeed::Providers.define_provider_methods(self) do |instance, method, *args, **opts, &block|
@@ -39,7 +39,7 @@ module SimpleFeed
 
         printf "\n#{instance.feed.name.to_s.blue}.#{method.to_s.cyan.bold}#{brackets[0]}#{opts.to_s.gsub(/[{}]/, '').blue}#{brackets[1]} \n" if SimpleFeed::DSL.debug?
 
-        response = instance.ua.send(method, *args, **opts)
+        response = instance.activity.send(method, *args, **opts)
 
         puts response.inspect.yellow if SimpleFeed::DSL.debug?
 
