@@ -15,7 +15,15 @@ This is a ruby implementation of a fast simple feed commonly used in a typical s
     <li>We thank <em><a href="http://simbi.com">Simbi, Inc.</a></em> for sponsoring the development of this open source library.</li>
 </div>
 
-## What's an Activity Feed?
+## What is an activity feed?
+
+> Activity feed is a visual representation of a time-ordered, reverse chronological list of events which can be:
+>
+> * personalized for a given user or a group, or global
+> * filtered by a certain characteristic, such as, eg.
+>   * the source of the events — i.e. people you follow
+>   * type of event (i.e. posts, likes, and updates)
+> * the target of the event i.e. my own activity as opposed to from those I follow.
 
 Here is an example of a text-based simple feed that is very common today on social networking sites.
 
@@ -49,10 +57,21 @@ will be populated with the events coming from the followers.
 ```ruby
 require 'simplefeed'
 require 'simplefeed/redis/provider'
-require 'yaml'
 
-# Let's configure backend provider via a Hash, although we can also
-# instantiate it directly (as shown in the second example below)
+# Now let's define another feed, by wrapping Redis connection
+# in a ConnectionPool. Also notice the SimpleFeed.provider(:symbol) helper.
+SimpleFeed.define(:notifications) do |f|
+  f.provider   = SimpleFeed.provider(:redis, 
+    redis: -> { ::Redis.new(host: '192.168.10.10', port: 9000) },
+    pool_size: 10
+  )
+  f.per_page   = 50
+  f.batch_size = 10 # default batch size
+  f.namespace  = 'nf'
+end
+
+# Let's configure another Redis provider using a Hash.
+require 'yaml'
 provider_yaml = <<-eof
   klass: SimpleFeed::Providers::Redis::Provider
   opts:
@@ -63,20 +82,13 @@ provider_yaml = <<-eof
 eof
 
 SimpleFeed.define(:news_feed) do |f|
-  f.provider = YAML.load(provider_yaml)
-  f.max_size = 1000 # how many items can be in the feed
-  f.per_page = 20 # default page size
+  f.provider   = YAML.load(provider_yaml)
+  f.max_size   = 1000 # how many items can be in the feed
+  f.per_page   = 50 # default page size
+  f.batch_size = 20 # default batch size
+  f.namespace  = 'nf'
 end
 
-# Now let's define another feed, by wrapping Redis connection
-# in a ConnectionPool. Also notice the SimpleFeed.provider(:symbol) helper.
-SimpleFeed.define(:notifications) do |f|
-  f.provider = SimpleFeed.provider(:redis, 
-    redis: -> { ::Redis.new(host: '192.168.10.10', port: 9000) },
-    pool_size: 10
-  )
-  f.per_page = 50
-end
 ```
 
 After the feed is defined, the gem creates a similarly named method
@@ -89,7 +101,7 @@ accessing the feed:
 
 You can also get a full list of currently defined feeds with `SimpleFeed.feed_names` method.
 
-### Reading and writing from/to the Feed
+### Reading from and writing to the feed
 
 For the impatient here is a quick way to get started with the
 `SimpleFeed`.
