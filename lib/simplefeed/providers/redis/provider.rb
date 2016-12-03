@@ -7,6 +7,7 @@ require 'simplefeed/providers/base/provider'
 require 'simplefeed/providers/serialization/key'
 
 require_relative 'driver'
+require_relative 'stats'
 
 require 'pp'
 
@@ -113,7 +114,23 @@ module SimpleFeed
           end
         end
 
-        def transform_response(user_id, result)
+        FEED_METHODS = %i(total_memory_bytes total_users last_disk_save_time)
+
+        def total_memory_bytes
+          with_stats(:used_memory_since_boot)
+        end
+
+        def total_users
+          with_redis { |redis| redis.dbsize / 2}
+        end
+
+        def with_stats(operation)
+          with_redis do |redis|
+            SimpleFeed::Providers::Redis::Stats.new(redis).send(operation)
+          end
+        end
+
+        def transform_response(user_id = nil, result)
           case result
             when ::Redis::Future
               transform_response(user_id, result.value)

@@ -23,6 +23,7 @@ shared_examples 'a provider' do
     end
   }
 
+  let(:provider) { feed.provider.provider }
   before { feed }
 
   include_context :event_matrix
@@ -30,20 +31,30 @@ shared_examples 'a provider' do
   let(:user_id) { 99119911 }
   let(:activity) { feed.activity(user_id) }
 
+  # Reset the feed with a wipe, and ensure the size is zero
+  before { with_activity(activity) { wipe; total_count { |r| expect(r).to eq(0) } } }
+
   context '#store' do
-    context 'storing events and wiping feed' do
+    context 'new events' do
       it 'returns valid responses back from each operation' do
         with_activity(activity, events: events) do
-          wipe
-          total_count { |r| expect(r).to eq(0) }
-
           store(events.first) { |r| expect(r).to eq(true) }
-          wipe { |r| expect(r).to eq(true) }
+          total_count { |r| expect(r).to eq(1) }
 
-          store(events.first) { |r| expect(r).to eq(true) }
           store(events.last) { |r| expect(r).to eq(true) }
-
           total_count { |r| expect(r).to eq(2) }
+        end
+      end
+    end
+
+    context 'storing new events' do
+      it 'returns valid responses back from each operation' do
+        with_activity(activity, events: events) do
+          store(events.first) { |r| expect(r).to eq(true) }
+          store(events.first) { |r| expect(r).to eq(false) }
+
+          store(events.last) { |r| expect(r).to eq(true) }
+          store(events.last) { |r| expect(r).to eq(false) }
         end
       end
     end
@@ -51,18 +62,22 @@ shared_examples 'a provider' do
     context 'storing and removing events' do
       before do
         with_activity(activity, events: events) do
-          wipe
           store(events.first) { |r| expect(r).to eq(true) }
-          store(events.first) { |r| expect(r).to eq(false) }
           store(events.last) { |r| expect(r).to eq(true) }
-          store(events.last) { |r| expect(r).to eq(false) }
+          total_count { |r| expect(r).to eq(2) }
         end
       end
 
       context '#delete' do
-        it('has one event left') do
+        it('with event as an argument') do
           with_activity(activity, events: events) do
             delete(events.first) { |r| expect(r).to eq(true) }
+            total_count { |r| expect(r).to eq(1) }
+          end
+        end
+        it('with event value as an argument') do
+          with_activity(activity, events: events) do
+            delete(events.first.value) { |r| expect(r).to eq(true) }
             total_count { |r| expect(r).to eq(1) }
           end
         end
@@ -163,5 +178,15 @@ shared_examples 'a provider' do
         expect(ua_ns2.fetch.map(&:value)).to eq(%w(ns2))
       end
     end
+
+    context 'additional methods' do
+      it '#total_memory_bytes' do
+        expect(provider.total_memory_bytes).to be >  0
+      end
+      it '#total_users' do
+        expect(provider.total_users).to eq(1)
+      end
+    end
+
   end
 end

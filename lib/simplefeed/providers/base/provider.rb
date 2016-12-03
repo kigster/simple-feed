@@ -2,18 +2,29 @@ require 'simplefeed/providers/serialization/key'
 
 module SimpleFeed
   module Providers
-    module Base
+    class NotImplementedError < ::StandardError
+      def initialize(klass, method)
+        super("Class #{klass.name} did not implement abstract method #{method}, but was called.")
+      end
+    end
 
+    module Base
       class Provider
         attr_accessor :feed
 
         def self.class_to_registry(klass)
-          klass.name.split('::').delete_if { |n| %w(SimpleFeed Providers Provider).include?(n) }.compact.first.downcase.to_sym
+          klass.name.split('::').delete_if { |n| %w(SimpleFeed Providers Provider).include?(n) }.compact.last.downcase.to_sym
         end
 
         def self.inherited(klass)
           SimpleFeed::Providers.register(class_to_registry(klass), klass)
         end
+
+        # SimpleFeed::Providers::REQUIRED_METHODS.each do |m|
+        #   define_method(m) do |*|
+        #     raise ::SimpleFeed::Providers::NotImplementedError.new(self, m)
+        #   end
+        # end
 
         protected
 
@@ -60,6 +71,12 @@ module SimpleFeed
             end
           end
           response
+        end
+
+        def with_result
+          result = yield
+          result = transform_response(nil, result) if self.respond_to?(:transform_response)
+          result
         end
       end
     end

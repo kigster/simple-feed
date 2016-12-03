@@ -8,8 +8,8 @@ module SimpleFeed
       attr_accessor :activity, :feed
 
       def initialize(activity, **opts)
-        self.activity   = activity
-        self.feed = activity.feed
+        self.activity = activity
+        self.feed     = activity.feed
         opts.each_pair do |key, value|
           self.class.instance_eval do
             attr_accessor key
@@ -26,22 +26,24 @@ module SimpleFeed
       # etc...
       SimpleFeed::Providers.define_provider_methods(self) do |instance, method, *args, **opts, &block|
         if args&.first
-          event = args.shift
-          if !event.is_a?(SimpleFeed::Event) && args.size == 1
-            event = SimpleFeed::Event(value: event, at: args[1] || Time.now)
+          arg1 = args.shift
+          if arg1.is_a?(SimpleFeed::Event)
+            event = arg1
+          else
+            opts[:value] = arg1 unless opts[:value]
+            opts[:at]    = args.shift unless opts[:value]
           end
         else
           event = opts.delete(:event)
         end
 
         opts.merge!(value: event.value, at: event.at) if event
-        brackets = opts.empty? ? ['', ''] : %w{( )}
 
-        printf "\n#{instance.feed.name.to_s.blue}.#{method.to_s.cyan.bold}#{brackets[0]}#{opts.to_s.gsub(/[{}]/, '').blue}#{brackets[1]} \n" if SimpleFeed::DSL.debug?
-
-        response = instance.activity.send(method, *args, **opts)
-
-        puts response.inspect.yellow if SimpleFeed::DSL.debug?
+        response = instance.instance_eval do
+          print_debug_info(method, **opts) do
+            activity.send(method, *args, **opts)
+          end
+        end
 
         if block
           if instance.context
@@ -54,6 +56,15 @@ module SimpleFeed
         response
       end
 
+      private
+
+      def print_debug_info(method, **opts)
+        brackets = opts.empty? ? ['', ''] : %w{( )}
+        printf "\n#{self.feed.name.to_s.blue}.#{method.to_s.cyan.bold}#{brackets[0]}#{opts.to_s.gsub(/[{}]/, '').blue}#{brackets[1]} \n" if SimpleFeed::DSL.debug?
+        response = yield if block_given?
+        puts response.inspect.yellow if SimpleFeed::DSL.debug?
+        response
+      end
     end
   end
 end

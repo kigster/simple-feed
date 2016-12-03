@@ -1,6 +1,7 @@
 require 'base62-rb'
 require 'hashie'
 require 'set'
+require 'knjrbfw'
 
 require 'simplefeed/event'
 require_relative 'paginator'
@@ -93,6 +94,15 @@ module SimpleFeed
           with_response_batched(user_ids) do |key|
             user_record(key).last_read
           end
+        end
+
+        def total_memory_bytes
+          analyzer = Knj::Memory_analyzer::Object_size_counter.new(self.h)
+          analyzer.calculate_size
+        end
+
+        def total_users
+          self.h.size
         end
 
         private

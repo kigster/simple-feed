@@ -16,8 +16,16 @@ module SimpleFeed
     def self.key(*args)
       SimpleFeed::Providers::Serialization::Key.new(*args)
     end
-    
-    REQUIRED_METHODS = %i(store delete delete_if wipe reset_last_read last_read paginate fetch total_count unread_count)
+
+    # These methods must be implemented by each Provider, and operation on a given
+    # set of users passed via the user_ids: parameter.
+    ACTIVITY_METHODS = %i(store delete delete_if wipe reset_last_read last_read paginate fetch total_count unread_count)
+
+    # These methods must be implemented in order to gather statistics about each provider's
+    # memory consumption and state.
+    FEED_METHODS = %i(total_memory_bytes total_users)
+
+    REQUIRED_METHODS = ACTIVITY_METHODS + FEED_METHODS
 
     def self.define_provider_methods(klass, prefix = nil, &block)
       # Methods on the class instance

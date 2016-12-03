@@ -42,7 +42,7 @@ Formatter.with_timing(ua: @ua) do
   p('#last_read for %user% is now')             { ua.last_read }
 
   1998.times do |i|
-    ua.store(value: "this is the value number " + i.to_s, at: Time.now)
+    ua.store(value: 'this is the value number ' + i.to_s, at: Time.now)
   end
 
   p('#unread_count for %user% is now')          { ua.unread_count }

@@ -16,4 +16,5 @@ RSpec.describe SimpleFeed::Providers::Redis::Provider do
   end
 
   it_behaves_like 'a provider'
+
 end
