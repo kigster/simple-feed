@@ -20,8 +20,8 @@ RSpec.describe SimpleFeed::Providers::Redis::Stats do
 
   context 'current redis-info' do
     subject { stats.info }
-    its(:uptime_in_seconds) { should be >= 26 }
-    its(:used_memory) { should be >= 1008384 }
+    its(:uptime_in_seconds) { should be >= 0 }
+    its(:used_memory) { should be >= 1000000 }
     its([:dbstats, '7']) { should include({'keys' => 1})}
   end
 
