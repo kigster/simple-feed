@@ -3,6 +3,7 @@ require 'redis'
 require 'simplefeed/providers/redis/stats'
 
 RSpec.describe SimpleFeed::Providers::Redis::Stats do
+
   let(:redis_db) { 7 }
   let(:redis) { Redis.new db: redis_db }
   subject(:stats) { described_class.new(redis) }

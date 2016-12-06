@@ -43,9 +43,11 @@ context 'Integration' do
 
     context ' ➞ Store Events' do
       before do
-        events.each { |e| expect(provider).to receive(:store).
-          with(user_ids: [user_id], value: e.value, at: e.at).
-          and_return(SimpleFeed::Response.new({user_id => true}))}
+        events.each do |e|
+          expect(provider).to receive(:store).
+            with(user_ids: [user_id], value: e.value, at: e.at).
+            and_return(SimpleFeed::Response.new({ user_id => true }))
+        end
       end
       it 'should call provider with :value and :at when supplied :event' do
         events.each { |e| user_activity.store(event: e) }

@@ -16,6 +16,8 @@ end
 #  * provider_opts
 
 shared_examples 'a provider' do
+  include_context :event_matrix
+
   subject(:feed) {
     SimpleFeed.define(:tested_feed) do |f|
       f.max_size = 5
@@ -24,10 +26,6 @@ shared_examples 'a provider' do
   }
 
   let(:provider) { feed.provider.provider }
-  before { feed }
-
-  include_context :event_matrix
-
   let(:user_id) { 99119911 }
   let(:activity) { feed.activity(user_id) }
 
@@ -99,6 +97,7 @@ shared_examples 'a provider' do
       context 'hitting #max_size of the feed' do
         it('pushes the oldest one out') do
           with_activity(activity, events: events) do
+
             wipe
             reset_last_read
             store(value: 'new story') { |r| expect(r).to be(true) }

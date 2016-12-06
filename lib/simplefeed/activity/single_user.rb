@@ -65,7 +65,6 @@ module SimpleFeed
         @user_id           = user_id
         self.user_activity = MultiUser.new(feed: feed, user_ids: [user_id])
       end
-
     end
   end
 end

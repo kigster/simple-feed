@@ -36,38 +36,34 @@ describe 'SimpleFeed::Activity::MultiUserActivity' do
     end
 
     context 'calling through to provider' do
+      let(:true_response) do
+        SimpleFeed::Response.new({ user_id_1 => true, user_id_2 => true })
+      end
+
       let(:provider_must_receive) {
         ->(method, **opts) {
           expect(opts).to_not be_empty
-          expect(provider).to receive(method).
-            with(user_ids: user_ids, **opts).
-            and_return(SimpleFeed::Response.new({
-                                                  user_ids[0] => true,
-                                                  user_ids[0] => true
-                                                }))
+          expect(provider).to receive(method).with(user_ids: user_ids, **opts).
+            and_return(true_response)
         }
       }
 
       let!(:opts) { { hello: :goodbye } }
 
-      SimpleFeed::Providers::REQUIRED_METHODS.each do |m|
+      SimpleFeed::Providers::REQUIRED_METHODS.each do |method|
+        context "method #{method}" do
+          before { provider_must_receive[method, **opts] }
 
-        context "method #{m}" do
-          before do
-            provider_must_receive[m, **opts]
-          end
+          it('should call the provider') { user_activity.send(method, **opts) }
 
-          it 'should call the provider' do
-            user_activity.send(m, **opts)
-          end
+          context 'response' do
+            subject { user_activity.send(method, **opts) }
 
-          context '#Enumeration' do
-            it 'should enumerate response' do
-              user_activity.send(m, **opts).each do |user_id, result|
-                expect(user_ids.include?(user_id)).to be(true)
-                expect(result).to be(true)
-              end
-            end
+            its(:class) { should be SimpleFeed::Response }
+            its(:user_count) { should be 2 }
+
+            it('should respond to #each') { is_expected.to respond_to(:each) }
+            it(:each) { expect { |args| subject.each(&args)}.to yield_successive_args([user_id_1, true], [user_id_2, true]) }
           end
         end
       end

@@ -30,5 +30,9 @@ module SimpleFeed
       opts.merge!({ context: self }) unless opts && opts[:context]
       SimpleFeed::DSL::Activities.new(activity, **opts).instance_eval(&block)
     end
+
+    def event(value, at = Time.now)
+      SimpleFeed::Event.new(value, at)
+    end
   end
 end

@@ -8,13 +8,8 @@ module SimpleFeed
 
       attr_accessor :activity, :feed
 
-      def initialize(activity)
-        self.activity = activity
-        self.feed     = activity.feed
-      end
-
       def color_dump
-        puts
+        local_puts
 
         header do
           field('Feed Name', feed.name, "\n")
@@ -23,29 +18,49 @@ module SimpleFeed
         end
 
         with_activity(activity) do
-
-          lr        = last_read
           last_time = nil
 
-          [['User ID', activity.user_id, "\n"],
-           ['Activities', sprintf('%d total, %d unread', total_count, unread_count), "\n"],
-           ['Last Read', lr ? Time.at(lr) : 'N/A'],
-          ].each do |field, value, *args|
-            field(field, value, *args)
-          end
-          puts ; hr '¨'
-
-          lr = Time.at(lr || 0)
-
-          fetch.each_with_index do |e, i|
-            if last_time && last_time > lr && e.time <= lr
-              printf ">>>> %16s <<<< last read\n", lr.strftime(TIME_FORMAT).red.bold
+          activity.each do |user_id|
+            lr = last_read[user_id]
+            [['User ID', user_id, "\n"],
+             ['Activities', sprintf('%d total, %d unread', total_count[user_id], unread_count[user_id]), "\n"],
+             ['Last Read', lr ? Time.at(lr) : 'N/A'],
+            ].each do |field, value, *args|
+              field(field, value, *args)
             end
-            last_time = e.time
-            printf "[%2d] %16s %s\n", i, e.time.strftime(TIME_FORMAT).blue.bold, e.value
+
+            local_puts; hr '¨'
+
+            lr = Time.at(lr || 0)
+
+            fetch[user_id].each_with_index do |e, i|
+              if last_time && last_time > lr && e.time <= lr
+                print_last_read_separator(lr)
+              end
+              last_time = e.time
+              local_print "[%2d] %16s %s\n", i, e.time.strftime(TIME_FORMAT).blue.bold, e.value
+            end
           end
         end
       end
+
+      def print_last_read_separator(lr)
+        local_print ">>>> %16s <<<< last read\n", lr.strftime(TIME_FORMAT).red.bold
+      end
+    end
+
+    @print_method = :printf
+
+    class << self
+      attr_accessor :print_method
+    end
+
+    def local_print(*args, **opts, &block)
+      send(SimpleFeed::DSL.print_method, *args, **opts, &block)
+    end
+
+    def local_puts(*args)
+      send(SimpleFeed::DSL.print_method, "\n" + args.join)
     end
 
     def header
@@ -72,11 +87,11 @@ module SimpleFeed
     end
 
     def field(label, value, sep = '')
-      printf field_label(label).italic + field_value(value).cyan.bold + sep
+      local_print field_label(label).italic + field_value(value).cyan.bold + sep
     end
 
     def hr(char = '—')
-      print (char * 100 + "\n").magenta
+      local_print (char * 100 + "\n").magenta
     end
   end
 end

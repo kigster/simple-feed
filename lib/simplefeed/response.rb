@@ -10,8 +10,12 @@ module SimpleFeed
 
     include Enumerable
     def each
-      @result.each_pair do |user_id, result|
-        yield(user_id, result)
+      if block_given?
+        @result.each_pair do |user_id, result|
+          yield(user_id, result)
+        end
+      else
+        @result.keys.to_enum
       end
     end
 
@@ -33,6 +37,10 @@ module SimpleFeed
 
     def has_user?(user_id)
       @result.key?(user_id)
+    end
+
+    def user_count
+      @result.size
     end
 
     def to_h
