@@ -11,7 +11,6 @@ This is a ruby implementation of a fast simple feed commonly used in a typical s
 
 <div style="border: 2px solid #222; padding: 10px; background: #f5f5f5; font-family: 'HelveticaNeue-CondensedBold'; font-size: 14pt;">
 <ol>
-    <li>Please note that this project is under <em>active development</em>, and is not yet completed.<br/></li>
     <li>We thank <em><a href="http://simbi.com">Simbi, Inc.</a></em> for sponsoring the development of this open source library.</li>
 </div>
 
