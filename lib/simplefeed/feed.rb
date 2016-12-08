@@ -32,6 +32,10 @@ module SimpleFeed
       @proxy
     end
 
+    def provider_type
+      SimpleFeed::Providers::Base::Provider.class_to_registry(@proxy.provider.class)
+    end
+
     def user_activity(user_id)
       Activity::SingleUser.new(user_id: user_id, feed: self)
     end

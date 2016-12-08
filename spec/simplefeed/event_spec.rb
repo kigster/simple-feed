@@ -1,10 +1,11 @@
 require 'spec_helper'
 
 RSpec.describe SimpleFeed::Event do
+
   let(:event1) { described_class.new(value: '1', at: Time.now) }
   let(:event2) { described_class.new(value: '2', at: Time.now - 10) }
   let(:event3) { described_class.new(value: '3', at: Time.now + 10) }
-  let(:events_manually_sorted) { [ event3, event1, event2 ] }
+  let(:events_manually_sorted) { [event3, event1, event2] }
 
   context '#eql?' do
     let(:identical) { described_class.new(value: '1', at: Time.now - 60) }
@@ -20,9 +21,24 @@ RSpec.describe SimpleFeed::Event do
 
   end
 
+  context '#to_s #inspect and #to_json' do
+    subject { event1 }
+    let(:at) { event1.at }
+    let(:value) { event1.value }
+    let(:time) { Time.at(at) }
+    let(:expected_json) { { value: value, at: at, time: time }.to_json }
+
+    its(:to_json) { should eq expected_json }
+    its(:to_s) do
+      should match /#{at.to_f}/
+      should match /#{value}/
+      should match /time/
+      should match /#{time}/
+    end
+  end
   context '#to_json' do
     it 'should properly generate JSON' do
-      expect(event1.to_json).to eq({ value: event1.value, at: event1.at }.to_json)
+
     end
   end
 

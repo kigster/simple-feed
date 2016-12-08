@@ -1,15 +1,20 @@
 require 'simplefeed/dsl'
-
+require 'simplefeed/activity/single_user'
+require 'simplefeed/activity/multi_user'
 module SimpleFeed
   module DSL
     module Formatter
-
       include SimpleFeed::DSL
 
       attr_accessor :activity, :feed
 
-      def color_dump
-        local_puts
+      def color_dump(_activity = activity)
+        _activity = if _activity.is_a?(SimpleFeed::Activity::SingleUser)
+                      _activity.feed.activity([_activity.user_id])
+                    else
+                      _activity
+                    end
+        _puts
 
         header do
           field('Feed Name', feed.name, "\n")
@@ -17,35 +22,42 @@ module SimpleFeed
           field('Max Size', feed.max_size, "\n")
         end
 
-        with_activity(activity) do
-          last_time = nil
+        with_activity(_activity) do
+          _activity.each do |user_id|
+            _last_event_at = nil
+            _last_read     = (last_read[user_id] || 0.0).to_f
 
-          activity.each do |user_id|
-            lr = last_read[user_id]
             [['User ID', user_id, "\n"],
              ['Activities', sprintf('%d total, %d unread', total_count[user_id], unread_count[user_id]), "\n"],
-             ['Last Read', lr ? Time.at(lr) : 'N/A'],
+             ['Last Read', _last_read ? Time.at(_last_read) : 'N/A'],
             ].each do |field, value, *args|
               field(field, value, *args)
             end
 
-            local_puts; hr '¨'
+            _puts; hr '¨'
 
-            lr = Time.at(lr || 0)
+            _events       = fetch[user_id]
+            _events_count = _events.size
+            _events.each_with_index do |_event, _index|
 
-            fetch[user_id].each_with_index do |e, i|
-              if last_time && last_time > lr && e.time <= lr
-                print_last_read_separator(lr)
+              if _last_event_at.nil? && _event.at < _last_read
+                print_last_read_separator(_last_read)
+              elsif _last_event_at && _last_read < _last_event_at && _last_read > _event.at
+                print_last_read_separator(_last_read)
               end
-              last_time = e.time
-              local_print "[%2d] %16s %s\n", i, e.time.strftime(TIME_FORMAT).blue.bold, e.value
+
+              _last_event_at = _event.at # float
+              _print "[%2d] %16s %s\n", _index, _event.time.strftime(TIME_FORMAT).blue.bold, _event.value
+              if _index == _events_count - 1 && _last_read < _event.at
+                print_last_read_separator(_last_read)
+              end
             end
           end
         end
       end
 
       def print_last_read_separator(lr)
-        local_print ">>>> %16s <<<< last read\n", lr.strftime(TIME_FORMAT).red.bold
+        _print ">>>> %16s <<<< last read\n", Time.at(lr).strftime(TIME_FORMAT).red.bold
       end
     end
 
@@ -55,18 +67,12 @@ module SimpleFeed
       attr_accessor :print_method
     end
 
-    def local_print(*args, **opts, &block)
+    def _print(*args, **opts, &block)
       send(SimpleFeed::DSL.print_method, *args, **opts, &block)
     end
 
-    def local_puts(*args)
+    def _puts(*args)
       send(SimpleFeed::DSL.print_method, "\n" + args.join)
-    end
-
-    def header
-      hr
-      yield
-      hr
     end
 
     def field_label(text)
@@ -87,11 +93,17 @@ module SimpleFeed
     end
 
     def field(label, value, sep = '')
-      local_print field_label(label).italic + field_value(value).cyan.bold + sep
+      _print field_label(label).italic + field_value(value).cyan.bold + sep
     end
 
     def hr(char = '—')
-      local_print (char * 100 + "\n").magenta
+      _print (char * 75 + "\n").magenta
+    end
+
+    def header(message = nil)
+      hr
+      block_given? ? yield : _print(message.capitalize.magenta.bold + "\n")
+      hr
     end
   end
 end

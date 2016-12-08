@@ -36,7 +36,7 @@ module SimpleFeed
 
         def store(user_ids:, value:, at: Time.now)
           with_response_pipelined(user_ids) do |redis, key|
-            tap redis.zadd(key.data, at.to_f, value)  do
+            tap redis.zadd(key.data, at.to_f, value) do
               redis.zremrangebyrank(key.data, 0, -feed.max_size - 1)
             end
           end
@@ -61,22 +61,20 @@ module SimpleFeed
 
         def wipe(user_ids:)
           with_response_pipelined(user_ids) do |redis, key|
-            redis.del(key.meta)
-            redis.del(key.data)
-          end.transform do |*, result|
-            result == 1 ? true : false
+            should_wipe = block_given? ? yield(key.user_id) : true
+            key.keys.all? { |redis_key| redis.del(redis_key) if should_wipe }
           end
         end
 
         def paginate(user_ids:, page:, per_page: feed.per_page, peek: false, with_total: false)
+          reset_last_read(user_ids: user_ids) unless peek
           with_response_pipelined(user_ids) do |redis, key|
-            redis.hset(key.meta, 'last_read', Time.now) unless peek
-            events = events(page, per_page, redis, key)
-
+            events = paginated_events(page, per_page, redis, key)
             with_total ? { events:      events,
                            total_count: redis.zcard(key.data) } : events
           end
         end
+
 
         def fetch(user_ids:)
           with_response_pipelined(user_ids) do |redis, key|
@@ -86,8 +84,7 @@ module SimpleFeed
 
         def reset_last_read(user_ids:, at: Time.now)
           with_response_pipelined(user_ids) do |redis, key, *|
-            redis.hset(key.meta, 'last_read', at.to_f)
-            at
+            reset_users_last_read(redis, key, at.to_f)
           end
         end
 
@@ -99,18 +96,17 @@ module SimpleFeed
 
         def unread_count(user_ids:)
           response = with_response_pipelined(user_ids) do |redis, key|
-            redis.hget(key.meta, 'last_read')
+            get_users_last_read(redis, key)
           end
-
           with_response_pipelined(response.user_ids, response) do |redis, key, _response|
             last_read = _response.delete(key.user_id).to_f
-            redis.zcount(key.data, last_read, Time.now.to_f)
+            redis.zcount(key.data, last_read, '+inf')
           end
         end
 
         def last_read(user_ids:)
           with_response_pipelined(user_ids) do |redis, key, *|
-            redis.hget(key.meta, 'last_read')
+            get_users_last_read(redis, key)
           end
         end
 
@@ -121,7 +117,7 @@ module SimpleFeed
         end
 
         def total_users
-          with_redis { |redis| redis.dbsize / 2}
+          with_redis { |redis| redis.dbsize / 2 }
         end
 
         def with_stats(operation)
@@ -150,12 +146,12 @@ module SimpleFeed
               end
 
               if result.size == 2 && result[1].is_a?(Float)
-                SimpleFeed::Event.new(value: result[0], at: result[1])
+                SimpleFeed::Event.new(value: result[0], at: Time.at(result[1]))
               else
                 result
               end
-            when ::String
 
+            when ::String
               if result =~ /^\d+\.\d+$/
                 result.to_f
               elsif result =~ /^\d+$/
@@ -163,7 +159,6 @@ module SimpleFeed
               else
                 result
               end
-
             else
               result
           end
@@ -173,13 +168,30 @@ module SimpleFeed
           [
             ::Redis::Future,
             ::Hash,
-            ::Array
-          ].any? { |klass| value.is_a?(klass) }
+            ::Array,
+            ::String
+          ].include?(value.class)
         end
 
         private
 
-        def events(page, per_page, redis, key)
+        #——————————————————————————————————————————————————————————————————————————————————————
+        # helpers
+        #——————————————————————————————————————————————————————————————————————————————————————
+
+        def reset_users_last_read(redis, key, time = nil)
+          time = time.nil? ? Time.now.to_f : time.to_f
+          redis.hset(key.meta, 'last_read', time)
+          Time.at(time)
+        end
+
+        # returns a string containing a float, which must then be
+        # converted into float in #transform
+        def get_users_last_read(redis, key)
+          redis.hget(key.meta, 'last_read')
+        end
+
+        def paginated_events(page, per_page, redis, key)
           redis.zrevrange(key.data, (page - 1) * per_page, page * per_page - 1, withscores: true)
         end
 

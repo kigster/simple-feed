@@ -9,6 +9,7 @@ module SimpleFeed
     def_delegators :@result, :delete, :key?, :value?, :values, :keys, :size, :merge!
 
     include Enumerable
+
     def each
       if block_given?
         @result.each_pair do |user_id, result|

@@ -97,34 +97,78 @@ shared_examples 'a provider' do
       context 'hitting #max_size of the feed' do
         it('pushes the oldest one out') do
           with_activity(activity, events: events) do
-
             wipe
-            reset_last_read
-            store(value: 'new story') { |r| expect(r).to be(true) }
-            store(value: 'old one', at: Time.now - 7200) { |r| expect(r).to be(true) }
-            store(value: 'older one', at: Time.now - 8000) { |r| expect(r).to be(true) }
-            store(value: 'and one more') { |r| expect(r).to be(true) }
-            store(value: 'the oldest', at: Time.now - 20000) { |r| expect(r).to be(true) }
-            store(value: 'and two more', at: Time.now + 10) { |r| expect(r).to be(true) }
+            # The next one resets the time
+            store(value: 'new story right now') { |r| expect(r).to be true }
+            store(value: 'old one', at: Time.now - 5.0) { |r| expect(r).to be(true) }
+            store(value: 'older one', at: Time.now - 6.0) { |r| expect(r).to be(true) }
+            store(value: 'one just now') { |r| expect(r).to be(true) }
+            store(value: 'the super old one', at: Time.now - 20000.0) { |r| expect(r).to be(true) }
+            store(value: 'and in the future', at: Time.now + 10.0) { |r| expect(r).to be(true) }
 
             fetch do |r|
               ensure_descending(r)
               expect(r.size).to eq(5)
+              expect(r.map(&:value)).not_to include('the oldest')
+              expect(r.map(&:value)).to include('old one')
+              expect(r.map(&:value).first).to eq('and in the future')
             end
-            fetch { |r| expect(r.map(&:value)).not_to include('the oldest') }
           end
+
         end
       end
 
-      context '#paginate' do
-        let(:ts) { Time.now }
-        it 'resets last read, and returns the first event as page 1' do
+      context '#unread_count, #paginate and #last_read' do
+        it 'correctly resets the last_read and unread_count after paginate' do
           with_activity(activity, events: events) do
-            unread_count { |r| expect(r).to eq(2) }
-            reset_last_read { |r| expect(r.to_f).to be_within(0.01).of(Time.now.to_f) }
-            unread_count { |r| expect(r).to eq(0) }
-            store(value: 'new story') { |r| expect(r).to be(true) }
+            wipe
+
+            _now = Time.now
+            reset_last_read at: _now
+
+            last_read { |r| expect(r.to_f).to be_within(0.001).of(_now.to_f) }
+
+            # The next one resets the time
+            store(value: 'new story right now') { |r| expect(r).to be true }
+            store(value: 'old one', at: _now - 5.0) { |r| expect(r).to be(true) }
+            store(value: 'older one', at: _now - 6.0) { |r| expect(r).to be(true) }
+
+            # unread count at this point is 1 because only the 'new story right now' is more recent
+            # then the unread flag
             unread_count { |r| expect(r).to eq(1) }
+
+            last_read { |r| expect(r.to_f).to be_within(0.001).of(_now.to_f) }
+
+            paginate(page: 1, per_page: 1) do |r|
+              expect(r.size).to eq(1)
+              expect(r.first.value).to eq('new story right now')
+            end
+
+            _then = Time.now
+
+            last_read { |r| expect(r.to_f).to be > _now.to_f }
+            last_read { |r| expect(r.to_f).to be < _then.to_f }
+
+            # now that we've read the feed...
+            unread_count { |r| expect(r).to be == 0 }
+
+            last_read { |r| expect(r.to_f).to be < _then.to_f }
+
+            store(value: 'and then one right now',) { |r| expect(r).to be(true) }
+            unread_count { |r| expect(r).to be == 1 }
+
+            store(value: 'and then one just ahead of it', at: _then + 3) { |r| expect(r).to be(true) }
+            unread_count { |r| expect(r).to be == 2 }
+
+            store(value: 'and even then one more', at: _then + 10) { |r| expect(r).to be(true) }
+            unread_count { |r| expect(r).to be == 3 }
+
+            store(value: 'some other future ', at: _then + 30) { |r| expect(r).to be(true) }
+            unread_count { |r| expect(r).to be == 4 }
+
+            total_count { |r| expect(r).to be == 5 }
+
+            color_dump
           end
         end
       end
@@ -132,7 +176,9 @@ shared_examples 'a provider' do
       context '#fetch' do
         it 'fetches all elements sorted by time desc' do
           with_activity(activity, events: events) do
+
             reset_last_read
+
             store(value: 'new story') { |r| expect(r).to be(true) }
             store(value: 'and another', at: Time.now - 7200) { |r| expect(r).to be(true) }
             store(value: 'and one more') { |r| expect(r).to be(true) }
@@ -180,7 +226,7 @@ shared_examples 'a provider' do
 
     context 'additional methods' do
       it '#total_memory_bytes' do
-        expect(provider.total_memory_bytes).to be >  0
+        expect(provider.total_memory_bytes).to be > 0
       end
       it '#total_users' do
         expect(provider.total_users).to eq(1)

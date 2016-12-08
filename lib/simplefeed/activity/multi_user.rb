@@ -8,7 +8,7 @@ module SimpleFeed
       attr_reader :user_ids
 
       extend Forwardable
-      def_delegators :user_ids, :size, :each, :select, :delete_if, :inject
+      def_delegators :@user_ids, :size, :each, :select, :delete_if, :inject
 
       include Enumerable
 

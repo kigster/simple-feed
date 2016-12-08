@@ -1,23 +1,22 @@
 require 'json'
 
 module SimpleFeed
-
   class Event
     attr_accessor :value, :at
     include Comparable
+
     def initialize(*args, value: nil, at: Time.now)
       if args && args.size > 0
         self.value = args[0]
-        self.at    = args[1] || Time.now
+        self.at    = args[1] || at
       else
         self.value = value
         self.at    = at
       end
 
-      self.at = self.at.to_f unless self.at.is_a?(Float)
+      self.at = self.at.to_f
 
-      raise ArgumentError, 'either pass arguments as hash: { value:, at: <Time.now> } or args array: [ value, at = Time.now ],' +
-        "Got #{self.inspect.blue}, args=#{args}" unless self.value && self.at
+      validate!
     end
 
     def time
@@ -38,7 +37,7 @@ module SimpleFeed
     end
 
     def to_h
-      { value: value, at: at }
+      { value: value, at: at, time: time }
     end
 
     def hash
@@ -49,15 +48,34 @@ module SimpleFeed
       to_h.to_json
     end
 
-    def inspect
-      "#<#{self.class.name}##{object_id} #{to_json}>"
+    def to_yaml
+      YAML.dump(to_h)
     end
 
     def to_s
-      inspect
+      "Event Value: [#{value}], epoch: [#{at}], time: [#{time}]"
     end
 
+    def to_color_s
+      counter = 0
+      to_s.gsub(/,/, '-').split(/[\[\]]/).map do |word|
+        counter += 1
+        counter.even? ? word.bold.yellow + "\n": word.blue
+      end.join('').gsub(/[\n] /, '')
+    end
+
+    def inspect
+      super
+    end
+
+
     private
+
+    def validate!
+      unless self.value && self.at
+        raise ArgumentError, "Required arguments missing, value=[#{value}], at=[#{at}]"
+      end
+    end
 
     def copy(&block)
       copy = self.clone

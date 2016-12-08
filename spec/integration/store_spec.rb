@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 context 'Integration' do
-  context ' ➞ Setup' do
+  context 'Setup' do
     let(:feed) { SimpleFeed::Fixtures.follow_feed }
     let(:proxy) { feed.provider }
     let(:provider) { proxy.provider }
