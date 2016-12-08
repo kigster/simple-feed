@@ -58,7 +58,7 @@ with_activity(@activity) do
   total_count { |r| p 'total_count is now', "#{r[@uid]._v}" }
   unread_count { |r| p 'unread_count is now', "#{r[@uid]._v}" }
   hr
-  delete('value four') { p 'deleting', 'value three' }
+  delete('value four') { p 'deleting', 'value four' }
   total_count { |r| p 'total_count is now', "#{r[@uid]._v}" }
   unread_count { |r| p 'unread_count is now', "#{r[@uid]._v}" }
 
