@@ -33,7 +33,7 @@ RSpec.describe SimpleFeed::Event do
       should match /#{at.to_f}/
       should match /#{value}/
       should match /time/
-      should match /#{time}/
+      should include time.to_s
     end
   end
   context '#to_json' do
