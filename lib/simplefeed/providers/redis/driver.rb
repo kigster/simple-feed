@@ -51,7 +51,7 @@ module SimpleFeed
                 (sprintf '%.5f', delta*1000), ' ms ',
                 (sprintf '%15s ', m.to_s.upcase),
                 (sprintf '%-40s', args.inspect.gsub(/[",\[\]]/, '')), ' ⇒ ',
-                (result.is_a?(::Redis::Future) ? result.inspect : result.to_s)]
+                (result.is_a?(::Redis::Future) ? '' : result.to_s)]
               components.each_with_index do |component, index|
                 color = self.class.disable_color ? nil : colors[index]
                 component = component.send(color) if color

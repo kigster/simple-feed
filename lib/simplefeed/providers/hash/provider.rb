@@ -1,7 +1,11 @@
 require 'base62-rb'
 require 'hashie'
 require 'set'
-require 'knjrbfw'
+
+begin
+  require 'knjrbfw'
+rescue LoadError
+end
 
 require 'simplefeed/event'
 require_relative 'paginator'
@@ -97,8 +101,12 @@ module SimpleFeed
         end
 
         def total_memory_bytes
-          analyzer = Knj::Memory_analyzer::Object_size_counter.new(self.h)
-          analyzer.calculate_size
+          if defined?(::Knj)
+            analyzer = Knj::Memory_analyzer::Object_size_counter.new(self.h)
+            analyzer.calculate_size
+          else
+            raise LoadError, 'Please run "gem install knjrbfw" to get accurate hash size'
+          end
         end
 
         def total_users

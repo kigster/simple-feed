@@ -60,7 +60,7 @@ module SimpleFeed
       counter = 0
       to_s.split(/[']/).map do |word|
         counter += 1
-        counter.even? ? word.yellow : word.blue
+        counter.even? ? word.yellow.bold : word.blue
       end.join('')
     end
 

@@ -7,15 +7,14 @@
 [![Test Coverage](https://codeclimate.com/repos/58339a5b3d9faa74ac006b36/badges/8b899f6df4fc1ed93759/coverage.svg)](https://codeclimate.com/repos/58339a5b3d9faa74ac006b36/coverage)
 [![Issue Count](https://codeclimate.com/repos/58339a5b3d9faa74ac006b36/badges/8b899f6df4fc1ed93759/issue_count.svg)](https://codeclimate.com/repos/58339a5b3d9faa74ac006b36/feed)
 
-This is a ruby implementation of a fast simple feed commonly used in a typical social network-like applications. The implementation is optimized for **read-time performance** and high concurrency (lots of users). A default Redis-based provider implementation is provided, with the API supporting new providers very easily.
+This is a fast, pure-ruby implementation of an activity feed concept commonly used in social networking applications. The implementation is optimized for **read-time performance** and high concurrency (lots of users), and can be extended with custom backend providers. Two providers come bundled: the production-ready Redis provider, and a naive pure Hash-based provider.
 
-__SimpleFeed requires ruby 2.3 or later.__
+__Important Notes and Acknowledgements:__
 
-<div style="border: 2px solid #222; padding: 10px; background: #f5f5f5; font-family: 'HelveticaNeue-CondensedBold'; font-size: 14pt;">
-<ol>
-    <li>This library is currently live in production.</li>
-    <li>We thank <em><a href="http://simbi.com">Simbi, Inc.</a></em> for sponsoring the development of this open source library.</li>
-</div>
+ * SimpleFeed *does not depend on Ruby on Rails* and is a __pure-ruby__ implementation. 
+ * __SimpleFeed requires ruby 2.3 or later.__
+ * SimpleFeed is currently live in production.
+ * We'd like to thank __[Simbi, Inc — Symbiotic Economy](http://simbi.com)__ for their sponsorship of the development of this open source library.
 
 ## What is an activity feed?
 
@@ -378,11 +377,11 @@ Two providers are available with this gem:
 
 ### Redis Provider
 
-If you set environment variable `REDIS_DEBUG` and run the example (see below) you will see every operation redis performs. This could be useful in debugging an issue or submitting a bug report.
+If you set environment variable `REDIS_DEBUG` to `true` and run the example (see below) you will see every operation redis performs. This could be useful in debugging an issue or submitting a bug report.
   
-## Examples
+## Running the Examples
 
-Source code for the gem contains the `examples` folder with an example file that can be used to measure the performance of the Redis-based provider.
+Source code for the gem contains the `examples` folder with an example file that can be used to test out the providers, and see what they do under the hood.
 
 To run it, checkout the source of the library, and then:
 
@@ -394,20 +393,13 @@ be rspec  # make sure tests are passing
 ruby examples/redis_provider_example.rb 
 ```
 
-The above command will help you download, setup all dependencies, and run the examples for a single user. To run examples for multiple users, just __just pass a number as a second argument__:, for example:
+The above command will help you download, setup all dependencies, and run the examples for a single user: 
 
-``` bash
-ruby examples/redis_provider_example.rb  10
-```
+[![Example](https://raw.githubusercontent.com/kigster/simple-feed/master/man/running-example.png)](https://raw.githubusercontent.com/kigster/simple-feed/master/man/running-example.png)
 
-Or to measure the time:
-```bash
-time ruby examples/redis_provider_example.rb  1000 > /dev/null
-```
+If you set `REDIS_DEBUG` variable prior to running the example, you will be able to see every single Redis command executed as the example works its way through. Below is a sample output:
 
-Below is a an example output shown for a single user:
-
-[![Example](https://raw.githubusercontent.com/kigster/simple-feed/master/man/running-the-example.png)](https://raw.githubusercontent.com/kigster/simple-feed/master/man/running-the-example.png)
+[![Example with Debugging](https://raw.githubusercontent.com/kigster/simple-feed/master/man/running-example-redis-debug.png)](https://raw.githubusercontent.com/kigster/simple-feed/master/man/running-example-redis-debug.png)
 
 ### Generating Ruby API Documentation
 
