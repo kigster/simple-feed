@@ -84,14 +84,12 @@ RSpec.describe SimpleFeed::Event do
     its(:to_s) do
       should match(/#{at.to_f}/)
       should match(/#{value}/)
-      should match(/#{time.to_s}/)
       should include(time.to_s)
     end
 
     its(:to_color_s) do
       should match(/#{at.to_f}/)
       should match(/#{value}/)
-      should match(/#{time.to_s}/)
       should include(time.to_s)
     end
   end
