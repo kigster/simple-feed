@@ -29,4 +29,20 @@ describe SimpleFeed do
       end
     end
   end
+
+  context 'self.provider' do
+    context 'when provider is known' do
+      let(:redis) { ::Redis.new }
+      subject { SimpleFeed.provider(:redis, redis: redis, pool_size: 1) }
+
+      it { is_expected.to be_kind_of(SimpleFeed::Providers::Redis::Provider) }
+      its(:pool) { should be_kind_of(ConnectionPool) }
+    end
+
+    context 'when provider is unknown' do
+      it 'should raise ArgumentError' do
+        expect { SimpleFeed.provider(:unknown_provider) }.to raise_error(ArgumentError)
+      end
+    end
+  end
 end

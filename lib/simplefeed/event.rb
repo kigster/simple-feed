@@ -8,11 +8,11 @@ module SimpleFeed
     def initialize(*args, value: nil, at: Time.now)
       if args && args.size > 0
         self.value = args[0]
-        self.at    = args[1] || at
-      else
-        self.value = value
-        self.at    = at
+        self.at    = args[1]
       end
+
+      self.value ||= value
+      self.at    ||= at
 
       self.at = self.at.to_f
 
@@ -53,21 +53,20 @@ module SimpleFeed
     end
 
     def to_s
-      "Event Value: [#{value}], epoch: [#{at}], time: [#{time}]"
+      "<SimpleFeed::Event: value='#{value}', at='#{at}', time='#{time}'>"
     end
 
     def to_color_s
       counter = 0
-      to_s.gsub(/,/, '-').split(/[\[\]]/).map do |word|
+      to_s.split(/[']/).map do |word|
         counter += 1
-        counter.even? ? word.bold.yellow + "\n": word.blue
-      end.join('').gsub(/[\n] /, '')
+        counter.even? ? word.yellow : word.blue
+      end.join('')
     end
 
     def inspect
       super
     end
-
 
     private
 
@@ -75,12 +74,6 @@ module SimpleFeed
       unless self.value && self.at
         raise ArgumentError, "Required arguments missing, value=[#{value}], at=[#{at}]"
       end
-    end
-
-    def copy(&block)
-      copy = self.clone
-      copy.instance_eval(&block)
-      copy
     end
 
   end

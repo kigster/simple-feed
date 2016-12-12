@@ -15,6 +15,14 @@ module SimpleFeed
         self.debug
       end
 
+      def self.with_debug(&block)
+        previous_value                     = SimpleFeed::Providers::Redis.debug
+        SimpleFeed::Providers::Redis.debug = true
+        result                             = yield if block_given?
+        SimpleFeed::Providers::Redis.debug = previous_value
+        result
+      end
+
       class << self
         attr_accessor :debug
       end
@@ -24,10 +32,32 @@ module SimpleFeed
         end
 
         class LoggingRedis < Struct.new(:redis)
+          @stream = STDOUT
+          @disable_color = false
+          class << self
+            # in case someone might prefer to dump it into STDOUT instead, just set
+            # SimpleFeed::Providers::Redis::Driver::LoggingRedis.stream = STDOUT | STDERR | etc...
+            attr_accessor :stream, :disable_color
+          end
+
           def method_missing(m, *args, &block)
             if redis.respond_to?(m)
-              result = redis.send(m, *args, &block)
-              STDERR.printf "%40s %s\n", "#{m.to_s.upcase.bold.red}", "#{args.inspect.gsub(/[\[\]]/, '').magenta}"
+              t1         = Time.now
+              result     = redis.send(m, *args, &block)
+              delta      = Time.now - t1
+              colors     = [:blue, nil, :blue, :blue, :yellow, :cyan, nil, :blue]
+              components = [
+                Time.now.strftime('%H:%M:%S.%L'), ' rtt=',
+                (sprintf '%.5f', delta*1000), ' ms ',
+                (sprintf '%15s ', m.to_s.upcase),
+                (sprintf '%-40s', args.inspect.gsub(/[",\[\]]/, '')), ' ⇒ ',
+                (result.is_a?(::Redis::Future) ? result.inspect : result.to_s)]
+              components.each_with_index do |component, index|
+                color = self.class.disable_color ? nil : colors[index]
+                component = component.send(color) if color
+                self.class.stream.printf component
+              end
+              self.class.stream.puts
               result
             else
               super

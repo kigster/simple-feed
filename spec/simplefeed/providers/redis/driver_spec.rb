@@ -81,4 +81,19 @@ RSpec.describe SimpleFeed::Providers::Redis::Driver do
       adapter.set('retry', 'connection')
     end
   end
+  context 'LoggingRedis' do
+    let(:adapter) { RedisAdapter.new(redis: redis , pool_size: 1) }
+    it 'should print out each redis operation to STDERR' do
+      expect(SimpleFeed::Providers::Redis::Driver::LoggingRedis.stream).to receive(:printf).at_least(15).times
+      expect(SimpleFeed::Providers::Redis::Driver::LoggingRedis.stream).to receive(:puts).exactly(3).times
+
+      SimpleFeed::Providers::Redis.with_debug do
+        adapter.with_redis do |redis|
+          expect(redis.set('hokey', 'pokey')).to eq 'OK'
+          expect(redis.get('hokey')).to eq 'pokey'
+          expect(redis.del('hokey')).to eq 1
+        end
+      end
+    end
+  end
 end

@@ -7,14 +7,6 @@ require 'simplefeed/providers/redis'
 require 'simplefeed/providers/hash'
 require 'simplefeed/dsl'
 
-Float.class_eval do
-  def near_eql?(other)
-    delta = 0.001
-    n     = (other - self).abs
-    delta >= n
-  end
-end
-
 module SimpleFeed
   @registry = {}
 

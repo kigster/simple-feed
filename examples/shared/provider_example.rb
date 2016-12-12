@@ -24,43 +24,44 @@ def p(*args)
 end
 
 with_activity(@activity) do
+
   header "#{@activity.feed.provider_type.to_s} provider example"
-  wipe { puts 'wiping feed...' }
 
-  store('value one') { p 'storing', 'value one' }
-  store('value two') { p 'storing', 'value two' }
-  store('value three') { p 'storing', 'value three' }
+  wipe
+
+  store('value one') { p 'storing new value', 'value one' }
+  store('value two') { p 'storing new value', 'value two' }
+  store('value three') { p 'storing new value', 'value three' }
+
   hr
 
   total_count { |r| p 'total_count is now', "#{r[@uid]._v}" }
   unread_count { |r| p 'unread_count is now', "#{r[@uid]._v}" }
 
-  header 'FIRST PAGE (PER-PAGE: 2) #to_json'
-  paginate(page: 1, per_page: 2) { |r| puts r[@uid].map(&:to_json) }
-  header 'SECOND PAGE (PER-PAGE: 2) #to_s'
-  paginate(page: 2, per_page: 2) { |r| puts r[@uid].map(&:to_s) }
-  header 'LAST PAGE (PER-PAGE: 1) #to_color_s'
-  paginate(page: 3, per_page: 1) { |r| puts r[@uid].map(&:to_color_s) }
+  header 'paginate(page: 1, per_page: 2)'
+  paginate(page: 1, per_page: 2) { |r| puts r[@uid].map(&:to_color_s) }
+  header 'paginate(page: 2, per_page: 2)'
+  paginate(page: 2, per_page: 2) { |r| puts r[@uid].map(&:to_color_s) }
 
   hr
-  total_count { |r| p 'total_count is now', "#{r[@uid]._v}" }
-  unread_count { |r| p 'unread_count is now', "#{r[@uid]._v}" }
+
+  total_count { |r| p 'total_count ', "#{r[@uid]._v}" }
+  unread_count { |r| p 'unread_count ', "#{r[@uid]._v}" }
 
   hr
   store('value four') { p 'storing', 'value four' }
-  total_count { |r| p 'total_count is now', "#{r[@uid]._v}" }
-  unread_count { |r| p 'unread_count is now', "#{r[@uid]._v}" }
 
   color_dump
 
-  hr
+  header 'deleting'
+
   delete('value three') { p 'deleting', 'value three' }
-  total_count { |r| p 'total_count is now', "#{r[@uid]._v}" }
-  unread_count { |r| p 'unread_count is now', "#{r[@uid]._v}" }
+  total_count { |r| p 'total_count ', "#{r[@uid]._v}" }
+  unread_count { |r| p 'unread_count ', "#{r[@uid]._v}" }
   hr
   delete('value four') { p 'deleting', 'value four' }
-  total_count { |r| p 'total_count is now', "#{r[@uid]._v}" }
-  unread_count { |r| p 'unread_count is now', "#{r[@uid]._v}" }
+  total_count { |r| p 'total_count ', "#{r[@uid]._v}" }
+  unread_count { |r| p 'unread_count ', "#{r[@uid]._v}" }
 
 end
 

@@ -97,13 +97,17 @@ module SimpleFeed
     end
 
     def hr(char = '—')
-      _print (char * 75 + "\n").magenta
+      _print(_hr(char).magenta)
+    end
+
+    def _hr(char = '—')
+      char * 75 + "\n"
     end
 
     def header(message = nil)
-      hr
-      block_given? ? yield : _print(message.capitalize.magenta.bold + "\n")
-      hr
+      _print(_hr.green.bold)
+      block_given? ? yield : _print(message.green.italic + "\n")
+      _print(_hr.green.bold)
     end
   end
 end
