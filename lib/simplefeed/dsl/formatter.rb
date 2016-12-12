@@ -8,11 +8,11 @@ module SimpleFeed
 
       attr_accessor :activity, :feed
 
-      def color_dump(_activity = activity)
-        _activity = if _activity.is_a?(SimpleFeed::Activity::SingleUser)
-                      _activity.feed.activity([_activity.user_id])
+      def color_dump(this_activity = activity)
+        this_activity = if this_activity.is_a?(SimpleFeed::Activity::SingleUser)
+                      this_activity.feed.activity([this_activity.user_id])
                     else
-                      _activity
+                      this_activity
                     end
         _puts
 
@@ -22,34 +22,34 @@ module SimpleFeed
           field('Max Size', feed.max_size, "\n")
         end
 
-        with_activity(_activity) do
-          _activity.each do |user_id|
-            _last_event_at = nil
-            _last_read     = (last_read[user_id] || 0.0).to_f
+        with_activity(this_activity) do
+          this_activity.each do |user_id|
+            this_last_event_at = nil
+            this_last_read     = (last_read[user_id] || 0.0).to_f
 
             [['User ID', user_id, "\n"],
              ['Activities', sprintf('%d total, %d unread', total_count[user_id], unread_count[user_id]), "\n"],
-             ['Last Read', _last_read ? Time.at(_last_read) : 'N/A'],
+             ['Last Read', this_last_read ? Time.at(this_last_read) : 'N/A'],
             ].each do |field, value, *args|
               field(field, value, *args)
             end
 
             _puts; hr '¨'
 
-            _events       = fetch[user_id]
-            _events_count = _events.size
-            _events.each_with_index do |_event, _index|
+            this_events       = fetch[user_id]
+            this_events_count = this_events.size
+            this_events.each_with_index do |_event, _index|
 
-              if _last_event_at.nil? && _event.at < _last_read
-                print_last_read_separator(_last_read)
-              elsif _last_event_at && _last_read < _last_event_at && _last_read > _event.at
-                print_last_read_separator(_last_read)
+              if this_last_event_at.nil? && _event.at < this_last_read
+                print_last_read_separator(this_last_read)
+              elsif this_last_event_at && this_last_read < this_last_event_at && this_last_read > _event.at
+                print_last_read_separator(this_last_read)
               end
 
-              _last_event_at = _event.at # float
+              this_last_event_at = _event.at # float
               _print "[%2d] %16s %s\n", _index, _event.time.strftime(TIME_FORMAT).blue.bold, _event.value
-              if _index == _events_count - 1 && _last_read < _event.at
-                print_last_read_separator(_last_read)
+              if _index == this_events_count - 1 && this_last_read < _event.at
+                print_last_read_separator(this_last_read)
               end
             end
           end

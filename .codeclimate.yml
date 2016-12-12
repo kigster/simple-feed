@@ -17,6 +17,8 @@ engines:
         enabled: false
       Rubocop/Metrics/CyclomaticComplexity:
         enabled: false
+      Rubocop/Lint/UnderscorePrefixedVariableName:
+        enabled: false
 ratings:
   paths:
   - "**.inc"

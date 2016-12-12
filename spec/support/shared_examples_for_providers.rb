@@ -123,47 +123,47 @@ shared_examples 'a provider' do
           with_activity(activity, events: events) do
             wipe
 
-            _now = Time.now
-            reset_last_read at: _now
+            current_time = Time.now
+            reset_last_read at: current_time
 
-            last_read { |r| expect(r.to_f).to be_within(0.001).of(_now.to_f) }
+            last_read { |r| expect(r.to_f).to be_within(0.001).of(current_time.to_f) }
 
             # The next one resets the time
             store(value: 'new story right now') { |r| expect(r).to be true }
-            store(value: 'old one', at: _now - 5.0) { |r| expect(r).to be(true) }
-            store(value: 'older one', at: _now - 6.0) { |r| expect(r).to be(true) }
+            store(value: 'old one', at: current_time - 5.0) { |r| expect(r).to be(true) }
+            store(value: 'older one', at: current_time - 6.0) { |r| expect(r).to be(true) }
 
             # unread count at this point is 1 because only the 'new story right now' is more recent
             # then the unread flag
             unread_count { |r| expect(r).to eq(1) }
 
-            last_read { |r| expect(r.to_f).to be_within(0.001).of(_now.to_f) }
+            last_read { |r| expect(r.to_f).to be_within(0.001).of(current_time.to_f) }
 
             paginate(page: 1, per_page: 1) do |r|
               expect(r.size).to eq(1)
               expect(r.first.value).to eq('new story right now')
             end
 
-            _then = Time.now
+            time_then = Time.now
 
-            last_read { |r| expect(r.to_f).to be > _now.to_f }
-            last_read { |r| expect(r.to_f).to be < _then.to_f }
+            last_read { |r| expect(r.to_f).to be > current_time.to_f }
+            last_read { |r| expect(r.to_f).to be < time_then.to_f }
 
             # now that we've read the feed...
             unread_count { |r| expect(r).to be == 0 }
 
-            last_read { |r| expect(r.to_f).to be < _then.to_f }
+            last_read { |r| expect(r.to_f).to be < time_then.to_f }
 
             store(value: 'and then one right now',) { |r| expect(r).to be(true) }
             unread_count { |r| expect(r).to be == 1 }
 
-            store(value: 'and then one just ahead of it', at: _then + 3) { |r| expect(r).to be(true) }
+            store(value: 'and then one just ahead of it', at: time_then + 3) { |r| expect(r).to be(true) }
             unread_count { |r| expect(r).to be == 2 }
 
-            store(value: 'and even then one more', at: _then + 10) { |r| expect(r).to be(true) }
+            store(value: 'and even then one more', at: time_then + 10) { |r| expect(r).to be(true) }
             unread_count { |r| expect(r).to be == 3 }
 
-            store(value: 'some other future ', at: _then + 30) { |r| expect(r).to be(true) }
+            store(value: 'some other future ', at: time_then + 30) { |r| expect(r).to be(true) }
             unread_count { |r| expect(r).to be == 4 }
 
             total_count { |r| expect(r).to be == 5 }

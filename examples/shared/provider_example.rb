@@ -25,7 +25,7 @@ end
 
 with_activity(@activity) do
 
-  header "#{@activity.feed.provider_type.to_s} provider example"
+  header "#{@activity.feed.provider_type} provider example"
 
   wipe
 
