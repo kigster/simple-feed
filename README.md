@@ -279,9 +279,11 @@ responses for each user, accessible via `response[user_id]` method.
   # if the block returns true, the event is deleted
 end
 
+# Wipe the feed for a given user(s)
 @multi.wipe
 # => [Response] { user_id => [Boolean], ... } true if user activity was found and deleted, false otherwise
 
+# Return a paginated list of all items, optionally with the total count of items
 @multi.paginate(page:, per_page:, peek: false, with_total: false)
 # => [Response] { user_id => [Array]<Event>, ... }
 # Options:
@@ -294,7 +296,7 @@ end
 # => [Response] { user_id => [Array]<Event>, ... }
 # Options:
 #   since: <timestamp> — if provided, returns all items posted since then
-#   since: :unread — if provided, returns all unread items
+#   since: :unread — if provided, returns all unread items and resets +last_read+
 
 @multi.reset_last_read
 # => [Response] { user_id => [Time] last_read, ... }
