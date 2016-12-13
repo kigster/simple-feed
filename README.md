@@ -21,28 +21,28 @@ __Important Notes and Acknowledgements:__
 > Activity feed is a visual representation of a time-ordered, reverse chronological list of events which can be:
 >
 > * personalized for a given user or a group, or global
-> * filtered by a certain characteristic, such as, eg.
->   * the source of the events — i.e. people you follow
->   * type of event (i.e. posts, likes, and updates)
->   * the target of the event i.e. my own activity as opposed to from those I follow.
 > * aggregated across several actors for a similar event type, eg. "John, Mary, etc.. followed George"
+> * filtered by a certain characteristic, such as:
+>   * the actor producing an event — i.e. people you follow on a social network, or "yourself" for your own activity
+>   * the type of an event (i.e. posts, likes, comments, stories, etc)
+>   * the target of an event (commonly a user, but can also be a thing you are interested in, e.g. a github repo you are watching)
 
-Here is an example of a text-based simple feed that is very common today on social networking sites.
+Here is an example of a real feed powered by this library, and which is very common on today's social media sites:
 
-[![Example](https://raw.githubusercontent.com/kigster/simple-feed/master/man/sf-example.png)](https://raw.githubusercontent.com/kigster/simple-feed/master/man/sf-example.png)
+[![Example](https://raw.githubusercontent.com/kigster/simple-feed/master/man/activity-feed-action.png)](https://raw.githubusercontent.com/kigster/simple-feed/master/man/activity-feed-action.png)
 
-The _stories_ in the feed depend entirely on the application using this
-library, therefore to integrate with SimpleFeed requires implementing
-several _glue points_ in your code.
+What you publish into your feed — i.e. _stories_ or _events_, will depend entirely on your application. SimpleFeed should be able to power the most demanding *write-time* feeds.
 
-## Challenges
+## Challenges 
 
-Activity feeds tend to be challenging due to the large number of event types that it typically includes, and the requirement for it to scale to massive numbers of concurrent users.  Therefore common implementations tend to focus on either:
+Building a personalized activity feeds tend to be a challenging task, due to the diversity of event types that it often includes, the personalization requirement, and the need for it to often scale to very large numbers of concurrent users.  Therefore common implementations tend to focus on either:
 
  * optimizing the read time performance by pre-computing the feed for each user ahead of time
  * OR optimizing the various ranking algorithms by computing the feed at read time, with complex forms of caching addressing the performance requirements.
  
 The first type of feed is much simpler to implement on a large scale (up to a point), and it scales well if the data is stored in a light-weight in-memory storage such as Redis. This is exactly the approach this library takes.
+
+For more information about various types of feed, and the typical architectures that power them — please read ["How would you go about building an activity feed like Facebook?"](https://hashnode.com/post/architecture-how-would-you-go-about-building-an-activity-feed-like-facebook-cioe6ea7q017aru53phul68t1/answer/ciol0lbaa02q52s530vfqea0t) by [Lee Byron](https://hashnode.com/@leebyron). 
 
 ## Overview
 
@@ -104,6 +104,9 @@ activity.store(value: 'hello')
 
 # or equivalent:
 @event = SimpleFeed::Event.new(value: 'hello', at: Time.now)
+# or even simpler:
+@event = SimpleFeed::Event.new('hello', Time.now)
+# and then:
 activity.store(event: @event)
 # => false # false indicates that the same event is already in the feed.
 ```
@@ -123,7 +126,7 @@ activity.paginate(page: 1)
 
 The feed API is offered in a single-user and a batch (multi-user) forms.
 
-The only and primary difference is in what the methods return. In the
+The main and only difference is in what the methods return. In the
 single user case, the return of, say, `#total_count` is an `Integer`
 value representing the total count for this user.
 
@@ -135,56 +138,44 @@ Please see further below the details about the [Batch API](#bach-api).
 
 <a name="single-user-api"/>
 
-#####  Single-User API 
+##### Single-User API 
 
-This API should be used typically for _read_ operations, and is accessed
-via the `SimpleFeed::Feed#for` instance method. Optimized for simplicity
-of data retrieval of a single-user, this method strives for simplicity
-and ease of use.
+In the examples below we show responses based on a single-user usage. As previously mentioned, the multi-user case is the same, except for the response values, and is discussed further below.
 
-Below is a user session that demonstrates simple return values from the
-Feed operations for a given user:
+Below is a user session that demonstrates simple return values from the feed operations for a given user:
 
 ```ruby
 require 'simplefeed'
 
 # Define the feed using an in-memory Hash provider, which uses
 # SortedSet to keep user's events sorted.
-SimpleFeed.define(:notifications) do |f|
+SimpleFeed.define(:followers) do |f|
   f.provider = SimpleFeed.provider(:hash)
   f.per_page = 50
   f.per_page = 2
 end
 
 # Let's get the Activity instance that wraps this user_id
-activity = SimpleFeed.get(:notifications).activity(user_id)
-# => [... complex object removed for brevity ]
-
+activity = SimpleFeed.get(:followers).activity(user_id)   # => [... complex object removed for brevity ]
 # let's clear out this feed to ensure it's empty
-activity.wipe
-# => true
-
+activity.wipe                                             # => true
 # Let's verify that the counts for this feed are at zero
-activity.total_count
-#=> 0
-
-activity.unread_count
-#=> 0
-
+activity.total_count                                      # => 0
+activity.unread_count                                     # => 0
 # Store some events
-activity.store(value: 'hello')
-activity.store(value: 'goodbye')
-
+activity.store(value: 'hello')                            # => true
+activity.store(value: 'goodbye')                          # => true
+activity.unread_count                                     # => 2
 # Now we can paginate the events, which by default resets "last_read" timestamp the user
 activity.paginate(page: 1)
 # [
 #     [0] #<SimpleFeed::Event#70138821650220 {"value":"goodbye","at":1480475294.0579991}>,
 #     [1] #<SimpleFeed::Event#70138821649420 {"value":"hello","at":1480475294.057138}>
 # ]
-
 # Now the unread_count should return 0 since the user just "viewed" the feed.
-activity.unread_count
-#=> 0
+activity.unread_count                                     # => 0
+activity.delete(value: 'hello')                           # => true
+activity.total_count                                      # => 1
 ```
 
 You can fetch all items in the feed using `#fetch`, and you can
@@ -253,6 +244,9 @@ with_activity(activity, countries: data_to_store) do
     store(value: country) { |result| report(result ? 'success' : 'failure') }
     # we can call #report inside the proc because it is evaluated in the 
     # outside context of the #with_activity
+    
+    # now let's print a color ASCII dump of the entire feed for this user: 
+    color_dump 
   end  
   printf "Activity counts are: %d unread of %d total\n", unread_count, total_count
 end
@@ -262,56 +256,9 @@ end
 
 ## Complete API
 
-### Single User
+For completeness sake we'll show the multi-user API responses only. For a single-user use-case the response is typically a scalar, and the input is a singular `user_id`, not an array of ids. 
 
-For a single user, via the instance of 
-`SimpleFeed::Activity::UserActivity` class:
-
-```ruby
-require 'simplefeed'
-
-@ua = SimpleFeed.get(:news).activity(current_user.id)
-
-@ua.store(event:)
-@ua.store(value:, at:)
-# => [Boolean] true if the value was stored, false if it wasn't.
-
-@ua.delete(event:)
-@ua.delete(value:, at:)
-# => [Boolean] true if the value was removed, false if it didn't exist
-
-@ua.delete_if do |user_id, event|
-  # if the block returns true, the event is deleted
-end
-
-@ua.wipe
-# => [Boolean] true
-
-# Options:
-# with options[:peak] = true it does not reset last_read
-# with options[:with_total] = true it returns a hash with a total:
-# @return: 
-@ua.paginate(page:, per_page:, **options)
-# @return: [Array]<Event> (without options[:with_total])
-# @return: { events: [Array]<Event, total_count: 3242 }
-
-@ua.fetch
-# => [Array]<Event> – returns all events up to Feed.max_size
-
-@ua.reset_last_read
-# => [Time] last_read
-
-@ua.total_count
-# => [Integer] total_count
-
-@ua.unread_count
-# => [Integer] unread_count
-
-@ua.last_read
-# => [Time] last_read
-```
-
-#### Batch User API
+#### Multi-User (Batch) API
 
 Each API call at this level expects an array of user IDs, therefore the
 return value is an object, `SimpleFeed::Response`, containing individual
@@ -335,12 +282,19 @@ end
 @multi.wipe
 # => [Response] { user_id => [Boolean], ... } true if user activity was found and deleted, false otherwise
 
-@multi.paginate(page:, per_page:, peek: false)
+@multi.paginate(page:, per_page:, peek: false, with_total: false, unread_only: false)
 # => [Response] { user_id => [Array]<Event>, ... }
-# With (peak: true) does not reset last_read, otherwise it does.
+# Options:
+#   peak: true — does not reset last_read, otherwise it does.
+#   unread_only: true — only return paginated unread items  
+#   with_total: true — returns a hash for each user_id:
+#        => [Response] { user_id => { events: Array<Event>, total_count: 3 }, ... } 
 
-@multi.fetch
+# Return un-paginated list of all items, optionally filtered
+@multi.fetch(since: nil)
 # => [Response] { user_id => [Array]<Event>, ... }
+# Options:
+#   since: <timestamp> — if provided, returns all items posted since then
 
 @multi.reset_last_read
 # => [Response] { user_id => [Time] last_read, ... }

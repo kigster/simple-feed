@@ -3,6 +3,9 @@ require 'simplefeed/activity/single_user'
 require 'simplefeed/activity/multi_user'
 module SimpleFeed
   module DSL
+    # This module exports method #color_dump which receives an activity and
+    # then prints out a report about the activity, including the event
+    # data found for a given user.
     module Formatter
       include SimpleFeed::DSL
 

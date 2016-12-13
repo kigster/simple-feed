@@ -11,10 +11,10 @@ module SimpleFeed
   #     include SimpleFeed::DSL
   #
   #     with_activity(SimpleFeed.get(:newsfeed).activity(user_id)) do
-  #       puts 'success' if store(value: 'hello', at: Time.now)
-  #       puts fetch
-  #       puts total_count
-  #       puts unread_count
+  #       store(value: 'hello', at: Time.now)  #=> true
+  #       fetch                                # => [ Event, Event, ... ]
+  #       total_count                          # => 12
+  #       unread_count                         # => 4
   #     end
   #
   module DSL
