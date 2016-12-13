@@ -144,6 +144,11 @@ shared_examples 'a provider' do
               expect(r.first.value).to eq('new story right now')
             end
 
+            paginate(page: 1, per_page: 1, with_total: true) do |r|
+              expect(r[:events].size).to eq(1)
+              expect(r[:total_count]).to eq(3)
+            end
+
             time_then = Time.now
 
             last_read { |r| expect(r.to_f).to be > current_time.to_f }
@@ -166,9 +171,15 @@ shared_examples 'a provider' do
             store(value: 'some other future ', at: time_then + 30) { |r| expect(r).to be(true) }
             unread_count { |r| expect(r).to be == 4 }
 
+            fetch { |r| expect(r.size).to eq 5 }
+
+            fetch(since: :unread) { |r| expect(r.size).to eq 4 }
+            fetch(since: last_read) { |r| expect(r.size).to eq 4 }
+            fetch(since: time_then + 15) { |r| expect(r.size).to eq 1 }
+
             total_count { |r| expect(r).to be == 5 }
 
-            color_dump
+            # color_dump
           end
         end
       end

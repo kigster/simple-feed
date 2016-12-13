@@ -61,17 +61,24 @@ module SimpleFeed
           end
         end
 
-        def fetch(user_ids:)
+        def fetch(user_ids:, since: nil)
           with_response_batched(user_ids) do |key|
-            activity(key)
+            if since == :unread
+              activity(key).reject { |event| event.at <= user_record(key).last_read.to_f }
+            elsif since
+              activity(key).reject { |event| event.at <= since.to_f }
+            else
+              activity(key)
+            end
           end
         end
 
-        def paginate(user_ids:, page:, per_page: feed.per_page, **options)
-          reset_last_read(user_ids: user_ids) unless options[:peek]
+        def paginate(user_ids:, page:, per_page: feed.per_page, with_total: false, peek: false)
+          reset_last_read(user_ids: user_ids) unless peek
           with_response_batched(user_ids) do |key|
             activity = activity(key)
-            (page && page > 0) ? activity[((page - 1) * per_page)...(page * per_page)] : activity
+            result = (page && page > 0) ? activity[((page - 1) * per_page)...(page * per_page)] : activity
+            with_total ? { events: result, total_count: activity.length } : result
           end
         end
 

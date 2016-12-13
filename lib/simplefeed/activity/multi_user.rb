@@ -13,10 +13,11 @@ module SimpleFeed
       include Enumerable
 
       #
-      # Multi-user API for the feeds.
+      # API Examples
+      # ============
       #
-      # ```ruby
-      # @multi = SimpleFeed.get(:feed_name).for(User.active.map(&:id))
+      #```ruby
+      # @multi = SimpleFeed.get(:feed_name).activity(User.active.map(&:id))
       #
       # @multi.store(value:, at:)
       # @multi.store(event:)
@@ -24,18 +25,28 @@ module SimpleFeed
       #
       # @multi.delete(value:, at:)
       # @multi.delete(event:)
-      # # => [Response] { user_id => [Boolean], ... } true if the value was deleted, false if it didn't exist
+      # # => [Response] { user_id => [Boolean], ... } true if the value was removed, false if it didn't exist
+      #
+      # @multi.delete_if do |user_id, event|
+      #   # if the block returns true, the event is deleted
+      # end
       #
       # @multi.wipe
       # # => [Response] { user_id => [Boolean], ... } true if user activity was found and deleted, false otherwise
       #
-      # @multi.paginate(page:, per_page:, peek: false)
+      # @multi.paginate(page:, per_page:, peek: false, with_total: false)
       # # => [Response] { user_id => [Array]<Event>, ... }
+      # # Options:
+      # #   peek: true — does not reset last_read, otherwise it does.
+      # #   with_total: true — returns a hash for each user_id:
+      # #        => [Response] { user_id => { events: Array<Event>, total_count: 3 }, ... }
       #
-      # # With (peak: true) does not reset last_read, otherwise it does.
-      #
-      # @multi.fetch
+      # # Return un-paginated list of all items, optionally filtered
+      # @multi.fetch(since: nil)
       # # => [Response] { user_id => [Array]<Event>, ... }
+      # # Options:
+      # #   since: <timestamp> — if provided, returns all items posted since then
+      # #   since: :unread — if provided, returns all unread items
       #
       # @multi.reset_last_read
       # # => [Response] { user_id => [Time] last_read, ... }
@@ -48,7 +59,8 @@ module SimpleFeed
       #
       # @multi.last_read
       # # => [Response] { user_id => [Time] last_read, ... }
-      # ```
+      #
+      #```
 
       SimpleFeed::Providers.define_provider_methods(self) do |instance, method, *args, **opts, &block|
         opts.merge!(user_ids: instance.user_ids)

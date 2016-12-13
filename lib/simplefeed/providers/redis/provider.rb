@@ -75,10 +75,20 @@ module SimpleFeed
           end
         end
 
-
-        def fetch(user_ids:)
+        def fetch(user_ids:, since: nil)
+          if since == :unread
+            last_read_response = with_response_pipelined(user_ids) do |redis, key|
+              get_users_last_read(redis, key)
+            end
+          end
           with_response_pipelined(user_ids) do |redis, key|
-            redis.zrevrange(key.data, 0, -1, withscores: true)
+            if since == :unread
+              redis.zrevrangebyscore(key.data, '+inf', (last_read_response.delete(key.user_id) || 0).to_f, withscores: true)
+            elsif since
+              redis.zrevrangebyscore(key.data, '+inf', since.to_f, withscores: true)
+            else
+              redis.zrevrange(key.data, 0, -1, withscores: true)
+            end
           end
         end
 

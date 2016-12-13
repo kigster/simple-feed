@@ -27,5 +27,4 @@ describe 'SimpleFeed::Activity::SingleUser' do
       end
     end
   end
-
 end

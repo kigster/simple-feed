@@ -16,39 +16,50 @@ module SimpleFeed
         yield(user_id)
       end
 
+      #```ruby
+      #  @activity = SimpleFeed.get(:feed_name).activity(current_user.id)
       #
-      # Single-user API for the feeds.
+      #  @activity.store(value:, at:)
+      #  @activity.store(event:)
+      #  # => [Boolean] true if the value was stored, false if it wasn't.
       #
-      # @ua = SimpleFeed.get(:feed_name).user_activity(current_user.id)
+      #  @activity.delete(value:, at:)
+      #  @activity.delete(event:)
+      #  # => [Boolean] true if the value was removed, false if it didn't exist
       #
-      # @ua.store(value:, at:)
-      # # => [Boolean] true if the value was stored, false if it wasn't.
+      #  @activity.delete_if do |user_id, event|
+      #    # if the block returns true, the event is deleted
+      #  end
       #
-      # @ua.delete(value:, at:)
-      # # => [Boolean] true if the value was deleted, false if it didn't exist
+      #  @activity.wipe
+      #  # => [Boolean] true if user activity was found and deleted, false otherwise
       #
-      # @ua.wipe
-      # # => [Boolean] true
+      #  @activity.paginate(page:, per_page:, peek: false, with_total: false)
+      #  # => [Array]<Event>
+      #  # Options:
+      #  #   peek: true — does not reset last_read, otherwise it does.
+      #  #   with_total: true — returns a hash for each user_id:
+      #  #        => { events: Array<Event>, total_count: 3 }
       #
-      # @ua.paginate(page:, per_page:, peek: false)
-      # # => [Array]<Event>
-      # # with peak: true does not reset last_read
+      #  # Return un-paginated list of all items, optionally filtered
+      #  @activity.fetch(since: nil)
+      #  # => [Array]<Event>
+      #  # Options:
+      #  #   since: <timestamp> — if provided, returns all items posted since then
+      #  #   since: :unread — if provided, returns all unread items
       #
-      # @ua.fetch
-      # # => [Array]<Event>
+      #  @activity.reset_last_read
+      #  # => [Time] last_read
       #
-      # @ua.reset_last_read
-      # # => [Time] last_read
+      #  @activity.total_count
+      #  # => [Integer] total_count
       #
-      # @ua.total_count
-      # # => [Integer] total_count
+      #  @activity.unread_count
+      #  # => [Integer] unread_count
       #
-      # @ua.unread_count
-      # # => [Integer] unread_count
-      #
-      # @ua.last_read
-      # # => [Time] last_read
-      # ```
+      #  @activity.last_read
+      #  # => [Time] last_read
+
 
       SimpleFeed::Providers.define_provider_methods(self) do |instance, method, *args, **opts, &block|
         response = instance.user_activity.send(method, *args, **opts, &block)
