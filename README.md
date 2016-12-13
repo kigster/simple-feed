@@ -285,7 +285,7 @@ end
 @multi.paginate(page:, per_page:, peek: false, with_total: false, unread_only: false)
 # => [Response] { user_id => [Array]<Event>, ... }
 # Options:
-#   peak: true — does not reset last_read, otherwise it does.
+#   peek: true — does not reset last_read, otherwise it does.
 #   unread_only: true — only return paginated unread items  
 #   with_total: true — returns a hash for each user_id:
 #        => [Response] { user_id => { events: Array<Event>, total_count: 3 }, ... } 
