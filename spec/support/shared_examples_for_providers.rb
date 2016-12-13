@@ -173,10 +173,14 @@ shared_examples 'a provider' do
 
             fetch { |r| expect(r.size).to eq 5 }
 
-            fetch(since: :unread) { |r| expect(r.size).to eq 4 }
             fetch(since: last_read) { |r| expect(r.size).to eq 4 }
             fetch(since: time_then + 15) { |r| expect(r.size).to eq 1 }
 
+            unread_count { |r| expect(r).to be == 4 }
+            fetch(since: :unread) { |r| expect(r.size).to eq 4 }
+
+            # only because we have 3 items in the future now
+            unread_count { |r| expect(r).to be == 3 }
             total_count { |r| expect(r).to be == 5 }
 
             # color_dump

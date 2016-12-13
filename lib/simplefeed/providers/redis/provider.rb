@@ -80,6 +80,7 @@ module SimpleFeed
             last_read_response = with_response_pipelined(user_ids) do |redis, key|
               get_users_last_read(redis, key)
             end
+            reset_last_read(user_ids: user_ids)
           end
           with_response_pipelined(user_ids) do |redis, key|
             if since == :unread

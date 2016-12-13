@@ -64,9 +64,11 @@ module SimpleFeed
         def fetch(user_ids:, since: nil)
           with_response_batched(user_ids) do |key|
             if since == :unread
-              activity(key).reject { |event| event.at <= user_record(key).last_read.to_f }
+              result = activity(key).reject { |event| event.at < user_record(key).last_read.to_f }
+              reset_last_read(user_ids: user_ids)
+              result
             elsif since
-              activity(key).reject { |event| event.at <= since.to_f }
+              activity(key).reject { |event| event.at < since.to_f }
             else
               activity(key)
             end
