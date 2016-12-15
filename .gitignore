@@ -14,3 +14,4 @@
 ._*
 .Spotlight-V100
 .Trashes
+/lib/simplefeed/providers/serialization/key.rb

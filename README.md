@@ -42,28 +42,27 @@ Building a personalized activity feeds tend to be a challenging task, due to the
  
 The first type of feed is much simpler to implement on a large scale (up to a point), and it scales well if the data is stored in a light-weight in-memory storage such as Redis. This is exactly the approach this library takes.
 
-For more information about various types of feed, and the typical architectures that power them — please read ["How would you go about building an activity feed like Facebook?"](https://hashnode.com/post/architecture-how-would-you-go-about-building-an-activity-feed-like-facebook-cioe6ea7q017aru53phul68t1/answer/ciol0lbaa02q52s530vfqea0t) by [Lee Byron](https://hashnode.com/@leebyron). 
+For more information about various types of feed, and the typical architectures that power them — please read:
+
+ - ["How would you go about building an activity feed like Facebook?"](https://hashnode.com/post/architecture-how-would-you-go-about-building-an-activity-feed-like-facebook-cioe6ea7q017aru53phul68t1/answer/ciol0lbaa02q52s530vfqea0t) by [Lee Byron](https://hashnode.com/@leebyron).
+ - ["Feeding Frenzy: Selectively Materializing Users’ Event Feeds"](http://jeffterrace.com/docs/feeding-frenzy-sigmod10-web.pdf) (Yahoo! Research paper).
 
 ## Overview
 
 The feed library aims to address the following goals:
 
-* To define a minimalistic API for a typical event-based simple feed,
-  without tying it to any concrete provider implementation
-* To make it easy to implement and plug in a new type of provider,
-  eg.using Couchbase or MongoDB
+* To define a minimalistic API for a typical event-based simple feed, without tying it to any concrete provider implementation
+* To make it easy to implement and plug in a new type of provider, eg. using *Couchbase* or *MongoDB*
 * To provide a scalable default provider implementation using Redis, which can support millions of users via sharding
 * To support multiple simple feeds within the same application, but used for different purposes, eg. simple feed of my followers, versus simple feed of my own actions.
 
 ## Usage
 
-First you need to configure the Feed with a valid provider
-implementation and a name.
+First you need to configure the Feed with a valid provider implementation and a name.
 
 ### Configuration
 
-Below we configure a feed called `:newsfeed`, which presumably
-will be populated with the events coming from the followers.
+Below we configure a feed called `:newsfeed`, which presumably will be populated with the events coming from the followers.
 
 ```ruby
 require 'simplefeed'
@@ -74,16 +73,13 @@ SimpleFeed.define(:newsfeed) do |f|
   f.provider   = SimpleFeed.provider(:redis, 
                                       redis: -> { ::Redis.new },
                                       pool_size: 10)
-  f.per_page   = 50
-  f.batch_size = 10 # default batch size
-  f.namespace  = 'nf'
+  f.per_page   = 50     # default page size
+  f.batch_size = 10     # default batch size
+  f.namespace  = 'nf'   # only needed if you use the same redis for more than one feed
 end
 ```
 
-After the feed is defined, the gem creates a similarly named method
-under the `SimpleFeed` namespace to access the feed. For example, given
-a name such as `:newsfeed` the following are all valid ways of
-accessing the feed:
+After the feed is defined, the gem creates a similarly named method under the `SimpleFeed` namespace to access the feed. For example, given a name such as `:newsfeed` the following are all valid ways of accessing the feed:
 
  * `SimpleFeed.newsfeed`
  * `SimpleFeed.get(:newsfeed)`
@@ -92,21 +88,16 @@ You can also get a full list of currently defined feeds with `SimpleFeed.feed_na
 
 ### Reading from and writing to the feed
 
-For the impatient here is a quick way to get started with the
-`SimpleFeed`.
+For the impatient here is a quick way to get started with the `SimpleFeed`.
 
 ```ruby
-activity = SimpleFeed.get(:followers).activity(@current_user.id)
-
+activity = SimpleFeed.newsfeed.activity(@current_user.id)
 # Store directly the value and the optional time stamp
 activity.store(value: 'hello')
 # => true
 
 # or equivalent:
-@event = SimpleFeed::Event.new(value: 'hello', at: Time.now)
-# or even simpler:
 @event = SimpleFeed::Event.new('hello', Time.now)
-# and then:
 activity.store(event: @event)
 # => false # false indicates that the same event is already in the feed.
 ```
@@ -124,15 +115,15 @@ activity.paginate(page: 1)
 
 ### The Two Forms of the API
 
-The feed API is offered in a single-user and a batch (multi-user) forms.
+The feed API is offered in two forms:
 
-The main and only difference is in what the methods return. In the
-single user case, the return of, say, `#total_count` is an `Integer`
-value representing the total count for this user.
+ 1. single-user form, and 
+ 2. a batch (multi-user) form.
 
-In the multi-user case, the return is a `SimpleFeed::Response` instance,
-that can be thought of as a `Hash`, that has the user IDs as the keys,
-and return results for each user as a value.
+The method names and signatures are the same. The only difference is in what the methods return:
+
+ 1. In the single user case, the return of, say, `#total_count` is an `Integer` value representing the total count for this user.
+ 2. In the multi-user case, the return is a `SimpleFeed::Response` instance, that can be thought of as a `Hash`, that has the user IDs as the keys, and return results for each user as a value. 
 
 Please see further below the details about the [Batch API](#bach-api).
 
@@ -156,7 +147,7 @@ SimpleFeed.define(:followers) do |f|
 end
 
 # Let's get the Activity instance that wraps this user_id
-activity = SimpleFeed.get(:followers).activity(user_id)   # => [... complex object removed for brevity ]
+activity = SimpleFeed.followers.activity(user_id)   # => [... complex object removed for brevity ]
 # let's clear out this feed to ensure it's empty
 activity.wipe                                             # => true
 # Let's verify that the counts for this feed are at zero
@@ -175,12 +166,14 @@ activity.paginate(page: 1)
 # Now the unread_count should return 0 since the user just "viewed" the feed.
 activity.unread_count                                     # => 0
 activity.delete(value: 'hello')                           # => true
-activity.total_count                                      # => 1
+activity.delete_if do |user_id, value|
+  value =~ /goodbye/
+end                                                       # => true   
+activity.total_count                                      # => 0
 ```
 
-You can fetch all items in the feed using `#fetch`, and you can
-`#paginate` without resetting the `last_read` timestamp by passing the
-`peek: true` as a parameter.
+You can fetch all items (optionally filtered by time) in the feed using `#fetch`, and you can
+`#paginate` and reset the `last_read` timestamp by passing the `reset_last_read: true` as a parameter.
 
 <a name="batch-api"/>
 
@@ -284,19 +277,20 @@ end
 # => [Response] { user_id => [Boolean], ... } true if user activity was found and deleted, false otherwise
 
 # Return a paginated list of all items, optionally with the total count of items
-@multi.paginate(page:, per_page:, peek: false, with_total: false)
+@multi.paginate(page:, per_page:, with_total: false, reset_last_read: false)
 # => [Response] { user_id => [Array]<Event>, ... }
 # Options:
-#   peek: true — does not reset last_read, otherwise it does.
+#   reset_last_read: true — resets the last_read, otherwise it does.
 #   with_total: true — returns a hash for each user_id:
 #        => [Response] { user_id => { events: Array<Event>, total_count: 3 }, ... } 
 
 # Return un-paginated list of all items, optionally filtered
-@multi.fetch(since: nil)
+@multi.fetch(since: nil, reset_last_read: false)
 # => [Response] { user_id => [Array]<Event>, ... }
 # Options:
+#   reset_last_read: true — resets the last_read, otherwise it does.
 #   since: <timestamp> — if provided, returns all items posted since then
-#   since: :unread — if provided, returns all unread items and resets +last_read+
+#   since: :last_read — if provided, returns all unread items and resets +last_read+
 
 @multi.reset_last_read
 # => [Response] { user_id => [Time] last_read, ... }

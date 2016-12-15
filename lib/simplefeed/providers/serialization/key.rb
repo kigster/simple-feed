@@ -1,19 +1,13 @@
 require 'base62-rb'
 require 'hashie/mash'
+require 'liquid'
 module SimpleFeed
   module Providers
     module Serialization
       class Key
-        attr_accessor :user_id, :short_id, :prefix, :config
+        attr_accessor :user_id, :namespace
+        attr_accessor :base62_user_id, :key_types, :template
 
-        # This hash defines the paramters for the strategy we use
-        # to create a compact key based on the user id, feed's namespace,
-        # and the functionality, such as 'm' meta — as a hash for storing
-        # arbitrary values (in particular, +last_read+). and 'd' data —
-        # as a sorted set in for storing the actual events.
-        #
-        # ### Examples
-        #
         # Here is a meta key for a given user ID:
         #
         #            user   'm' for meta
@@ -22,59 +16,45 @@ module SimpleFeed
         #           ↑         ↑
         #         namespace user_id(base62)
         #
-        KEY_CONFIG = Hashie::Mash.new({
-                                        separator:         '.',
-                                        prefix:            '',
-                                        namespace_divider: '|',
-                                        namespace:         nil,
-                                        primary:           ->(user_id) { ::Base62.encode(user_id) },
-                                        primary_marker:    'u',
-                                        secondary_markers: {
-                                          data: 'd',
-                                          meta: 'm'
-                                        }
-                                      })
 
-        def initialize(user_id, namespace = nil, optional_key_config = {})
-          optional_key_config.merge!(namespace: namespace) if namespace
-          self.config = KEY_CONFIG.dup.merge!(optional_key_config)
+        TEMPLATE = Liquid::Template.parse(
+          %Q[{%- if namespace != null and namespace != '' -%}{{ namespace | append: '|'}}{%- endif -%}u.{{ base62_user_id }}.{{ key_type }}]
+        )
 
-          self.user_id  = user_id
-          self.short_id = config.primary[user_id]
+        def initialize(user_id, namespace = nil, key_types = %i(meta data), template = TEMPLATE)
+          self.namespace = namespace
+          self.key_types = key_types
+          self.user_id   = user_id
+          self.template  = template
 
-          self.prefix = configure_prefix
+          self.base62_user_id = ::Base62.encode(user_id)
 
-          config.secondary_markers.each_pair do |type, character|
-            self.class.send(:define_method, type) do
-              instance_variable_get("@#{type}") || instance_variable_set("@#{type}", "#{prefix}#{config.separator}#{character}")
+          key_types.each do |type|
+            unless self.class.respond_to?(type)
+              self.class.send(:define_method, type) do
+                instance_variable_get("@#{type}") || instance_variable_set("@#{type}", render_key(type))
+              end
             end
           end
         end
 
-        def keys
-          config.secondary_markers.map { |k, v| [k, self.send(k)] }
-        end
-
-        def for(type)
-          "#{prefix}#{config.separator}#{type.to_s}"
+        def render_key(type)
+          template.render('namespace'      => namespace.to_s,
+                          'base62_user_id' => base62_user_id,
+                          'key_type'       => type.to_s[0])
         end
 
         def to_s
-          super.gsub(/SimpleFeed::Providers::Serialization/, '...*') + { user_id: user_id, short_id: short_id, keys: keys }.to_json
+          super + { user_id: user_id, base62_user_id: base62_user_id, key_types: key_types }.to_s
         end
 
         def inspect
-
+          super
         end
 
-        private
-
-        # eg. ff|u.123498
-        def configure_prefix
-          namespace = config.namespace ? "#{config.namespace}#{config.namespace_divider}" : ''
-          "#{namespace}#{config.primary_marker}#{config.separator}#{short_id}"
+        def keys
+          key_types.map { |t| self.send(t) }.sort
         end
-
       end
     end
   end

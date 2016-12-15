@@ -61,8 +61,7 @@ module SimpleFeed
 
         def wipe(user_ids:)
           with_response_pipelined(user_ids) do |redis, key|
-            should_wipe = block_given? ? yield(key.user_id) : true
-            key.keys.all? { |redis_key| redis.del(redis_key) if should_wipe }
+            key.keys.all? { |redis_key| redis.del(redis_key) }
           end
         end
 

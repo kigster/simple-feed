@@ -29,6 +29,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'connection_pool', '~> 2'
   spec.add_dependency 'activesupport'
   spec.add_dependency 'colored2'
+  spec.add_dependency 'liquid'
 
   spec.add_development_dependency 'awesome_print'
   spec.add_development_dependency 'yard'

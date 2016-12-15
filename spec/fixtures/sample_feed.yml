@@ -17,8 +17,6 @@ feeds:
           - { value: 'John liked Robert', at: "2016-11-20 23:32:56 -0800" }
           - { value: 'debbie liked Robert', at: '2016-11-20 23:35:56 -0800' }
         last_read_at: 2016-11-20 23:32h:56 -0800
-        unread_count: 1
-        count: 2
 
       - user_ids: 2
         activity:
@@ -26,8 +24,6 @@ feeds:
           - { value: 'Konstantin is feeling great again', at: '2016-11-20 23:33:56 -0800' }
           - { value: 'Megan is following Konstantin', at: '2016-11-20 23:33:56 -0800' }
         last_read_at: '2016-11-20 23:33:56 -0800'
-        unread_count: 1
-        count: 4
 
 # ——————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -52,13 +48,9 @@ feeds:
           - { value: 'you followed John', at: "2016-11-20 23:32:56 -0800" }
           - { value: 'your facebook friend D.Trump joined', at: '2016-11-20 23:35:56 -0800' }
         last_read_at: 2016-11-20 22:33:56 -0800
-        unread_count: 2
-        count: 2
 
       - user_ids: 2
         activity:
           - { value: 'your facebook friend amy joined', at: "2016-11-20 23:34:56 -0800" }
           - { value: 'your divorce proposal was rejected by your wife', at: '2016-11-20 23:35:56 -0800' }
         last_read_at: 2016-11-20 22:33:56 -0800
-        unread_count: 2
-        count: 2
