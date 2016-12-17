@@ -1,4 +1,4 @@
-require 'simplefeed/providers/serialization/key'
+require 'simplefeed/providers/key'
 
 module SimpleFeed
   module Providers
@@ -34,7 +34,7 @@ module SimpleFeed
         end
 
         def key(user_id)
-          ::SimpleFeed::Providers.key(user_id, feed.namespace)
+          feed.key(user_id)
         end
 
         def to_array(user_ids)

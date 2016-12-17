@@ -52,13 +52,9 @@ RSpec.describe SimpleFeed::Providers::Base::Provider do
       end
     end
 
-    let(:provider) { TestProvider.new }
-    let(:feed) { SimpleFeed.define(:test, provider: provider, namespace: 'ns') }
+    let(:feed) { SimpleFeed.define(:test, provider: TestProvider.new, namespace: 'ns') }
+    let(:provider) {  feed.provider }
     let(:user_ids) { [1, 2, 3, 4] }
-
-    before do
-      provider.feed = Hashie::Mash.new({ namespace: :tp })
-    end
 
     context 'transforming values' do
       context '#store' do
@@ -82,7 +78,7 @@ RSpec.describe SimpleFeed::Providers::Base::Provider do
 
     context 'key with namespace' do
       it 'should create a key with a namespace' do
-        expect(provider.send(:key, 1).meta).to match /tp\|/
+        expect(feed.key(1).meta).to eq 'ns|u.1.m'
       end
     end
   end

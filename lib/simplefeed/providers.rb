@@ -1,4 +1,4 @@
-require_relative 'providers/serialization/key'
+require_relative 'providers/key'
 require_relative 'providers/proxy'
 
 module SimpleFeed
@@ -13,10 +13,6 @@ module SimpleFeed
       self.registry[provider_name] = provider_class
     end
     
-    def self.key(*args)
-      SimpleFeed::Providers::Serialization::Key.new(*args)
-    end
-
     # These methods must be implemented by each Provider, and operation on a given
     # set of users passed via the user_ids: parameter.
     ACTIVITY_METHODS = %i(store delete delete_if wipe reset_last_read last_read paginate fetch total_count unread_count)

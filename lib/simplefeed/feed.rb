@@ -1,5 +1,7 @@
 require_relative 'providers'
 require_relative 'activity/base'
+require 'simplefeed/key/template'
+
 module SimpleFeed
   class Feed
 
@@ -11,15 +13,19 @@ module SimpleFeed
     end
 
     def initialize(name)
-      @name      = name
-      @name      = name.underscore.to_sym unless name.is_a?(Symbol)
+      @name         = name
+      @name         = name.underscore.to_sym unless name.is_a?(Symbol)
       # set the defaults if not passed in
-      @meta      = {}
-      @namespace = nil
-      @per_page  ||= 50
-      @max_size  ||= 1000
-      @batch_size||= 10
-      @proxy     = nil
+      @meta         = {}
+      @namespace    = nil
+      @per_page     ||= 50
+      @max_size     ||= 1000
+      @batch_size   ||= 10
+      @proxy        = nil
+    end
+
+    def key_template
+      SimpleFeed::Key::Template.new(namespace)
     end
 
     def provider=(definition)
@@ -30,6 +36,10 @@ module SimpleFeed
 
     def provider
       @proxy
+    end
+
+    def key(user_id)
+      SimpleFeed::Providers::Key.new(user_id, key_template)
     end
 
     def provider_type

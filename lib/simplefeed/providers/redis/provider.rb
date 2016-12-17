@@ -4,7 +4,7 @@ require 'forwardable'
 require 'redis/pipeline' # defines Redis::Future
 
 require 'simplefeed/providers/base/provider'
-require 'simplefeed/providers/serialization/key'
+require 'simplefeed/providers/key'
 
 require_relative 'driver'
 require_relative 'stats'

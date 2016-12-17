@@ -9,7 +9,7 @@ end
 
 require 'simplefeed/event'
 require_relative 'paginator'
-require_relative '../serialization/key'
+require_relative '../key'
 require_relative '../base/provider'
 
 module SimpleFeed

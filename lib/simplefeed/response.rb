@@ -25,7 +25,7 @@ module SimpleFeed
     end
 
     def for(key_or_user_id, result = nil)
-      user_id = key_or_user_id.is_a?(SimpleFeed::Providers::Serialization::Key) ?
+      user_id = key_or_user_id.is_a?(SimpleFeed::Providers::Key) ?
         key_or_user_id.user_id :
         key_or_user_id
 
