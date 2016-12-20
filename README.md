@@ -260,9 +260,7 @@ The DSL context has access to two additional methods:
 
 Below is an example output of `color_dump` method, which is intended for the debugging purposes.
 
-
-
-[<img src="https://raw.githubusercontent.com/kigster/simple-feed/master/man/sf-color-dump.png" width="300" alt="color_dump output" style="width: 300px; max-width:100%;">](https://raw.githubusercontent.com/kigster/simple-feed/master/man/sf-color-dump.png)
+[<img src="https://raw.githubusercontent.com/kigster/simple-feed/master/man/sf-color-dump.png" width="450" alt="color_dump output" style="width: 300px; max-width:100%;">](https://raw.githubusercontent.com/kigster/simple-feed/master/man/sf-color-dump.png)
 
 <a name="api"/>
 
