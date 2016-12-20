@@ -35,7 +35,7 @@ What you publish into your feed — i.e. _stories_ or _events_, will depend enti
 
 ## Challenges 
 
-Building a personalized activity feeds tend to be a challenging task, due to the diversity of event types that it often includes, the personalization requirement, and the need for it to often scale to very large numbers of concurrent users.  Therefore common implementations tend to focus on either:
+Building a personalized activity feed tends to be a challenging task, due to the diversity of event types that it often includes, the personalization requirement, and the need for it to often scale to very large numbers of concurrent users.  Therefore common implementations tend to focus on either:
 
  * optimizing the read time performance by pre-computing the feed for each user ahead of time
  * OR optimizing the various ranking algorithms by computing the feed at read time, with complex forms of caching addressing the performance requirements.
@@ -66,7 +66,6 @@ Below we configure a feed called `:newsfeed`, which presumably will be populated
 
 ```ruby
 require 'simplefeed'
-require 'simplefeed/providers/redis'
 
 # Let's define a Redis-based feed, and wrap Redis in a in a ConnectionPool. 
 SimpleFeed.define(:newsfeed) do |f|
@@ -91,6 +90,7 @@ You can also get a full list of currently defined feeds with `SimpleFeed.feed_na
 For the impatient here is a quick way to get started with the `SimpleFeed`.
 
 ```ruby
+# This assumes we have previously defined a feed named :newsfeed (see above)
 activity = SimpleFeed.newsfeed.activity(@current_user.id)
 # Store directly the value and the optional time stamp
 activity.store(value: 'hello')
@@ -125,15 +125,15 @@ The method names and signatures are the same. The only difference is in what the
  1. In the single user case, the return of, say, `#total_count` is an `Integer` value representing the total count for this user.
  2. In the multi-user case, the return is a `SimpleFeed::Response` instance, that can be thought of as a `Hash`, that has the user IDs as the keys, and return results for each user as a value. 
 
-Please see further below the details about the [Batch API](#bach-api).
+Please see further below the details about the [Batch API](#batch-api).
 
 <a name="single-user-api"/>
 
 ##### Single-User API 
 
-In the examples below we show responses based on a single-user usage. As previously mentioned, the multi-user case is the same, except for the response values, and is discussed further below.
+In the examples below we show responses based on a single-user usage. As previously mentioned, the multi-user usage is the same, except what the response values are, and is discussed further down below.
 
-Below is a user session that demonstrates simple return values from the feed operations for a given user:
+Let's take a look at a ruby session, which demonstrates return values of the feed operations for a single user:
 
 ```ruby
 require 'simplefeed'
@@ -155,20 +155,26 @@ activity.total_count                                      # => 0
 activity.unread_count                                     # => 0
 # Store some events
 activity.store(value: 'hello')                            # => true
-activity.store(value: 'goodbye')                          # => true
+activity.store(value: 'goodbye', at: Time.now - 20)       # => true
 activity.unread_count                                     # => 2
 # Now we can paginate the events, which by default resets "last_read" timestamp the user
 activity.paginate(page: 1)
 # [
-#     [0] #<SimpleFeed::Event#70138821650220 {"value":"goodbye","at":1480475294.0579991}>,
-#     [1] #<SimpleFeed::Event#70138821649420 {"value":"hello","at":1480475294.057138}>
+#     [0] #<SimpleFeed::Event: value=good bye, at=1480475294.0579991>,
+#     [1] #<SimpleFeed::Event: value=hello, at=1480475294.057138>
 # ]
 # Now the unread_count should return 0 since the user just "viewed" the feed.
 activity.unread_count                                     # => 0
 activity.delete(value: 'hello')                           # => true
-activity.delete_if do |user_id, value|
-  value =~ /goodbye/
-end                                                       # => true   
+# the next method yields to a passed in block for each event in the user's feed, and deletes
+# all events for which the block returns true. The return of this call is the
+# array of all events that have been deleted for this user.
+activity.delete_if do |event, user_id|
+  event.value =~ /good/
+end                                                       
+# => [
+#     [0] #<SimpleFeed::Event: value=good bye, at=1480475294.0579991>
+# ]   
 activity.total_count                                      # => 0
 ```
 
@@ -207,13 +213,13 @@ user.
 end
 ```
 
-##### DSL 
+##### Activity Feed DSL (Domain-Specific Language) 
 
 The library offers a convenient DSL for adding feed functionality into
 your current scope.
 
 To use the module, just include `SimpleFeed::DSL` where needed, which
-exports just one primary method `with_activity'. You call this method
+exports just one primary method `#with_activity`. You call this method
 and pass an activity object created for a set of users (or a single
 user), like so:
 
@@ -245,6 +251,17 @@ with_activity(activity, countries: data_to_store) do
 end
 ```
 
+The DSL context has access to two additional methods: 
+
+ * `#event(value, at)` returns a fully constructed `SimpleFeed::Event` instance
+ * `#color_dump` prints to STDOUT the ASCII text dump of the current user's activities (events), as well as the counts and the `last_read` shown visually on the time line.
+ 
+##### `#color_dump`
+
+Below is an example output of `color_dump` method, which is intended for the debugging purposes.
+
+[![color_dump output](https://raw.githubusercontent.com/kigster/simple-feed/master/man/sf-color-dump.png)](https://raw.githubusercontent.com/kigster/simple-feed/master/man/sf-color-dump.png)
+
 <a name="api"/>
 
 ## Complete API
@@ -268,9 +285,10 @@ responses for each user, accessible via `response[user_id]` method.
 @multi.delete(event:)
 # => [Response] { user_id => [Boolean], ... } true if the value was removed, false if it didn't exist
 
-@multi.delete_if do |user_id, event|
-  # if the block returns true, the event is deleted
+@multi.delete_if do |event, user_id|
+  # if the block returns true, the event is deleted and returned 
 end
+# => [Response] { user_id => [deleted_event1, deleted_event2, ...], ... }
 
 # Wipe the feed for a given user(s)
 @multi.wipe

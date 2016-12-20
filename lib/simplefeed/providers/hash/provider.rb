@@ -47,9 +47,14 @@ module SimpleFeed
 
         def delete_if(user_ids:, &block)
           with_response_batched(user_ids) do |key|
-            activity(key).each do |event|
-              __delete(key, event) if yield(key.user_id, event)
-            end
+            activity(key).map do |event|
+              if yield(event, key.user_id)
+                __delete(key, event)
+                event
+              else
+                nil
+              end
+            end.compact
           end
         end
 

@@ -27,9 +27,10 @@ module SimpleFeed
       # @multi.delete(event:)
       # # => [Response] { user_id => [Boolean], ... } true if the value was removed, false if it didn't exist
       #
-      # @multi.delete_if do |user_id, event|
-      #   # if the block returns true, the event is deleted
+      # @multi.delete_if do |event, user_id|
+      #   # if the block returns true, the event is deleted and returned
       # end
+      # # => [Response] { user_id => [Array]<Event>, ... }
       #
       # @multi.wipe
       # # => [Response] { user_id => [Boolean], ... } true if user activity was found and deleted, false otherwise

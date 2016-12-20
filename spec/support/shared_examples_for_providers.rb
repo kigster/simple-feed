@@ -83,12 +83,18 @@ shared_examples 'a provider' do
 
       context '#delete_if' do
         let(:activity) { feed.activity(user_id) }
+
         it 'should delete events that match' do
-          expect(activity.total_count).to eq(2)
-          activity.delete_if do |user_id, evt|
-            evt == events.first
+          activity.wipe
+          events.each do |event|
+            expect(activity.store(event: event)).to eq(true)
           end
-          expect(activity.total_count).to eq(1)
+          expect(activity.total_count).to eq(3)
+          deleted_events = activity.delete_if do |event_to_delete, *|
+            event_to_delete == events.first
+          end
+          expect(activity.total_count).to eq(2)
+          expect(deleted_events).to eq([events.first])
           expect(activity.fetch).to include(events.last)
           expect(activity.fetch).not_to include(events.first)
         end
