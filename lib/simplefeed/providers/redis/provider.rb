@@ -67,8 +67,13 @@ module SimpleFeed
           end
         end
 
-        def paginate(user_ids:, page:, per_page: feed.per_page, peek: false, with_total: false)
-          reset_last_read(user_ids: user_ids) unless peek
+        def paginate(user_ids:, page:,
+                     per_page: feed.per_page,
+                     with_total: false,
+                     reset_last_read: false)
+
+          reset_last_read_value(user_ids: user_ids, at: reset_last_read) if reset_last_read
+
           with_response_pipelined(user_ids) do |redis, key|
             events = paginated_events(page, per_page, redis, key)
             with_total ? { events:      events,
@@ -76,14 +81,14 @@ module SimpleFeed
           end
         end
 
-        def fetch(user_ids:, since: nil)
+        def fetch(user_ids:, since: nil, reset_last_read: false)
           if since == :unread
             last_read_response = with_response_pipelined(user_ids) do |redis, key|
               get_users_last_read(redis, key)
             end
-            reset_last_read(user_ids: user_ids)
           end
-          with_response_pipelined(user_ids) do |redis, key|
+
+          response = with_response_pipelined(user_ids) do |redis, key|
             if since == :unread
               redis.zrevrangebyscore(key.data, '+inf', (last_read_response.delete(key.user_id) || 0).to_f, withscores: true)
             elsif since
@@ -92,6 +97,10 @@ module SimpleFeed
               redis.zrevrange(key.data, 0, -1, withscores: true)
             end
           end
+
+          reset_last_read_value(user_ids: user_ids, at: reset_last_read) if reset_last_read
+
+          response
         end
 
         def reset_last_read(user_ids:, at: Time.now)

@@ -28,6 +28,18 @@ module SimpleFeed
 
         protected
 
+        def reset_last_read_value(user_ids:, at: nil)
+          at = [Time, DateTime, Date].include?(at.class) ? at : Time.now
+          at = at.to_time if at.respond_to?(:to_time)
+          at = at.to_f if at.respond_to?(:to_f)
+
+          if self.respond_to?(:reset_last_read)
+            reset_last_read(user_ids: user_ids, at: at)
+          else
+            raise ArgumentError, "Class #{self.class} does not implement #reset_last_read method"
+          end
+        end
+
         def tap(value)
           yield
           value
@@ -73,11 +85,6 @@ module SimpleFeed
           response
         end
 
-        def with_result
-          result = yield
-          result = transform_response(nil, result) if self.respond_to?(:transform_response)
-          result
-        end
       end
     end
   end

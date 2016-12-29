@@ -35,17 +35,18 @@ module SimpleFeed
       # @multi.wipe
       # # => [Response] { user_id => [Boolean], ... } true if user activity was found and deleted, false otherwise
       #
-      # @multi.paginate(page:, per_page:, peek: false, with_total: false)
+      # @multi.paginate(page:, per_page:, reset_last_read: [Bool | Time], with_total: false)
       # # => [Response] { user_id => [Array]<Event>, ... }
       # # Options:
-      # #   peek: true — does not reset last_read, otherwise it does.
+      # #   reset_last_read: false — reset last read to Time.now (true), or provided timestamp
       # #   with_total: true — returns a hash for each user_id:
       # #        => [Response] { user_id => { events: Array<Event>, total_count: 3 }, ... }
       #
       # # Return un-paginated list of all items, optionally filtered
-      # @multi.fetch(since: nil)
+      # @multi.fetch(since: nil, reset_last_read: [Bool | Time] )
       # # => [Response] { user_id => [Array]<Event>, ... }
       # # Options:
+      # #   reset_last_read: false — reset last read to Time.now (true), or provided timestamp
       # #   since: <timestamp> — if provided, returns all items posted since then
       # #   since: :unread — if provided, returns all unread items
       #

@@ -150,7 +150,7 @@ shared_examples 'a provider' do
               expect(r.first.value).to eq('new story right now')
             end
 
-            paginate(page: 1, per_page: 1, with_total: true) do |r|
+            paginate(page: 1, per_page: 1, with_total: true, reset_last_read: true) do |r|
               expect(r[:events].size).to eq(1)
               expect(r[:total_count]).to eq(3)
             end
@@ -183,7 +183,8 @@ shared_examples 'a provider' do
             fetch(since: time_then + 15) { |r| expect(r.size).to eq 1 }
 
             unread_count { |r| expect(r).to be == 4 }
-            fetch(since: :unread) { |r| expect(r.size).to eq 4 }
+
+            fetch(since: :unread, reset_last_read: true) { |r| expect(r.size).to eq 4 }
 
             # only because we have 3 items in the future now
             unread_count { |r| expect(r).to be == 3 }

@@ -299,7 +299,7 @@ end
 @multi.paginate(page:, per_page:, with_total: false, reset_last_read: false)
 # => [Response] { user_id => [Array]<Event>, ... }
 # Options:
-#   reset_last_read: true — resets the last_read, otherwise it does.
+#   reset_last_read: false — reset last read to Time.now (true), or the provided timestamp
 #   with_total: true — returns a hash for each user_id:
 #        => [Response] { user_id => { events: Array<Event>, total_count: 3 }, ... } 
 
@@ -307,7 +307,7 @@ end
 @multi.fetch(since: nil, reset_last_read: false)
 # => [Response] { user_id => [Array]<Event>, ... }
 # Options:
-#   reset_last_read: true — resets the last_read, otherwise it does.
+#   reset_last_read: false — reset last read to Time.now (true), or the provided timestamp
 #   since: <timestamp> — if provided, returns all items posted since then
 #   since: :last_read — if provided, returns all unread items and resets +last_read+
 
