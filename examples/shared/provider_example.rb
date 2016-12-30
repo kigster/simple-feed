@@ -40,8 +40,8 @@ with_activity(@activity) do
 
   header 'paginate(page: 1, per_page: 2)'
   paginate(page: 1, per_page: 2) { |r| puts r[@uid].map(&:to_color_s) }
-  header 'paginate(page: 2, per_page: 2)'
-  paginate(page: 2, per_page: 2) { |r| puts r[@uid].map(&:to_color_s) }
+  header 'paginate(page: 2, per_page: 2, reset_last_read: true)'
+  paginate(page: 2, per_page: 2, reset_last_read: true) { |r| puts r[@uid].map(&:to_color_s) }
 
   hr
 

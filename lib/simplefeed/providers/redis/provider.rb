@@ -9,8 +9,6 @@ require 'simplefeed/providers/key'
 require_relative 'driver'
 require_relative 'stats'
 
-require 'pp'
-
 module SimpleFeed
   module Providers
     module Redis

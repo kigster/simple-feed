@@ -1,7 +1,7 @@
 cache: bundler
 rvm:
-- 2.3.1
-- 2.4.0-preview2
+- 2.3.5
+- 2.4.0
 services:
 - redis-server
 before_script:

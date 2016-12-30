@@ -121,12 +121,7 @@ SimpleFeed::Redis::Driver.new(redis: { host: 'localhost', port: 6379, db: 1, tim
           send_proc = redis_method if redis_method.respond_to?(:call)
           send_proc ||= ->(redis) { redis.send(redis_method, *args, &block) }
 
-          if opts[:pipelined]
-            opts.delete :pipelined
-            with_pipelined { |redis| send_proc.call(redis) }
-          else
-            with_redis { |redis| send_proc.call(redis) }
-          end
+          with_redis { |redis| send_proc.call(redis) }
         end
 
         class MockRedis

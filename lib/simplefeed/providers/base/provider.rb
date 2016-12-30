@@ -20,12 +20,6 @@ module SimpleFeed
           SimpleFeed::Providers.register(class_to_registry(klass), klass)
         end
 
-        # SimpleFeed::Providers::REQUIRED_METHODS.each do |m|
-        #   define_method(m) do |*|
-        #     raise ::SimpleFeed::Providers::NotImplementedError.new(self, m)
-        #   end
-        # end
-
         protected
 
         def reset_last_read_value(user_ids:, at: nil)

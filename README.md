@@ -54,16 +54,24 @@ The feed library aims to address the following goals:
 
 * To define a minimalistic API for a typical event-based simple feed, without tying it to any concrete provider implementation
 * To make it easy to implement and plug in a new type of provider, eg. using *Couchbase* or *MongoDB*
-* To provide a scalable default provider implementation using Redis, which can support millions of users via sharding
+* To provide a scalable default provider implementation using Redis, which can support millions of users via data sharding by user
 * To support multiple simple feeds within the same application, but used for different purposes, eg. simple feed of my followers, versus simple feed of my own actions.
 
 ## Usage
 
-First you need to configure the Feed with a valid provider implementation and a name.
+A key concept to understanding SimpleFeed gem, is that of a _provider_, which is effectively a persistence implementation for the events belonging to each user.
+
+Two providers are supplied with this gem:
+
+ * The production-ready `:redis` provider, which uses the [sorted set Redis data type](https://redislabs.com/ebook/redis-in-action/part-2-core-concepts-2/chapter-3-commands-in-redis/3-5-sorted-sets) to store and fetch the events, scored by time (but not necessarily). 
+
+ * The naïve provider `:hash`  based on the ruby `Hash` class, that can be useful in unit tests, or in simple simulations. 
+
+You initialize a provider by using the `SimpleFeed.provider([Symbol])` method.
 
 ### Configuration
 
-Below we configure a feed called `:newsfeed`, which presumably will be populated with the events coming from the followers.
+Below we configure a feed called `:newsfeed`, which in this example will be populated with the various events coming from the followers. 
 
 ```ruby
 require 'simplefeed'
@@ -158,8 +166,8 @@ activity.unread_count                                     # => 0
 activity.store(value: 'hello')                            # => true
 activity.store(value: 'goodbye', at: Time.now - 20)       # => true
 activity.unread_count                                     # => 2
-# Now we can paginate the events, which by default resets "last_read" timestamp the user
-activity.paginate(page: 1)
+# Now we can paginate the events:
+activity.paginate(page: 1, per_page: 2)
 # [
 #     [0] #<SimpleFeed::Event: value=good bye, at=1480475294.0579991>,
 #     [1] #<SimpleFeed::Event: value=hello, at=1480475294.057138>
@@ -179,7 +187,7 @@ end
 activity.total_count                                      # => 0
 ```
 
-You can fetch all items (optionally filtered by time) in the feed using `#fetch`, and you can
+You can fetch all items (optionally filtered by time) in the feed using `#fetch`, 
 `#paginate` and reset the `last_read` timestamp by passing the `reset_last_read: true` as a parameter.
 
 <a name="batch-api"/>
@@ -325,21 +333,26 @@ end
 
 ```
 
-## Providers
+## Providers in Depth 
 
-A provider is an underlying implementation that persists the events for each user, together with some meta-data for each feed.
+As we've discussed above, a provider is an underlying persistence mechanism implementation. 
 
 It is the intention of this gem that:
 
- * it should be easy to swap providers
- * it should be easy to add new providers
+ * it should be easy to write new providers 
+ * it should be easy to swap out providers
 
-Each provider must implement exactly the public API of a provider shown
-above (the `Feed` version, that receives `user_ids:` as arguments).
+To create a new provider please use `SimpleFeed::Providers::Hash::Provider` class as a starting point.
 
 Two providers are available with this gem:
 
- * `SimpleFeed::Providers::Redis::Provider` is the production-ready provider that uses the [sorted set Redis data type](https://redislabs.com/ebook/redis-in-action/part-2-core-concepts-2/chapter-3-commands-in-redis/3-5-sorted-sets) and their operations operations to store the events, scored by their time typically (but not necessarily). This provider is highly optimized for massive writes and can be sharded by using a _Twemproxy_ backend, and many small Redis shards.
+### `SimpleFeed::Providers::Redis::Provider` 
+
+Redis Provider is a production-ready persistence adapter that uses the [sorted set Redis data type](https://redislabs.com/ebook/redis-in-action/part-2-core-concepts-2/chapter-3-commands-in-redis/3-5-sorted-sets). 
+
+This provider is optimized for large writes and can use either a single Redis instance for all users of your application, or any number of Redis [shards](https://en.wikipedia.org/wiki/Shard_(database_architecture)) by using a [_Twemproxy_](https://github.com/twitter/twemproxy) in front of the Redis shards. 
+
+While future 
 
  * `SimpleFeed::Providers::HashProvider` is a pure Hash-like implementation of a provider that can be useful in unit tests of a host application. This provider could be used to write and read events within a single ruby process, can be serialized to and from a YAML file, and is therefore intended primarily for Feed emulations in automated tests.
   
