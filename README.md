@@ -34,7 +34,7 @@ Here is an example of a real feed powered by this library, and which is very com
 
 What you publish into your feed — i.e. _stories_ or _events_, will depend entirely on your application. SimpleFeed should be able to power the most demanding *write-time* feeds.
 
-## Challenges 
+## Implementation Challenges 
 
 Building a personalized activity feed tends to be a challenging task, due to the diversity of event types that it often includes, the personalization requirement, and the need for it to often scale to very large numbers of concurrent users.  Therefore common implementations tend to focus on either:
 
@@ -65,7 +65,7 @@ Two providers are supplied with this gem:
 
  * The production-ready `:redis` provider, which uses the [sorted set Redis data type](https://redislabs.com/ebook/redis-in-action/part-2-core-concepts-2/chapter-3-commands-in-redis/3-5-sorted-sets) to store and fetch the events, scored by time (but not necessarily). 
 
- * The naïve provider `:hash`  based on the ruby `Hash` class, that can be useful in unit tests, or in simple simulations. 
+ * The naïve `:hash` provider based on the ruby `Hash` class, that can be useful in unit tests, or in simple simulations. 
 
 You initialize a provider by using the `SimpleFeed.provider([Symbol])` method.
 
