@@ -8,14 +8,17 @@
 [![Issue Count](https://codeclimate.com/repos/58339a5b3d9faa74ac006b36/badges/8b899f6df4fc1ed93759/issue_count.svg)](https://codeclimate.com/repos/58339a5b3d9faa74ac006b36/feed)
 [![Inline docs](http://inch-ci.org/github/kigster/simple-feed.svg?branch=master)](http://inch-ci.org/github/kigster/simple-feed)
 
+[![Talk on Gitter](https://img.shields.io/gitter/room/gitterHQ/gitter.svg)](https://gitter.im/kigster/simple-feed)
+
+
 This is a fast, pure-ruby implementation of an activity feed concept commonly used in social networking applications. The implementation is optimized for **read-time performance** and high concurrency (lots of users), and can be extended with custom backend providers. Two providers come bundled: the production-ready Redis provider, and a naive pure Hash-based provider.
 
 __Important Notes and Acknowledgements:__
 
- * SimpleFeed *does not depend on Ruby on Rails* and is a __pure-ruby__ implementation. 
- * __SimpleFeed requires ruby 2.3 or later.__
- * SimpleFeed is currently live in production.
- * We'd like to thank __[Simbi, Inc — Symbiotic Economy](http://simbi.com)__ for their sponsorship of the development of this open source library.
+ * SimpleFeed *does not depend on Ruby on Rails* and is a __pure-ruby__ implementation
+ * __SimpleFeed requires ruby 2.3 or later
+ * SimpleFeed is currently live in production
+ * We'd like to thank __[Simbi, Inc](http://simbi.com)__ for sponsorship of the development of this open source library.
 
 ## What is an activity feed?
 
