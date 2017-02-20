@@ -10,13 +10,18 @@
 
 [![Talk on Gitter](https://img.shields.io/gitter/room/gitterHQ/gitter.svg)](https://gitter.im/kigster/simple-feed)
 
+---
+
+**February 20th, 2017**: Please read the blog post [Feeding Frenzy with SimpleFeed](http://kig.re/2017/02/19/feeding-frenzy-with-simple-feed-activity-feed-ruby-gem.html) launching this library.
+
+---
 
 This is a fast, pure-ruby implementation of an activity feed concept commonly used in social networking applications. The implementation is optimized for **read-time performance** and high concurrency (lots of users), and can be extended with custom backend providers. Two providers come bundled: the production-ready Redis provider, and a naive pure Hash-based provider.
 
 __Important Notes and Acknowledgements:__
 
  * SimpleFeed *does not depend on Ruby on Rails* and is a __pure-ruby__ implementation
- * __SimpleFeed requires ruby 2.3 or later
+ * SimpleFeed requires ruby 2.3 or later
  * SimpleFeed is currently live in production
  * We'd like to thank __[Simbi, Inc](http://simbi.com)__ for sponsorship of the development of this open source library.
 
