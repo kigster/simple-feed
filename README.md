@@ -12,7 +12,7 @@
 
 ---
 
-**February 20th, 2017**: Please read the blog post [Feeding Frenzy with SimpleFeed](http://kig.re/2017/02/19/feeding-frenzy-with-simple-feed-activity-feed-ruby-gem.html) launching this library.
+**February 20th, 2017**: Please read the blog post [Feeding Frenzy with SimpleFeed](http://kig.re/2017/02/19/feeding-frenzy-with-simple-feed-activity-feed-ruby-gem.html) launching this library. Please leave comments or questions in the discussion thread at the bottom of that post. Thanks! 
 
 ---
 
