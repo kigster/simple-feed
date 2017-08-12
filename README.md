@@ -31,79 +31,10 @@ __Important Notes and Acknowledgements:__
  * SimpleFeed is currently live in production
  * SimpleFeed is open source thanks to the generosity of __[Simbi, Inc](http://simbi.com)__.
 
-## What is an activity feed?
+## Background, Examples, Serialization, etc
 
-> Activity feed is a visual representation of a time-ordered, reverse chronological list of events which can be:
->
-> * personalized for a given user or a group, or global
-> * aggregated across several actors for a similar event type, eg. "John, Mary, etc.. followed George"
-> * filtered by a certain characteristic, such as:
->   * the actor producing an event — i.e. people you follow on a social network, or "yourself" for your own activity
->   * the type of an event (i.e. posts, likes, comments, stories, etc)
->   * the target of an event (commonly a user, but can also be a thing you are interested in, e.g. a github repo you are watching)
+Please read the additional documentation, including the examples, on the [project's Github Wiki](https://github.com/kigster/simple-feed/wiki).
 
-Here is an example of a real feed powered by this library, and which is very common on today's social media sites:
-
-[![Example](https://raw.githubusercontent.com/kigster/simple-feed/master/man/activity-feed-action.png)](https://raw.githubusercontent.com/kigster/simple-feed/master/man/activity-feed-action.png)
-
-What you publish into your feed — i.e. _stories_ or _events_, will depend entirely on your application. SimpleFeed should be able to power the most demanding *write-time* feeds.
-
-## Background 
-
-Building a personalized activity feed tends to be a challenging task, due to the diversity of event types that it often includes, the personalization requirement, and the need for it to often scale to very large numbers of concurrent users.  Therefore common implementations tend to focus on either:
-
- * optimizing the read time performance by pre-computing the feed for each user ahead of time
- * OR optimizing the various ranking algorithms by computing the feed at read time, with complex forms of caching addressing the performance requirements.
- 
-The first type of feed is much simpler to implement on a large scale (up to a point), and it scales well if the data is stored in a light-weight in-memory storage such as Redis. This is exactly the approach this library takes.
-
-For more information about various types of feed, and the typical architectures that power them — please read:
-
- - ["How would you go about building an activity feed like Facebook?"](https://hashnode.com/post/architecture-how-would-you-go-about-building-an-activity-feed-like-facebook-cioe6ea7q017aru53phul68t1/answer/ciol0lbaa02q52s530vfqea0t) by [Lee Byron](https://hashnode.com/@leebyron).
- - ["Feeding Frenzy: Selectively Materializing Users’ Event Feeds"](http://jeffterrace.com/docs/feeding-frenzy-sigmod10-web.pdf) (Yahoo! Research paper).
-
-## Overview
-
-The feed library aims to address the following goals:
-
-* To define a minimalistic API for a typical event-based simple feed, without tying it to any concrete provider implementation
-* To make it easy to implement and plug in a new type of provider, eg. using *Couchbase* or *MongoDB*
-* To provide a scalable default provider implementation using Redis, which can support millions of users via data sharding by user
-* To support multiple simple feeds within the same application, but used for different purposes, eg. simple feed of my followers, versus simple feed of my own actions.
-* To support per-user read and unread counts that can be shown in user's "new messages" widgets
-
-### Birds-Eye View on the API
-
-For production usage, SimpleFeed expects you to have a viable Redis instance available, which will be used to store each individual user's feeds. SimpleFeed will store events in an ordered set data type of Redis, one for each user. To "render" or "display" this user's feed, the developer must simply instantiate this user's `Activity`, and then query it via the `#paginate` API method.
-
-As an example, on a Social Network the events are pushed to the user's feed as soon as someone else this user follows posts an interesting action. The relationship between users is left for the implementation to the consumer of this library. As a side-effect, you are free to create custom feeds for a "fake" user, such a "Global" feed of events from ALL users, or geo-centered events (use zip-code a "user id"), etc. For simplicity sake, we'll be using the term "user" to indicate a unique instance of a feed, with an unique mix of the sources of interesting events that this "user" should see.
-
-Whenever a user on your site performs an interesting action, one that the product must display in other user's activity feeds, a consumer of this library must get a list of users interested in the event first, create a multi-user instance of `Activity`, and then call `#store` on this instance. Amount of time required to store activity for all users depends on whether or not your backend is sharded, ie. you can shard Redis into hundreds of shards by using a [twemproxy](https://github.com/twitter/twemproxy) sharding proxy. But you may not need to do this until you are serving millions of unique users, because the storage requirements are rather small (assuming you keep small values in SimpleFeed).
-
-> One could say that, if you were to implement Twitter with SimpleFeed, you would be using the Multi-User API for _writing to_ the feed, whenever users post events. Conversely, in order to render each user's activity in real-time (and in constant time) you will be using the Single-User API, as you will be _reading from_ the feed. 
-
-> Let's say we are on Twitter, and we follow [Taylor Swift](https://twitter.com/taylorswift13). Let's also say she sends a tweet. I expect my feed to be updated, and her post added. As a developer implementing this backend, you must first fetch all of her follower IDs, and then create a multi-user `Activity` instance, while passing the array of IDs as an argument. You will then call `#store` on the instance to publish this event, serialized somehow as the string value. 
->
-> If you are using a background-processing framework such as [Sidekiq](https://sidekiq.org) you will want to be publishing these events in the background job. This is because posting to thousands of users will take some time, much slower than reading individual user's feed (an operation this library is specifically optimized around).
-
-And yet, the Twitter example is just one particular Use Case. You can just as easily use this software to implement a 1-1 or many-1 event publishing paradigms. 
-
-### How to Represent Events in SimpleFeed
-
-From the library perspective, the only thing you can store as a `Value` is a string, which is necessarily associated with a double `Score` when its stored. Most common application for the `Score` field is a timestamp (it's also the default, if you do not pass the score yourself). But there is no such as thing as the most common `Value`. This is because how you store your events is up to you, the developer, to decide.
-
-Having said that, here are some considerations:
-
- * the less you store the more a single-instance Redis backend can scale up without having to be sharded
- * the less you store the faster network interactions will be with the feed, and less likely it will become a point of contention
- * the less you store in SimpleFeed, the more you probably will have to fetch in addition to what SimpleFeed returns, to show the user their activity.
-
-With that in mind, imagine that we are building an application where most objects in the system have a database identifier field, specifically — the table of events. We created this polymorphic `EVENTS` table to records all interesting events that happened, associated only with their producer and not with the consumers (i.e. followers). This is easy and relatively cheap (up to a point) implement, and ensures you have an authoritative list of events in your system, and you can always re-generate user activity in SimpleFeed, should you need to.
-
-Now, all you have to store in the `Value` is the database ID of the event. You can even store it as a base64-encoded number, for additional compactness.
-
-Then, to render a given user's feed, you'd first call `#paginate` to get a page-worth of event IDs, and then fetch the actual data from the database, using primary-key lookup against an array of IDs. This will scale very well, and is easily cached, because all lookups are always by the primary key. Caching libraries like [`cache-object`](https://github.com/wanelo/cache-object) might offer a drop-in write-through caching solution. 
- 
 ## Usage
 
 A key concept to understanding SimpleFeed gem, is that of a _provider_, which is effectively a persistence implementation for the events belonging to each user.
