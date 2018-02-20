@@ -1,6 +1,5 @@
 # SimpleFeed — Scalable, easy to use activity feed implementation.
 
-
 [![Gem Version](https://img.shields.io/gem/v/simple-feed.svg)](https://rubygems.org/gems/simple-feed)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kigster/simple-feed/master/LICENSE.txt)
 
