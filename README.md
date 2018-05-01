@@ -74,7 +74,7 @@ You can also get a full list of currently defined feeds with `SimpleFeed.feed_na
 
 ### Reading from and writing to the feed
 
-For the impatient here is a quick way to get started with the `SimpleFeed`.
+For the impatient, here is a quick way to get started with the `SimpleFeed`.
 
 ```ruby
 # This assumes we have previously defined a feed named :newsfeed (see above)
@@ -333,12 +333,11 @@ Redis Provider is a production-ready persistence adapter that uses the [sorted s
 
 This provider is optimized for large writes and can use either a single Redis instance for all users of your application, or any number of Redis [shards](https://en.wikipedia.org/wiki/Shard_(database_architecture)) by using a [_Twemproxy_](https://github.com/twitter/twemproxy) in front of the Redis shards. 
 
-While future 
-
- * `SimpleFeed::Providers::HashProvider` is a pure Hash-like implementation of a provider that can be useful in unit tests of a host application. This provider could be used to write and read events within a single ruby process, can be serialized to and from a YAML file, and is therefore intended primarily for Feed emulations in automated tests.
+### `SimpleFeed::Providers::HashProvider`
+ 
+This is a pure Hash-like implementation of a provider that can be useful in unit tests of a host application. This provider could be used to write and read events within a single ruby process, can be serialized to and from a YAML file, and is therefore intended primarily for Feed emulations in automated tests.
   
-
-### Redis Provider
+## Redis Provider
 
 If you set environment variable `REDIS_DEBUG` to `true` and run the example (see below) you will see every operation redis performs. This could be useful in debugging an issue or submitting a bug report.
   
