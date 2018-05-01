@@ -35,6 +35,10 @@ __Important Notes and Acknowledgements:__
 
 Please read the additional documentation, including the examples, on the [project's Github Wiki](https://github.com/kigster/simple-feed/wiki).
 
+Below is a screen shot of an actual activity feed powered by this library.
+
+![usage](https://raw.githubusercontent.com/kigster/simple-feed/master/man/activity-feed-action.png)
+
 ## Usage
 
 A key concept to understanding SimpleFeed gem, is that of a _provider_, which is effectively a persistence implementation for the events belonging to each user.
