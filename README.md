@@ -10,11 +10,7 @@
 [![Inline docs](http://inch-ci.org/github/kigster/simple-feed.svg?branch=master)](http://inch-ci.org/github/kigster/simple-feed)
 [![Talk on Gitter](https://img.shields.io/gitter/room/gitterHQ/gitter.svg)](https://gitter.im/kigster/simple-feed)
 
----
-
 > Please read the blog post [Feeding Frenzy with SimpleFeed](http://kig.re/2017/02/19/feeding-frenzy-with-simple-feed-activity-feed-ruby-gem.html) launching this library. Please leave comments or questions in the discussion thread at the bottom of that post. Thanks! 
-
----
 
 If you like to see this project grow, your donation of any amount is much appreciated.
 
