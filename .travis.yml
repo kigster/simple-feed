@@ -1,18 +1,21 @@
 cache: bundler
 rvm:
 - 2.3.8
-- 2.4.6
+- 2.4.10
 - 2.5.3
 - 2.6.2
+- 2.7.1
 services:
 - redis-server
 before_script:
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
-script: bundle exec rspec
+script: bundle exec rspec --format=documentation
 after_script:
+  - bash <(curl -s https://codecov.io/bash)
   - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
 env:
   global:
+    CODECOV_TOKEN="2085c087-f833-49c7-a105-703bce882653"
     secure: cdUlrz0XNCu0HB5lNLYZBF6yaukIkDZRlVsAbeeaNhPKCVj7MOvuGEUZ9TzQP0yXRaGXHy3xXem0MdDbnli5WYvHxj2MTrRVEDBiRm4jaZFHe3Rewr2mWmLqK1c4g9gvOTgjPNPTesdft87+wQuPedQLpfMGuedA86tkKzA2Tkc4J69DI93C02h6H89iiQFHL9ISNk5DzZh3FJo+fyi0JQlD6CAzWrVplCqf088qGdAk3Hy77Q2GKkVEdOb/P0cdmDLnFjekdh4b0TPI/uaqgu4cZeoebWQgg61K/enGLqxY2Lp0f4DsXQev+06d14KxIJMYHLuDgvlVwYMDInxQU7kXgTRgAnaxRdm0S7NbP89uBVkfIQiNGan7Qkvw2ayGhYCcu7Vgvjo6C2btZWLpxT0XvpQGfpvHrRrPnzFbFLLtG4rhJd3iiTbSa5LPDEi4Qx9uwGNy4iR6IB69R6dPwAR8P45XZE4JnJVUvrM/X9v9Yv2hAxnuCb48whalIozGqpwavLdYrgCf2pQecls74uw4mCxvDAg0EoskrDYuk4DYeZ507ajor4zX1avLUVfYk/0igpp6KeLENY5ozl1zsEvRcOldfdV8R9tKEGxliIgffe67Hc5/ZP+C/53lcK0nIxXYrB1I7Q+CVlEDNutNQNZRDfrNBYJVe/+RvmmdD+w=
