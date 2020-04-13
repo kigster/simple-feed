@@ -3,7 +3,7 @@
 [![Gem Version](https://img.shields.io/gem/v/simple-feed.svg)](https://rubygems.org/gems/simple-feed)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kigster/simple-feed/master/LICENSE.txt)
 
-![Ruby](https://github.com/kigster/simple-feed/workflows/Ruby/badge.svg)
+[![Ruby](https://github.com/kigster/simple-feed/workflows/Ruby/badge.svg?branch=master)](https://github.com/kigster/simple-feed/actions?query=workflow%3ARuby)
 [![Build Status](https://travis-ci.org/kigster/simple-feed.svg?branch=master)](https://travis-ci.org/kigster/simple-feed)
 [![Maintainability](https://api.codeclimate.com/v1/badges/a11061820895fcde635e/maintainability)](https://codeclimate.com/github/kigster/simple-feed/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/a11061820895fcde635e/test_coverage)](https://codeclimate.com/github/kigster/simple-feed/test_coverage)
