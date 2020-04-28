@@ -1,5 +1,6 @@
 require 'hashie/extensions/symbolize_keys'
 require 'simplefeed/version'
+require 'hashie'
 
 Hashie.logger = Logger.new(nil)
 
