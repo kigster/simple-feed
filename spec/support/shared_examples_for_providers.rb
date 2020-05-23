@@ -15,10 +15,9 @@ def ensure_descending(r)
   end
 end
 
-USER_IDS_TO_TEST = [12289734, 12, UUID.generate, 'R1.COMPOSITE.0X2F8F7D'].freeze
+USER_IDS_TO_TEST = [12_289_734, 12, UUID.generate, 'R1.COMPOSITE.0X2F8F7D'].freeze
 
 RSpec.shared_examples 'a valid SimpleFeed backend provider' do |provider_opts:, optional_user_id: nil, provider_class: described_class|
-
   user_ids = USER_IDS_TO_TEST.dup
   user_ids << optional_user_id if optional_user_id
 
@@ -27,11 +26,11 @@ RSpec.shared_examples 'a valid SimpleFeed backend provider' do |provider_opts:, 
       include_context :event_matrix
 
       subject(:feed) {
-                       SimpleFeed.define(:tested_feed) do |f|
-                         f.max_size = 5
-                         f.provider = described_class.new(**provider_opts)
-                       end
-                     }
+        SimpleFeed.define(:tested_feed) do |f|
+          f.max_size = 5
+          f.provider = described_class.new(**provider_opts)
+        end
+      }
 
       let(:provider) { feed.provider.provider }
       let(:activity) { feed.activity(user_id) }
@@ -134,7 +133,6 @@ RSpec.shared_examples 'a valid SimpleFeed backend provider' do |provider_opts:, 
                   expect(r.map(&:value).first).to eq('and in the future')
                 end
               end
-
             end
           end
 
@@ -212,7 +210,6 @@ RSpec.shared_examples 'a valid SimpleFeed backend provider' do |provider_opts:, 
           context '#fetch' do
             it 'fetches all elements sorted by time desc' do
               with_activity(activity, events: events) do
-
                 reset_last_read
 
                 store(value: 'new story') { |r| expect(r).to be(true) }
@@ -227,13 +224,15 @@ RSpec.shared_examples 'a valid SimpleFeed backend provider' do |provider_opts:, 
         end
 
         context '#namespace' do
-          let(:feed_proc) { ->(namespace) {
-            SimpleFeed.define(namespace.to_s) do |f|
-              f.max_size = 5
-              f.namespace = namespace
-              f.provider = described_class.new(provider_opts)
-            end
-          } }
+          let(:feed_proc) {
+            ->(namespace) {
+              SimpleFeed.define(namespace.to_s) do |f|
+                f.max_size = 5
+                f.namespace = namespace
+                f.provider = described_class.new(provider_opts)
+              end
+            }
+          }
 
           let(:feed_ns1) { feed_proc.call(:ns1) }
           let(:feed_ns2) { feed_proc.call(:ns2) }
@@ -268,7 +267,6 @@ RSpec.shared_examples 'a valid SimpleFeed backend provider' do |provider_opts:, 
             expect(provider.total_users).to eq(1)
           end
         end
-
       end
     end
   end
