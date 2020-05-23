@@ -8,7 +8,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     services:
@@ -27,9 +26,10 @@ jobs:
 
     - name: Build and test with Rake
       run: |
+        gem update --system
         gem install bundler
         bundle install --jobs 4 --retry 3
-        bundle exec rspec
+        bundle exec rspec --format documentation
       env:
         REDIS_HOST: redis
         REDIS_PORT: ${{ job.services.redis.ports[6379] }}

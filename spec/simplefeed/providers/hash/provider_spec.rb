@@ -4,11 +4,10 @@ require 'spec_helper'
 require 'simplefeed/providers/hash/provider'
 
 RSpec.describe SimpleFeed::Providers::Hash::Provider do
-  before :all do
-    SimpleFeed.registry.delete(:tested_feed)
-  end
+  before(:suite) { SimpleFeed.registry.delete(:tested_feed) }
 
-  let(:provider_opts) { {} }
-
-  it_behaves_like 'a provider'
+  it_behaves_like 'a valid SimpleFeed backend provider',
+                  provider_opts: {},
+                  optional_user_id: 'hash-me-honey',
+                  provider_class: described_class
 end
