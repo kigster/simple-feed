@@ -17,7 +17,10 @@ end
 
 USER_IDS_TO_TEST = [12_289_734, 12, UUID.generate, 'R1.COMPOSITE.0X2F8F7D'].freeze
 
-RSpec.shared_examples 'a valid SimpleFeed backend provider' do |provider_opts:, optional_user_id: nil, provider_class: described_class|
+# rubocop: disable Metrics/BlockLength
+RSpec.shared_examples('a valid SimpleFeed backend provider') do | provider_opts:,
+                                                                  optional_user_id: nil,
+                                                                  provider_class: described_class|
   user_ids = USER_IDS_TO_TEST.dup
   user_ids << optional_user_id if optional_user_id
 
@@ -270,4 +273,5 @@ RSpec.shared_examples 'a valid SimpleFeed backend provider' do |provider_opts:, 
       end
     end
   end
+  # rubocop: enable Metrics/BlockLength
 end
