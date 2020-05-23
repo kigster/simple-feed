@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require 'simplefeed/providers/key'
+require 'date'
+require 'time'
 
 module SimpleFeed
   module Providers
