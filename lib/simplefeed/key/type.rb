@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'template'
 
 module SimpleFeed
@@ -11,7 +13,7 @@ module SimpleFeed
       end
 
       def render(opts = {})
-        self.template.render(opts.merge({ 'key_type' => name, 'key_marker' => marker }))
+        template.render(opts.merge({ 'key_type' => name, 'key_marker' => marker }))
       end
     end
 
@@ -21,6 +23,5 @@ module SimpleFeed
     ].map do |type|
       Type.new(type[:name], type[:marker], DEFAULT_TEXT_TEMPLATE)
     end
-
   end
 end

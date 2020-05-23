@@ -1,7 +1,9 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 RSpec.describe SimpleFeed::Providers::Key do
-  let(:user_id) { 199929993999 }
+  let(:user_id) { 199_929_993_999 }
   let(:namespace) { nil }
   let(:key_template) { SimpleFeed::Key::Template.new(namespace) }
 
@@ -30,10 +32,11 @@ RSpec.describe SimpleFeed::Providers::Key do
   context 'custom key definition' do
     let(:namespace) { :poo }
     let(:text_template) { SimpleFeed::Key::TextTemplate.new('{{ namespace }}user:{{ base62_user_id }}/{{ key_marker }}') }
-    let(:key_template) { SimpleFeed::Key::Template.new(namespace,
-                                                       [ SimpleFeed::Key::Type.new(:beta, 'B'),
-                                                         SimpleFeed::Key::Type.new(:gamma, 'G') ],
-                                                       text_template)
+    let(:key_template) {
+      SimpleFeed::Key::Template.new(namespace,
+                                    [SimpleFeed::Key::Type.new(:beta, 'B'),
+                                     SimpleFeed::Key::Type.new(:gamma, 'G')],
+                                    text_template)
     }
     subject { described_class.new(user_id, key_template) }
 

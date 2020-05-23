@@ -1,13 +1,14 @@
+# frozen_string_literal: true
+
 module SimpleFeed
   module Fixtures
-
     def self.sample_feed
       # noinspection RubyResolve
       @sample_feed ||= Hashie::Mash.new(YAML.load(::File.read('spec/fixtures/sample_feed.yml')))
     end
 
     def self.mock_provider_props
-      @mock_provider_props ||= ::SimpleFeed.symbolize!(self.sample_feed[:feeds].first.provider.to_hash)
+      @mock_provider_props ||= ::SimpleFeed.symbolize!(sample_feed[:feeds].first.provider.to_hash)
     end
 
     def self.follow_feed
@@ -15,7 +16,7 @@ module SimpleFeed
     end
 
     def self.define_feed(feed_name)
-      SimpleFeed.define(feed_name, **(::SimpleFeed.symbolize!(self.sample_feed[:feeds].first.to_hash)))
+      SimpleFeed.define(feed_name, **::SimpleFeed.symbolize!(sample_feed[:feeds].first.to_hash))
     end
   end
 
@@ -30,22 +31,21 @@ module SimpleFeed
     end
 
     SimpleFeed::Providers::REQUIRED_METHODS.each do |m|
-      define_method(m) do |user_ids:, **opts, &block|
+      define_method(m) do |user_ids:, **opts|
         with_response_batched(user_ids) do |key, response|
           response.for(key.user_id) { opts[:result] || 0 }
         end
       end
     end
 
-    NAME = 'I am a mock provider and I laugh at you'.freeze
+    NAME = 'I am a mock provider and I laugh at you'
 
     def name
       NAME
     end
 
     def method_call(m, **opts)
-      puts "#{self.inspect}##{m}(#{opts.inspect})"
+      puts "#{inspect}##{m}(#{opts.inspect})"
     end
   end
 end
-

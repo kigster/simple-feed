@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 require 'redis/connection/hiredis'
 require 'connection_pool'
@@ -73,7 +75,7 @@ RSpec.describe SimpleFeed::Providers::Redis::Driver do
     include_examples :validate_adapter
   end
   context 'retrying an operation' do
-    let(:adapter) { RedisAdapter.new(redis: redis , pool_size: 1) }
+    let(:adapter) { RedisAdapter.new(redis: redis, pool_size: 1) }
     it 'should retry and succeed' do
       redis.del('retry')
       expect(redis).to receive(:set).and_raise(::Redis::BaseConnectionError).once
@@ -82,7 +84,7 @@ RSpec.describe SimpleFeed::Providers::Redis::Driver do
     end
   end
   context 'LoggingRedis' do
-    let(:adapter) { RedisAdapter.new(redis: redis , pool_size: 1) }
+    let(:adapter) { RedisAdapter.new(redis: redis, pool_size: 1) }
     it 'should print out each redis operation to STDERR' do
       expect(SimpleFeed::Providers::Redis::Driver::LoggingRedis.stream).to receive(:printf).at_least(15).times
       expect(SimpleFeed::Providers::Redis::Driver::LoggingRedis.stream).to receive(:puts).exactly(3).times

@@ -1,10 +1,11 @@
+# frozen_string_literal: true
+
 require 'forwardable'
 require_relative 'base'
 
 module SimpleFeed
   module Activity
     class MultiUser < Base
-
       attr_reader :user_ids
 
       extend Forwardable
@@ -16,7 +17,7 @@ module SimpleFeed
       # API Examples
       # ============
       #
-      #```ruby
+      # ```ruby
       # @multi = SimpleFeed.get(:feed_name).activity(User.active.map(&:id))
       #
       # @multi.store(value:, at:)
@@ -62,7 +63,7 @@ module SimpleFeed
       # @multi.last_read
       # # => [Response] { user_id => [Time] last_read, ... }
       #
-      #```
+      # ```
 
       SimpleFeed::Providers.define_provider_methods(self) do |instance, method, *args, **opts, &block|
         opts.merge!(user_ids: instance.user_ids)
@@ -71,8 +72,9 @@ module SimpleFeed
           opts.delete(:event)
         end
         response = instance.feed.send(method, *args, **opts, &block)
-        yield(response) if block_given?
+        block&.call(response)
         raise StandardError, "Nil response from provider #{instance.feed.provider&.provider&.class}, method #{method}(#{opts})" unless response
+
         response
       end
 

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 RSpec.shared_examples :validate_provider do
@@ -24,7 +26,6 @@ RSpec.shared_examples :validate_provider do
       expect { proxy.some_long_method_name }.to raise_error(NameError)
     end
   end
-
 end
 
 RSpec.describe SimpleFeed::Providers::Proxy do
@@ -63,7 +64,6 @@ RSpec.describe SimpleFeed::Providers::Proxy do
       let(:proxy) { SimpleFeed::Providers::Proxy.from(props) }
 
       include_examples :validate_provider
-
     end
   end
 end

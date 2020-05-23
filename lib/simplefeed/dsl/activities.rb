@@ -1,8 +1,9 @@
+# frozen_string_literal: true
+
 require_relative 'formatter'
 module SimpleFeed
   module DSL
     class Activities
-
       include SimpleFeed::DSL::Formatter
 
       attr_accessor :activity, :feed
@@ -14,7 +15,7 @@ module SimpleFeed
           self.class.instance_eval do
             attr_accessor key
           end
-          self.send("#{key}=".to_sym, value)
+          send("#{key}=".to_sym, value)
         end
       end
 
@@ -60,7 +61,7 @@ module SimpleFeed
 
       def print_debug_info(method, **opts)
         brackets = opts.empty? ? ['', ''] : %w{( )}
-        printf "\n#{self.feed.name.to_s.blue}.#{method.to_s.cyan.bold}#{brackets[0]}#{opts.to_s.gsub(/[{}]/, '').blue}#{brackets[1]} \n" if SimpleFeed::DSL.debug?
+        printf "\n#{feed.name.to_s.blue}.#{method.to_s.cyan.bold}#{brackets[0]}#{opts.to_s.gsub(/[{}]/, '').blue}#{brackets[1]} \n" if SimpleFeed::DSL.debug?
         response = yield if block_given?
         puts response.inspect.yellow if SimpleFeed::DSL.debug?
         response

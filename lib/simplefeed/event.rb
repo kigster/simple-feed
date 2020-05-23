@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'json'
 
 module SimpleFeed
@@ -6,7 +8,7 @@ module SimpleFeed
     include Comparable
 
     def initialize(*args, value: nil, at: Time.now)
-      if args && args.size > 0
+      if args && !args.empty?
         self.value = args[0]
         self.at    = args[1]
       end
@@ -44,7 +46,7 @@ module SimpleFeed
       self.value.hash
     end
 
-    def to_json
+    def to_json(*_args)
       to_h.to_json
     end
 
@@ -75,6 +77,5 @@ module SimpleFeed
         raise ArgumentError, "Required arguments missing, value=[#{value}], at=[#{at}]"
       end
     end
-
   end
 end

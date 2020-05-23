@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'hashie'
 require 'forwardable'
 require 'simplefeed'
@@ -29,7 +31,7 @@ module SimpleFeed
         key_or_user_id.user_id :
         key_or_user_id
 
-      @result[user_id] = result ? result : yield(@result[user_id])
+      @result[user_id] = result || yield(@result[user_id])
     end
 
     def user_ids
@@ -61,7 +63,7 @@ module SimpleFeed
     end
 
     def result(user_id = nil)
-      if user_id then
+      if user_id
         @result[user_id]
       else
         if @result.values.size == 1

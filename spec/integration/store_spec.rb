@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 context 'Integration' do
@@ -28,7 +30,7 @@ context 'Integration' do
 
     include_examples :event_matrix
 
-    let(:another_id) { 24989800 }
+    let(:another_id) { 24_989_800 }
 
     context 'event list' do
       it 'should be correctly defined' do
@@ -45,8 +47,8 @@ context 'Integration' do
       before do
         events.each do |e|
           expect(provider).to receive(:store).
-            with(user_ids: [user_id], value: e.value, at: e.at).
-            and_return(SimpleFeed::Response.new({ user_id => true }))
+                                with(user_ids: [user_id], value: e.value, at: e.at).
+                                and_return(SimpleFeed::Response.new({ user_id => true }))
         end
       end
       it 'should call provider with :value and :at when supplied :event' do
@@ -55,9 +57,6 @@ context 'Integration' do
       it 'should call provider as is without :event' do
         events.each { |e| user_activity.store(value: e.value, at: e.at) }
       end
-
     end
   end
-
-
 end

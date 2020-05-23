@@ -1,9 +1,10 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 require 'simplefeed/providers/hash/paginator'
 
 RSpec.describe SimpleFeed::Providers::Hash::Paginator do
-
   class TestClass < SimpleFeed::Providers::Base::Provider
     include SimpleFeed::Providers::Hash::Paginator
 
@@ -27,14 +28,14 @@ RSpec.describe SimpleFeed::Providers::Hash::Paginator do
     end
 
     context '#events' do
-      let(:user_id) { 23409239048293 }
+      let(:user_id) { 23_409_239_048_293 }
       let(:paginated) { TestClass.new(feed) }
       let(:generated_response) { SimpleFeed::Response.new({ user_id => events.map(&:dup).dup }) }
 
       before do
         expect(feed).to receive(:fetch).
-          exactly(4).times.
-          and_return(generated_response)
+                          exactly(4).times.
+                          and_return(generated_response)
       end
 
       it 'should correctly paginate events' do

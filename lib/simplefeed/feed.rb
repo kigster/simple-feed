@@ -1,10 +1,11 @@
+# frozen_string_literal: true
+
 require_relative 'providers'
 require_relative 'activity/base'
 require 'simplefeed/key/template'
 
 module SimpleFeed
   class Feed
-
     attr_accessor :per_page, :max_size, :batch_size, :meta, :namespace
     attr_reader :name
 
@@ -18,10 +19,10 @@ module SimpleFeed
       # set the defaults if not passed in
       @meta         = {}
       @namespace    = nil
-      @per_page     ||= 50
-      @max_size     ||= 1000
-      @batch_size   ||= 10
-      @proxy        = nil
+      @per_page ||= 50
+      @max_size ||= 1000
+      @batch_size ||= 10
+      @proxy = nil
     end
 
     def key_template
@@ -63,22 +64,22 @@ module SimpleFeed
 
     # @deprecated Please use {#activity} instead
     def for(*args)
-      STDERR.puts 'WARNING: method #for is deprecated, please use #activity'
+      warn 'WARNING: method #for is deprecated, please use #activity'
       activity(*args)
     end
 
     def configure(hash = {})
       SimpleFeed.symbolize!(hash)
       class_attrs.each do |attr|
-        self.send("#{attr}=", hash[attr]) if hash.key?(attr)
+        send("#{attr}=", hash[attr]) if hash.key?(attr)
       end
       yield self if block_given?
     end
 
     def eql?(other)
       other.class == self.class &&
-        %i(per_page max_size name).all? { |m| self.send(m).equal?(other.send(m)) } &&
-        self.provider.provider.class == other.provider.provider.class
+        %i(per_page max_size name).all? { |m| send(m).equal?(other.send(m)) } &&
+        provider.provider.class == other.provider.provider.class
     end
 
     def class_attrs

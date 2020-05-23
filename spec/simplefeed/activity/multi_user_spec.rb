@@ -1,7 +1,8 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe 'SimpleFeed::Activity::MultiUserActivity' do
-
   let!(:feed) { SimpleFeed::Feed.new(:test) }
 
   before do
@@ -15,8 +16,8 @@ describe 'SimpleFeed::Activity::MultiUserActivity' do
   let!(:provider_proxy) { feed.provider }
   let!(:provider) { provider_proxy.provider }
 
-  let(:user_id_1) { 19009845 }
-  let(:user_id_2) { 32423049 }
+  let(:user_id_1) { 19_009_845 }
+  let(:user_id_2) { 32_423_049 }
 
   let(:user_ids) { [user_id_1, user_id_2] }
   let(:user_activity) { feed.activity(user_ids) }
@@ -44,7 +45,7 @@ describe 'SimpleFeed::Activity::MultiUserActivity' do
         ->(method, **opts) {
           expect(opts).to_not be_empty
           expect(provider).to receive(method).with(user_ids: user_ids, **opts).
-            and_return(true_response)
+                                and_return(true_response)
         }
       }
 
@@ -63,7 +64,7 @@ describe 'SimpleFeed::Activity::MultiUserActivity' do
             its(:user_count) { should be 2 }
 
             it('should respond to #each') { is_expected.to respond_to(:each) }
-            it(:each) { expect { |args| subject.each(&args)}.to yield_successive_args([user_id_1, true], [user_id_2, true]) }
+            it(:each) { expect { |args| subject.each(&args) }.to yield_successive_args([user_id_1, true], [user_id_2, true]) }
           end
         end
       end

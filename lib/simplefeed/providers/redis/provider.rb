@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'redis'
 require 'base62-rb'
 require 'forwardable'
@@ -21,7 +23,6 @@ module SimpleFeed
       #     u.afkj234.meta: { total: 2, unread: 2, last_read: 2016-11-20 22:00:34 -08:00 GMT }
       #   ```
       class Provider < ::SimpleFeed::Providers::Base::Provider
-
         # SimpleFeed::Providers.define_provider_methods(self) do |provider, method, **opts, &block|
         #   users = Users.new(provider: provider, user_ids: opts.delete(:user_ids))
         #   opts.empty? ?
@@ -48,6 +49,7 @@ module SimpleFeed
 
         def delete_if(user_ids:)
           raise ArgumentError, '#delete_if must be called with a block that receives (user_id, event) as arguments.' unless block_given?
+
           with_response_batched(user_ids) do |key|
             fetch(user_ids: [key.user_id])[key.user_id].map do |event|
               with_redis do |redis|
@@ -129,7 +131,7 @@ module SimpleFeed
           end
         end
 
-        FEED_METHODS = %i(total_memory_bytes total_users last_disk_save_time)
+        FEED_METHODS = %i(total_memory_bytes total_users last_disk_save_time).freeze
 
         def total_memory_bytes
           with_stats(:used_memory_since_boot)
@@ -147,39 +149,39 @@ module SimpleFeed
 
         def transform_response(user_id = nil, result)
           case result
-            when ::Redis::Future
-              transform_response(user_id, result.value)
+          when ::Redis::Future
+            transform_response(user_id, result.value)
 
-            when ::Hash
+          when ::Hash
 
-              if result.values.any? { |v| transformable_type?(v) }
-                result.each { |k, v| result[k] = transform_response(user_id, v) }
-              else
-                result
-              end
-
-            when ::Array
-
-              if result.any? { |v| transformable_type?(v) }
-                result = result.map { |v| transform_response(user_id, v) }
-              end
-
-              if result.size == 2 && result[1].is_a?(Float)
-                SimpleFeed::Event.new(value: result[0], at: Time.at(result[1]))
-              else
-                result
-              end
-
-            when ::String
-              if result =~ /^\d+\.\d+$/
-                result.to_f
-              elsif result =~ /^\d+$/
-                result.to_i
-              else
-                result
-              end
+            if result.values.any? { |v| transformable_type?(v) }
+              result.each { |k, v| result[k] = transform_response(user_id, v) }
             else
               result
+            end
+
+          when ::Array
+
+            if result.any? { |v| transformable_type?(v) }
+              result = result.map { |v| transform_response(user_id, v) }
+            end
+
+            if result.size == 2 && result[1].is_a?(Float)
+              SimpleFeed::Event.new(value: result[0], at: Time.at(result[1]))
+            else
+              result
+            end
+
+          when ::String
+            if result =~ /^\d+\.\d+$/
+              result.to_f
+            elsif result =~ /^\d+$/
+              result.to_i
+            else
+              result
+            end
+          else
+            result
           end
         end
 
@@ -194,9 +196,9 @@ module SimpleFeed
 
         private
 
-        #——————————————————————————————————————————————————————————————————————————————————————
+        # ——————————————————————————————————————————————————————————————————————————————————————
         # helpers
-        #——————————————————————————————————————————————————————————————————————————————————————
+        # ——————————————————————————————————————————————————————————————————————————————————————
 
         def reset_users_last_read(redis, key, time = nil)
           time = time.nil? ? Time.now.to_f : time.to_f
@@ -214,9 +216,9 @@ module SimpleFeed
           redis.zrevrange(key.data, (page - 1) * per_page, page * per_page - 1, withscores: true)
         end
 
-        #——————————————————————————————————————————————————————————————————————————————————————
+        # ——————————————————————————————————————————————————————————————————————————————————————
         # Operations with response
-        #——————————————————————————————————————————————————————————————————————————————————————
+        # ——————————————————————————————————————————————————————————————————————————————————————
 
         def with_response_pipelined(user_ids, response = nil)
           with_response(response) do |response|
@@ -234,9 +236,9 @@ module SimpleFeed
           end
         end
 
-        #——————————————————————————————————————————————————————————————————————————————————————
+        # ——————————————————————————————————————————————————————————————————————————————————————
         # Batch operations
-        #——————————————————————————————————————————————————————————————————————————————————————
+        # ——————————————————————————————————————————————————————————————————————————————————————
         def batch_pipelined(user_ids)
           to_array(user_ids).each_slice(batch_size) do |batch|
             with_pipelined do |redis|

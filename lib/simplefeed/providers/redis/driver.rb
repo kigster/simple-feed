@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'redis'
 require 'redis/connection/hiredis'
 require 'connection_pool'
@@ -12,10 +14,10 @@ module SimpleFeed
       @debug = ENV['REDIS_DEBUG']
 
       def self.debug?
-        self.debug
+        debug
       end
 
-      def self.with_debug(&block)
+      def self.with_debug
         previous_value                     = SimpleFeed::Providers::Redis.debug
         SimpleFeed::Providers::Redis.debug = true
         result                             = yield if block_given?
@@ -48,10 +50,11 @@ module SimpleFeed
               colors     = [:blue, nil, :blue, :blue, :yellow, :cyan, nil, :blue]
               components = [
                 Time.now.strftime('%H:%M:%S.%L'), ' rtt=',
-                (sprintf '%.5f', delta*1000), ' ms ',
+                (sprintf '%.5f', delta * 1000), ' ms ',
                 (sprintf '%15s ', m.to_s.upcase),
                 (sprintf '%-40s', args.inspect.gsub(/[",\[\]]/, '')), ' ⇒ ',
-                (result.is_a?(::Redis::Future) ? '' : result.to_s)]
+                (result.is_a?(::Redis::Future) ? '' : result.to_s)
+              ]
               components.each_with_index do |component, index|
                 color = self.class.disable_color ? nil : colors[index]
                 component = component.send(color) if color
@@ -71,18 +74,16 @@ module SimpleFeed
 
         attr_accessor :pool
 
-=begin
-
-Various ways of defining a new Redis driver:
-
-SimpleFeed::Redis::Driver.new(pool: ConnectionPool.new(size: 2) { Redis.new })
-SimpleFeed::Redis::Driver.new(redis: -> { Redis.new }, pool_size: 2)
-SimpleFeed::Redis::Driver.new(redis: Redis.new)
-SimpleFeed::Redis::Driver.new(redis: { host: 'localhost', port: 6379, db: 1, timeout: 0.2 }, pool_size: 1)
-
-=end
+        #
+        # Various ways of defining a new Redis driver:
+        #
+        # SimpleFeed::Redis::Driver.new(pool: ConnectionPool.new(size: 2) { Redis.new })
+        # SimpleFeed::Redis::Driver.new(redis: -> { Redis.new }, pool_size: 2)
+        # SimpleFeed::Redis::Driver.new(redis: Redis.new)
+        # SimpleFeed::Redis::Driver.new(redis: { host: 'localhost', port: 6379, db: 1, timeout: 0.2 }, pool_size: 1)
+        #
         def initialize(**opts)
-          if opts[:pool] && opts[:pool].respond_to?(:with)
+          if opts[:pool]&.respond_to?(:with)
             self.pool = opts[:pool]
 
           elsif opts[:redis]
@@ -104,7 +105,7 @@ SimpleFeed::Redis::Driver.new(redis: { host: 'localhost', port: 6379, db: 1, tim
             end
           end
 
-          raise ArgumentError, "Unable to construct Redis connection from arguments: #{opts.inspect}" unless self.pool && self.pool.respond_to?(:with)
+          raise ArgumentError, "Unable to construct Redis connection from arguments: #{opts.inspect}" unless pool&.respond_to?(:with)
         end
 
         %i(set get incr decr setex expire del setnx exists zadd zrange).each do |method|
@@ -117,7 +118,7 @@ SimpleFeed::Redis::Driver.new(redis: { host: 'localhost', port: 6379, db: 1, tim
         alias_method :rm, :del
         alias_method :exists?, :exists
 
-        def exec(redis_method, *args, **opts, &block)
+        def exec(redis_method, *args, **_opts, &block)
           send_proc = redis_method if redis_method.respond_to?(:call)
           send_proc ||= ->(redis) { redis.send(redis_method, *args, &block) }
 
@@ -125,7 +126,7 @@ SimpleFeed::Redis::Driver.new(redis: { host: 'localhost', port: 6379, db: 1, tim
         end
 
         class MockRedis
-          def method_missing(name, *args, &block)
+          def method_missing(name, *args, **_opts, &block)
             puts "calling redis.#{name}(#{args.to_s.gsub(/[\[\]]/, '')}) { #{block ? block.call : nil} }"
           end
         end
@@ -133,7 +134,7 @@ SimpleFeed::Redis::Driver.new(redis: { host: 'localhost', port: 6379, db: 1, tim
         def with_redis
           with_retries do
             pool.with do |redis|
-              yield(self.debug? ? LoggingRedis.new(redis) : redis)
+              yield(debug? ? LoggingRedis.new(redis) : redis)
             end
           end
         end
@@ -170,13 +171,12 @@ SimpleFeed::Redis::Driver.new(redis: { host: 'localhost', port: 6379, db: 1, tim
             on_error e
           end
         rescue ::Redis::CommandError => e
-          (e.message =~ /loading/i || e.message =~ /connection/i) ? on_error(e) : raise(e)
+          e.message =~ /loading/i || e.message =~ /connection/i ? on_error(e) : raise(e)
         end
 
         def on_error(e)
-          raise Error.new(e)
+          raise Error, e
         end
-
       end
     end
   end

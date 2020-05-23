@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'simplefeed/dsl'
 require 'simplefeed/activity/single_user'
 require 'simplefeed/activity/multi_user'
@@ -13,9 +15,9 @@ module SimpleFeed
 
       def color_dump(this_activity = activity)
         this_activity = if this_activity.is_a?(SimpleFeed::Activity::SingleUser)
-                      this_activity.feed.activity([this_activity.user_id])
-                    else
-                      this_activity
+                          this_activity.feed.activity([this_activity.user_id])
+                        else
+                          this_activity
                     end
         _puts
 
@@ -32,8 +34,7 @@ module SimpleFeed
 
             [['User ID', user_id, "\n"],
              ['Activities', sprintf('%d total, %d unread', total_count[user_id], unread_count[user_id]), "\n"],
-             ['Last Read', this_last_read ? Time.at(this_last_read) : 'N/A'],
-            ].each do |field, value, *args|
+             ['Last Read', this_last_read ? Time.at(this_last_read) : 'N/A'],].each do |field, value, *args|
               field(field, value, *args)
             end
 
@@ -42,7 +43,6 @@ module SimpleFeed
             this_events       = fetch[user_id]
             this_events_count = this_events.size
             this_events.each_with_index do |_event, _index|
-
               if this_last_event_at.nil? && _event.at < this_last_read
                 print_last_read_separator(this_last_read)
               elsif this_last_event_at && this_last_read < this_last_event_at && this_last_read > _event.at
@@ -86,12 +86,12 @@ module SimpleFeed
 
     def field_value(value)
       case value
-        when Numeric
-          sprintf '%-20d', value
-        when Time
-          sprintf '%-30s', value.strftime(TIME_FORMAT)
-        else
-          sprintf '%-20s', value.to_s
+      when Numeric
+        sprintf '%-20d', value
+      when Time
+        sprintf '%-30s', value.strftime(TIME_FORMAT)
+      else
+        sprintf '%-20s', value.to_s
       end
     end
 

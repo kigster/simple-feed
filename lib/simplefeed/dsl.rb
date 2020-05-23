@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'providers'
 require 'simplefeed'
 require_relative 'dsl/activities'
@@ -22,7 +24,7 @@ module SimpleFeed
       attr_accessor :debug
 
       def debug?
-        self.debug
+        debug
       end
     end
 

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'base62-rb'
 require 'hashie'
 require 'set'
@@ -21,10 +23,10 @@ module SimpleFeed
         include SimpleFeed::Providers::Hash::Paginator
 
         def self.from_yaml(file)
-          self.new(YAML.load(File.read(file)))
+          new(YAML.parse(File.read(file)))
         end
 
-        def initialize(**opts)
+        def initialize(opts)
           self.h = {}
           h.merge!(opts)
         end
@@ -45,14 +47,12 @@ module SimpleFeed
           end
         end
 
-        def delete_if(user_ids:, &block)
+        def delete_if(user_ids:)
           with_response_batched(user_ids) do |key|
             activity(key).map do |event|
               if yield(event, key.user_id)
                 __delete(key, event)
                 event
-              else
-                nil
               end
             end.compact
           end
@@ -60,7 +60,7 @@ module SimpleFeed
 
         def wipe(user_ids:)
           with_response_batched(user_ids) do |key|
-            deleted = activity(key).size > 0
+            deleted = !activity(key).empty?
             wipe_user_record(key)
             deleted
           end
@@ -76,7 +76,7 @@ module SimpleFeed
 
           with_response_batched(user_ids) do |key|
             activity = activity(key)
-            result = (page && page > 0) ? activity[((page - 1) * per_page)...(page * per_page)] : activity
+            result = page && page > 0 ? activity[((page - 1) * per_page)...(page * per_page)] : activity
             with_total ? { events: result, total_count: activity.length } : result
           end
         end
@@ -123,7 +123,7 @@ module SimpleFeed
 
         def total_memory_bytes
           if defined?(::Knj)
-            analyzer = Knj::Memory_analyzer::Object_size_counter.new(self.h)
+            analyzer = Knj::Memory_analyzer::Object_size_counter.new(h)
             analyzer.calculate_size
           else
             raise LoadError, 'Please run "gem install knjrbfw" to get accurate hash size'
@@ -131,7 +131,7 @@ module SimpleFeed
         end
 
         def total_users
-          self.h.size
+          h.size
         end
 
         private
@@ -139,7 +139,6 @@ module SimpleFeed
         #===================================================================
         # Methods below operate on a single user only
         #
-
 
         def changed_activity_size?(key)
           ua          = activity(key)
@@ -181,7 +180,7 @@ module SimpleFeed
           end
         end
 
-        def __last_read(key, value = nil)
+        def __last_read(key, _value = nil)
           user_record(key)[:last_read]
         end
 

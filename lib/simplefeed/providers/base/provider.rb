@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'simplefeed/providers/key'
 
 module SimpleFeed
@@ -27,7 +29,7 @@ module SimpleFeed
           at = at.to_time if at.respond_to?(:to_time)
           at = at.to_f if at.respond_to?(:to_f)
 
-          if self.respond_to?(:reset_last_read)
+          if respond_to?(:reset_last_read)
             reset_last_read(user_ids: user_ids, at: at)
           else
             raise ArgumentError, "Class #{self.class} does not implement #reset_last_read method"
@@ -70,7 +72,7 @@ module SimpleFeed
         def with_response(response = nil)
           response ||= SimpleFeed::Response.new
           yield(response)
-          if self.respond_to?(:transform_response)
+          if respond_to?(:transform_response)
             response.transform do |user_id, result|
               # calling into a subclass
               transform_response(user_id, result)
@@ -78,7 +80,6 @@ module SimpleFeed
           end
           response
         end
-
       end
     end
   end

@@ -1,8 +1,9 @@
+# frozen_string_literal: true
+
 require_relative 'base'
 
 module SimpleFeed
   module Activity
-
     # Lazy implementation of SingleUser based on delegating an array of
     # one user_id to +MultiUser+
 
@@ -16,7 +17,7 @@ module SimpleFeed
         yield(user_id)
       end
 
-      #```ruby
+      # ```ruby
       #  @activity = SimpleFeed.get(:feed_name).activity(current_user.id)
       #
       #  @activity.store(value:, at:)
@@ -61,14 +62,14 @@ module SimpleFeed
       #  @activity.last_read
       #  # => [Time] last_read
 
-
       SimpleFeed::Providers.define_provider_methods(self) do |instance, method, *args, **opts, &block|
         response = instance.user_activity.send(method, *args, **opts, &block)
         unless response.has_user?(instance.user_id)
           raise StandardError, "Nil response from provider #{instance.feed.provider&.provider&.class}, method #{method}(#{opts}) — user_id #{instance.user_id}"
         end
+
         response = response[instance.user_id]
-        yield(response) if block_given?
+        block&.call(response)
         response
       end
 

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 class TestDSL;
@@ -34,5 +36,4 @@ describe SimpleFeed::DSL do
       end
     end
   end
-
 end

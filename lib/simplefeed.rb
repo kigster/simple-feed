@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'hashie/extensions/symbolize_keys'
 require 'simplefeed/version'
 require 'hashie'
@@ -18,9 +20,7 @@ module SimpleFeed
 
   class << self
     # @return [Hash<Symbol, Feed>] the registry of the defined feeds
-    def registry
-      @registry
-    end
+    attr_reader :registry
 
     # @param name [Symbol] feed name
     # @param options [Hash] any key-value pairs to set on the feed
@@ -28,9 +28,9 @@ module SimpleFeed
     # @return [Feed] the feed with the given name, and defined via options and a block
     def define(name, **options, &block)
       name = name.to_sym unless name.is_a?(Symbol)
-      feed = registry[name] ? registry[name] : SimpleFeed::Feed.new(name)
+      feed = registry[name] || SimpleFeed::Feed.new(name)
       feed.configure(options) do
-        block.call(feed) if block
+        block&.call(feed)
       end
       registry[name] = feed
       feed
@@ -51,11 +51,12 @@ module SimpleFeed
     def provider(provider_name, *args, **opts, &block)
       provider_class = SimpleFeed::Providers.registry[provider_name]
       raise ArgumentError, "No provider named #{provider_name} was found, #{SimpleFeed::Providers.registry.inspect}" unless provider_class
+
       provider_class.new(*args, **opts, &block)
     end
 
     # Forward all other method calls to the Provider
-    def method_missing(name, *args, &block)
+    def method_missing(name, *args, **opts, &block)
       registry[name] || super
     end
   end
@@ -63,7 +64,7 @@ module SimpleFeed
   # Returns list of class attributes based on the setter methods.
   # Not fool-proof, but works in this context.
   def self.class_attributes(klass)
-    klass.instance_methods.grep(%r{[^=!]=$}).map { |m| m.to_s.gsub(/=/, '').to_sym }
+    klass.instance_methods.grep(/[^=!]=$/).map { |m| m.to_s.gsub(/=/, '').to_sym }
   end
 
   # Shortcut method to symbolize hash keys, using Hashie::Extensions

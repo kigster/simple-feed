@@ -1,7 +1,8 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 RSpec.describe SimpleFeed::Event do
-
   let(:event_type) { described_class }
 
   let(:event1) { event_type.new(value: '1', at: Time.now) }
@@ -36,17 +37,17 @@ RSpec.describe SimpleFeed::Event do
       include_examples(:validate_event_constructor)
     end
     context 'when both *args and *opts are provided' do
-      let(:args) { ['hello', ts ] }
+      let(:args) { ['hello', ts] }
       let(:opts) { { value: 'bye', at: ts - 100 } }
       include_examples(:validate_event_constructor)
     end
     context 'when partial *args and *opts are provided' do
-      let(:args) { ['hello' ] }
+      let(:args) { ['hello'] }
       let(:opts) { { value: 'bye', at: ts } }
       include_examples(:validate_event_constructor)
     end
     context 'when partial *args and *opts are provided' do
-      let(:args) { ['hello' ] }
+      let(:args) { ['hello'] }
       let(:opts) { { at: ts } }
       include_examples(:validate_event_constructor)
     end

@@ -1,3 +1,5 @@
+# frozen_string_literal: false
+
 require 'spec_helper'
 require 'simplefeed/dsl/formatter'
 class TestDSL;
@@ -25,9 +27,8 @@ describe SimpleFeed::DSL::Formatter do
 
   let(:fetch_response) do
     ->(user_result) {
-      user_ids.inject({}) do |hash, id|
+      user_ids.each_with_object({}) do |id, hash|
         hash[id] = user_result
-        hash
       end
     }
   end
@@ -37,15 +38,19 @@ describe SimpleFeed::DSL::Formatter do
     let(:ts2) { Time.now - 10 }
     let(:ts3) { Time.now }
 
-    let(:user_events) { [event('First Story', ts1.to_f),
-                         event('Another Important Story', ts2.to_f)].sort }
+    let(:user_events) {
+      [event('First Story', ts1.to_f),
+       event('Another Important Story', ts2.to_f)].sort
+    }
 
-    let(:user_last_read) { {
-      1 => ts1 + 5.5, # between the two
-      2 => ts1 + 1.1, # between the two
-      3 => ts3 - 1.5,
-      4 => ts2 - 100000.4,
-      5 => ts2 - 6.2 } # between the two
+    let(:user_last_read) {
+      {
+        1 => ts1 + 5.5, # between the two
+        2 => ts1 + 1.1, # between the two
+        3 => ts3 - 1.5,
+        4 => ts2 - 100_000.4,
+        5 => ts2 - 6.2
+      } # between the two
     }
 
     it 'should define responses as a hash' do
@@ -60,7 +65,6 @@ describe SimpleFeed::DSL::Formatter do
 
     it 'should be able print the feed contents' do
       with_activity(activity, context: self) do
-
         context.instance_eval do
           expect_any_instance_of(SimpleFeed::DSL::Activities).to receive(:print_last_read_separator).exactly(5).times
           expect_any_instance_of(SimpleFeed::DSL::Activities).to receive(:fetch).exactly(5).times.and_return(fetch_response[user_events])

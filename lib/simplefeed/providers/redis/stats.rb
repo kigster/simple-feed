@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'redis'
 require 'hashie/mash'
 require 'yaml'
@@ -6,7 +8,6 @@ module SimpleFeed
   module Providers
     module Redis
       class Stats
-
         attr_accessor :redis
 
         def initialize(redis)
@@ -56,27 +57,25 @@ module SimpleFeed
           end
 
           def load_boot_stats!
-            @boot_info ||= destringify(YAML.load(File.open(File.expand_path('../boot_info.yml', __FILE__))))
+            @boot_info ||= destringify(YAML.load(File.open(File.expand_path('boot_info.yml', __dir__))))
           end
-
         end
 
         load_boot_stats!
 
         boot_info.keys.each do |key|
-          unless key.to_s =~ /^db[0-9]+/
+          next if key.to_s =~ /^db[0-9]+/
 
-            define_method(key.to_sym) do
-              info[key]
-            end
+          define_method(key.to_sym) do
+            info[key]
+          end
 
-            define_method("#{key}_at_boot".to_sym) do
-              boot_info[key]
-            end
+          define_method("#{key}_at_boot".to_sym) do
+            boot_info[key]
+          end
 
-            define_method("#{key}_since_boot".to_sym) do
-              info[key] - boot_info[key]
-            end
+          define_method("#{key}_since_boot".to_sym) do
+            info[key] - boot_info[key]
           end
         end
       end

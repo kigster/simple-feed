@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 require 'colored2'
 require 'simplefeed/dsl'
@@ -21,13 +23,19 @@ shared_examples 'a provider' do
   subject(:feed) {
     SimpleFeed.define(:tested_feed) do |f|
       f.max_size = 5
-      f.provider = described_class.new(provider_opts)
+      f.provider = described_class.new(**provider_opts)
     end
   }
 
   let(:provider) { feed.provider.provider }
-  let(:user_id) { 99119911 }
+  let(:user_id) { 99_119_911 }
   let(:activity) { feed.activity(user_id) }
+  let(:flush_feed) do
+    proc do
+      provider.with_redis(&:flushdb) if provider.respond_to?(:with_redis)
+      provider.h.clear if provider.respond_to?(:h)
+    end
+  end
 
   # Reset the feed with a wipe, and ensure the size is zero
   before { with_activity(activity) { wipe; total_count { |r| expect(r).to eq(0) } } }
@@ -109,7 +117,7 @@ shared_examples 'a provider' do
             store(value: 'old one', at: Time.now - 5.0) { |r| expect(r).to be(true) }
             store(value: 'older one', at: Time.now - 6.0) { |r| expect(r).to be(true) }
             store(value: 'one just now') { |r| expect(r).to be(true) }
-            store(value: 'the super old one', at: Time.now - 20000.0) { |r| expect(r).to be(true) }
+            store(value: 'the super old one', at: Time.now - 20_000.0) { |r| expect(r).to be(true) }
             store(value: 'and in the future', at: Time.now + 10.0) { |r| expect(r).to be(true) }
 
             fetch do |r|
@@ -120,7 +128,6 @@ shared_examples 'a provider' do
               expect(r.map(&:value).first).to eq('and in the future')
             end
           end
-
         end
       end
 
@@ -198,7 +205,6 @@ shared_examples 'a provider' do
       context '#fetch' do
         it 'fetches all elements sorted by time desc' do
           with_activity(activity, events: events) do
-
             reset_last_read
 
             store(value: 'new story') { |r| expect(r).to be(true) }
@@ -213,13 +219,15 @@ shared_examples 'a provider' do
     end
 
     context '#namespace' do
-      let(:feed_proc) { ->(namespace) {
-        SimpleFeed.define("#{namespace}") do |f|
-          f.max_size  = 5
-          f.namespace = namespace
-          f.provider  = described_class.new(provider_opts)
-        end
-      } }
+      let(:feed_proc) {
+        ->(namespace) {
+          SimpleFeed.define(namespace.to_s) do |f|
+            f.max_size = 5
+            f.namespace = namespace
+            f.provider = described_class.new(provider_opts)
+          end
+        }
+      }
 
       let(:feed_ns1) { feed_proc.call(:ns1) }
       let(:feed_ns2) { feed_proc.call(:ns2) }
@@ -228,6 +236,8 @@ shared_examples 'a provider' do
       let(:ua_ns2) { feed_ns2.activity(user_id) }
 
       before do
+        flush_feed.call
+
         ua_ns1.wipe
         ua_ns1.store(value: 'ns1')
 
@@ -254,6 +264,5 @@ shared_examples 'a provider' do
         expect(provider.total_users).to eq(1)
       end
     end
-
   end
 end

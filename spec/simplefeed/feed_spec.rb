@@ -1,7 +1,8 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe 'SimpleFeed::Feed' do
-
   context '#initialize' do
     subject(:feed) { SimpleFeed::Feed.new(:test) }
     it('sets default per_page') { expect(feed.per_page).to eq(50) }
@@ -30,8 +31,6 @@ describe 'SimpleFeed::Feed' do
       it 'should be one and the same' do
         expect(pre_instantiated_provider).to eq(provider)
       end
-
     end
   end
-
 end

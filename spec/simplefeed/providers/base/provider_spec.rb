@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 RSpec.describe SimpleFeed::Providers::Base::Provider do
@@ -11,37 +13,37 @@ RSpec.describe SimpleFeed::Providers::Base::Provider do
     class TestProvider < SimpleFeed::Providers::Base::Provider
       def transform_response(user_id, result)
         case result
-          when Symbol
-            result.to_s.upcase.to_sym
-          when Hash
-            result.each { |k, v| result[k] = transform_response(user_id, v) }
-          when String
-            if result =~ /^\d+\.\d+$/
-              result.to_f
-            elsif result =~ /^\d+$/
-              result.to_i
-            else
-              result.upcase
-            end
+        when Symbol
+          result.to_s.upcase.to_sym
+        when Hash
+          result.each { |k, v| result[k] = transform_response(user_id, v) }
+        when String
+          if result =~ /^\d+\.\d+$/
+            result.to_f
+          elsif result =~ /^\d+$/
+            result.to_i
           else
-            raise TypeError, 'Invalid response type'
+            result.upcase
+          end
+        else
+          raise TypeError, 'Invalid response type'
         end
       end
 
       SimpleFeed::Providers::REQUIRED_METHODS.each do |m|
-        define_method(m) do |**opts, &block|
+        define_method(m) do |**opts|
           puts "calling into method #{m}(#{opts})"
         end
       end
 
       # Override store
-      def store(user_ids:, **opts)
+      def store(user_ids:, **_opts)
         with_response_batched(user_ids) do |key, response|
           response.for(key, :add)
         end
       end
 
-      def delete(user_ids:, **opts)
+      def delete(user_ids:, **_opts)
         with_response_batched(user_ids) do |key, response|
           response.for(key, { total: 'unknown' })
         end
@@ -53,7 +55,7 @@ RSpec.describe SimpleFeed::Providers::Base::Provider do
     end
 
     let(:feed) { SimpleFeed.define(:test, provider: TestProvider.new, namespace: 'ns') }
-    let(:provider) {  feed.provider }
+    let(:provider) { feed.provider }
     let(:user_ids) { [1, 2, 3, 4] }
 
     context 'transforming values' do
@@ -71,7 +73,7 @@ RSpec.describe SimpleFeed::Providers::Base::Provider do
         end
         let(:response) { feed.activity(user_ids).delete(value: :hello, at: ts) }
         it 'should transform the result' do
-          response.values.all?{|v| expect(v[:total]).to eq('UNKNOWN') }
+          response.values.all?{ |v| expect(v[:total]).to eq('UNKNOWN') }
         end
       end
     end
