@@ -17,21 +17,21 @@ end
 
 USER_IDS_TO_TEST = [12_289_734, 12, UUID.generate, 'R1.COMPOSITE.0X2F8F7D'].freeze
 
-# rubocop: disable Metrics/BlockLength
-RSpec.shared_examples('a valid SimpleFeed backend provider') do | provider_opts:,
-                                                                  optional_user_id: nil,
-                                                                  provider_class: described_class|
+RSpec.shared_examples('a valid provider') do |provider_args:, more_users: nil, provider: described_class|
+  before(:suite) { SimpleFeed.registry.delete(:tested_feed) }
+
   user_ids = USER_IDS_TO_TEST.dup
-  user_ids << optional_user_id if optional_user_id
+  user_ids << Array(more_users) if more_users
+  user_ids.flatten!
 
   user_ids.each do |user_id|
-    describe "#{provider_class.name.gsub(/SimpleFeed::Providers/, '')} Provider with User ID #{user_id}" do
+    describe "#{provider.name.gsub(/SimpleFeed::Providers/, '')} Provider with User ID #{user_id}" do
       include_context :event_matrix
 
       subject(:feed) {
         SimpleFeed.define(:tested_feed) do |f|
           f.max_size = 5
-          f.provider = described_class.new(**provider_opts)
+          f.provider = described_class.new(**provider_args)
         end
       }
 
@@ -49,6 +49,8 @@ RSpec.shared_examples('a valid SimpleFeed backend provider') do | provider_opts:
       before { with_activity(activity) { wipe; total_count { |r| expect(r).to eq(0) } } }
 
       context '#store' do
+        before { flush_feed.call }
+
         context 'new events' do
           it 'returns valid responses back from each operation' do
             with_activity(activity, events: events) do
@@ -232,7 +234,7 @@ RSpec.shared_examples('a valid SimpleFeed backend provider') do | provider_opts:
               SimpleFeed.define(namespace.to_s) do |f|
                 f.max_size = 5
                 f.namespace = namespace
-                f.provider = described_class.new(provider_opts)
+                f.provider = described_class.new(provider_args)
               end
             }
           }
@@ -244,7 +246,7 @@ RSpec.shared_examples('a valid SimpleFeed backend provider') do | provider_opts:
           let(:ua_ns2) { feed_ns2.activity(user_id) }
 
           before do
-            flush_feed.callua_ns1.wipe
+            ua_ns1.wipe
             ua_ns1.store(value: 'ns1')
 
             ua_ns2.wipe
@@ -273,5 +275,4 @@ RSpec.shared_examples('a valid SimpleFeed backend provider') do | provider_opts:
       end
     end
   end
-  # rubocop: enable Metrics/BlockLength
 end

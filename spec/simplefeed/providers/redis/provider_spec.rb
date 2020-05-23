@@ -14,8 +14,8 @@ RSpec.describe SimpleFeed::Providers::Redis::Provider do
     },
   }.freeze
 
-  it_behaves_like 'a valid SimpleFeed backend provider',
-                  provider_opts:    REDIS_PROVIDER_OPTS,
-                  optional_user_id: 'horsing-around-monkey',
-                  provider_class:   described_class
+  it_behaves_like 'a valid provider',
+                  provider_args: REDIS_PROVIDER_OPTS,
+                  more_users:    'horsing-around-monkey',
+                  provider:      described_class
 end
