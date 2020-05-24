@@ -4,18 +4,18 @@ require 'spec_helper'
 require 'simplefeed/providers/redis/provider'
 
 RSpec.describe SimpleFeed::Providers::Redis::Provider do
-  before :all do
-    SimpleFeed.registry.delete(:tested_feed)
-  end
+  REDIS_PROVIDER_OPTS = {
+    pool_size: 1,
+    redis:     {
+      host:    '127.0.0.1',
+      port:    6379,
+      db:      1,
+      timeout: 0.2
+    },
+  }.freeze
 
-  let(:provider_opts) do
-    { redis:
-                 { host:    'localhost',
-                   port:    6379,
-                   db:      1,
-                   timeout: 0.2 },
-      pool_size: 1 }
-  end
-
-  it_behaves_like 'a provider'
+  it_behaves_like 'a valid provider',
+                  provider_args: REDIS_PROVIDER_OPTS,
+                  more_users:    'horsing-around-monkey',
+                  provider:      described_class
 end

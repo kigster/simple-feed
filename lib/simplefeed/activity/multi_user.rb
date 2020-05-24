@@ -55,10 +55,10 @@ module SimpleFeed
       # # => [Response] { user_id => [Time] last_read, ... }
       #
       # @multi.total_count
-      # # => [Response] { user_id => [Integer] total_count, ... }
+      # # => [Response] { user_id => [Integer, String] total_count, ... }
       #
       # @multi.unread_count
-      # # => [Response] { user_id => [Integer] unread_count, ... }
+      # # => [Response] { user_id => [Integer, String] unread_count, ... }
       #
       # @multi.last_read
       # # => [Response] { user_id => [Time] last_read, ... }

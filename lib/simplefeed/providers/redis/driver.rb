@@ -82,7 +82,7 @@ module SimpleFeed
         # SimpleFeed::Redis::Driver.new(redis: Redis.new)
         # SimpleFeed::Redis::Driver.new(redis: { host: 'localhost', port: 6379, db: 1, timeout: 0.2 }, pool_size: 1)
         #
-        def initialize(**opts)
+        def initialize(opts)
           if opts[:pool]&.respond_to?(:with)
             self.pool = opts[:pool]
 

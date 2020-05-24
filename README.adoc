@@ -24,7 +24,6 @@ IMPORTANT: Please read the (somewhat outdated) blog post http://kig.re/2017/02/1
 If you like to see this project grow, your donation of any amount is much appreciated.
 
 image::https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif[Donate,link=https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=FSFYYNEQ8RKWU]
-
 '''
 
 This is a fast, pure-ruby implementation of an activity feed concept commonly used in social networking applications. The implementation is optimized for *read-time performance* and high concurrency (lots of users), and can be extended with custom backend providers. Two providers come bundled: the production-ready Redis provider, and a naive Ruby Hash-based provider.
@@ -35,6 +34,34 @@ This is a fast, pure-ruby implementation of an activity feed concept commonly us
 * SimpleFeed requires ruby 2.3 or later
 * SimpleFeed is currently live in production
 * SimpleFeed is open source thanks to the generosity of *http://simbi.com[Simbi, Inc]*.
+
+== Features
+
+SimpleFeed offers the following features:
+
+ * Highly performant Redis-based activity feed
+
+ * Scales to millions of users (may need to use Twemproxy to shard across several Redis instances)
+
+ * Stores a fixed number of events per unique activity ID (eg, a user) — the default is 2000. When the full list is used, the oldest events are bumped off the feed (and are effectively trashed).
+
+ * Store user_id as either a string or an integer (the latter is base62 encoded when serialized, so very large users_ids are OK)
+
+ * Updating feeds of N users is roughly a O(N * log(N)) operation
+
+ * Reading feed for one user (or one type of user) is a O(1) operation
+
+ * For each activity (user) read the number of total and new items in the feed, computed since the user last saw their feed.
+
+ * Delete items from user's feed selectively (for instance, if a user unfollows someone they shouldn't see their events anymore).
+
+ * Automatically reset the timestamp when the user last read their feed when reading from the feed (or not, it's an argument). As soon as the user reads their feed (you call the `paginate` method), the "unread counter" is reset to 0.
+
+ * You can create as many different types of feeds per application as you like. No Singletons are used.
+
+ * Thread-safe implementation.
+
+ * Zero assumptions about what you are storing: the "data" is just a string. Serialize it with JSON, Marshall, YAML, or whatever.
 
 == Background, Examples, Serialization, etc
 
@@ -80,6 +107,24 @@ After the feed is defined, the gem creates a similarly named method under the `S
 * `SimpleFeed.get(:newsfeed)`
 
 You can also get a full list of currently defined feeds with `SimpleFeed.feed_names` method.
+
+=== User IDs
+
+In the following section you will see the examples of reading and writing activity for users based on their ID.
+
+SimpleFeed supports user IDs that are either numeric (integer) or string-based (eg, UUID).
+
+If your User IDs are numeric, they generate redis keys using Base62 encoding (which makes them shorter, and more compact).
+
+For string User IDs, the only transformation performed is the basic link:https://en.wikipedia.org/wiki/ROT13[`rot13`] in case user ids are semi-sensitive.
+
+==== Partitioning Schema
+
+You can take advantage of string user IDs for situations where your feed requires a composite keys for instance. Just remember that SimpleFeed does not care about what's in your user ID, and even what you call "a user". It's convenient to think of the activities in terms of users, because typically each user has a unique feed that only they see.
+
+But you can just as easily use zip code as the unique activity ID, and create one feed of events per geographical location, that all folks living in that zip code share. But what about other countries?
+
+Now you use partioning scheme: make "user_id" a combination `iso_country_code.postal_code`, eg for San Francisco, you'd use `us.94107`, but for Australia you could use, eg `au.3148`.
 
 === Reading from and writing to the feed
 
@@ -146,17 +191,21 @@ SimpleFeed.define(:followers) do |f|
   f.per_page = 2
 end
 
-# Let's get the Activity instance that wraps this user_id
-activity = SimpleFeed.followers.activity(user_id)   # => [... complex object removed for brevity ]
+# Let's get the Activity instance that wraps this
+activity = SimpleFeed.followers.activity(user_id)         # => [... complex object removed for brevity ]
+
 # let's clear out this feed to ensure it's empty
 activity.wipe                                             # => true
+
 # Let's verify that the counts for this feed are at zero
 activity.total_count                                      # => 0
 activity.unread_count                                     # => 0
+
 # Store some events
 activity.store(value: 'hello')                            # => true
 activity.store(value: 'goodbye', at: Time.now - 20)       # => true
 activity.unread_count                                     # => 2
+
 # Now we can paginate the events, while resetting this user's last-read timestamp:
 activity.paginate(page: 1, reset_last_read: true)
 # [
@@ -326,16 +375,16 @@ end
 # => [Response] { user_id => [Time] last_read, ... }
 
 @multi.total_count
-# => [Response] { user_id => [Integer] total_count, ... }
+# => [Response] { user_id => [Integer, String] total_count, ... }
 
 @multi.unread_count
-# => [Response] { user_id => [Integer] unread_count, ... }
+# => [Response] { user_id => [Integer, String] unread_count, ... }
 
 @multi.last_read
 # => [Response] { user_id => [Time] last_read, ... }
 ----
 
-== Providers in Depth
+== Providers
 
 As we've discussed above, a provider is an underlying persistence mechanism implementation.
 

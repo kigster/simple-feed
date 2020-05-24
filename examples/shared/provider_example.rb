@@ -5,9 +5,17 @@ $LOAD_PATH.unshift File.expand_path('../../../lib', __FILE__)
 raise ArgumentError, 'No @feed defined in the enclosing example' unless defined?(@feed)
 
 require 'simplefeed'
+require 'uuid'
 
-@number_of_users = ARGV[0] ? ARGV[0].to_i : 1
-@users           = Array.new(@number_of_users) { rand(200_000_000...800_000_000) }
+srand(Time.now.to_i % 100003)
+
+@number_of_users = ARGV[0] ? ARGV[0].to_i : 2
+@users = @number_of_users.times.map do |n|
+  n % 2 == 0 ? UUID.generate : rand(100003)
+end
+
+pp @users
+
 @activity        = @feed.activity(@users)
 @uid             = @users.first
 
@@ -24,7 +32,6 @@ def p(*args)
 end
 
 with_activity(@activity) do
-
   header "#{@activity.feed.provider_type} provider example"
 
   wipe

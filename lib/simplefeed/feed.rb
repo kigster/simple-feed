@@ -25,10 +25,6 @@ module SimpleFeed
       @proxy = nil
     end
 
-    def key_template
-      SimpleFeed::Key::Template.new(namespace)
-    end
-
     def provider=(definition)
       @proxy      = Providers::Proxy.from(definition)
       @proxy.feed = self
@@ -37,10 +33,6 @@ module SimpleFeed
 
     def provider
       @proxy
-    end
-
-    def key(user_id)
-      SimpleFeed::Providers::Key.new(user_id, key_template)
     end
 
     def provider_type
@@ -62,18 +54,16 @@ module SimpleFeed
         user_activity(one_or_more_users)
     end
 
-    # @deprecated Please use {#activity} instead
-    def for(*args)
-      warn 'WARNING: method #for is deprecated, please use #activity'
-      activity(*args)
-    end
-
     def configure(hash = {})
       SimpleFeed.symbolize!(hash)
       class_attrs.each do |attr|
         send("#{attr}=", hash[attr]) if hash.key?(attr)
       end
       yield self if block_given?
+    end
+
+    def key(user_id)
+      SimpleFeed::Providers::Key.new(user_id, key_template)
     end
 
     def eql?(other)
@@ -84,6 +74,12 @@ module SimpleFeed
 
     def class_attrs
       SimpleFeed.class_attributes(self.class)
+    end
+
+    private
+
+    def key_template
+      SimpleFeed::Key::Template.new(namespace)
     end
   end
 end
