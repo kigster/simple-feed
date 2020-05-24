@@ -23,7 +23,7 @@ RSpec.shared_examples('a valid provider') do |provider_args:, more_users: nil, p
   user_ids.flatten!
 
   user_ids.each do |user_id|
-    describe "#{provider.name.gsub(/SimpleFeed::Providers/, '')} Provider with User ID #{user_id}" do
+    describe "#{provider.name.gsub(/SimpleFeed::Providers/, '')} with User ID #{user_id}" do
       before do
         SimpleFeed.registry.delete(:test_feed)
         SimpleFeed.define(:test_feed) do |f|
