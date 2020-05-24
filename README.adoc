@@ -146,7 +146,8 @@ SimpleFeed.define(:followers) do |f|
   f.per_page = 2
 end
 
-# Let's get the Activity instance that wraps this user_id
+# Let's get the Activity instance that wraps this
+
 activity = SimpleFeed.followers.activity(user_id)   # => [... complex object removed for brevity ]
 # let's clear out this feed to ensure it's empty
 activity.wipe                                             # => true

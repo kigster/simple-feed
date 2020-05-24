@@ -18,30 +18,33 @@ end
 USER_IDS_TO_TEST = [12_289_734, 12, UUID.generate, 'R1.COMPOSITE.0X2F8F7D'].freeze
 
 RSpec.shared_examples('a valid provider') do |provider_args:, more_users: nil, provider: described_class|
-  before(:suite) { SimpleFeed.registry.delete(:tested_feed) }
-
   user_ids = USER_IDS_TO_TEST.dup
   user_ids << Array(more_users) if more_users
   user_ids.flatten!
 
   user_ids.each do |user_id|
     describe "#{provider.name.gsub(/SimpleFeed::Providers/, '')} Provider with User ID #{user_id}" do
+      before do
+        SimpleFeed.registry.delete(:test_feed)
+        SimpleFeed.define(:test_feed) do |f|
+          f.max_size = 5
+          f.provider = described_class.new(provider_args)
+        end
+      end
+
       include_context :event_matrix
 
-      subject(:feed) {
-        SimpleFeed.define(:tested_feed) do |f|
-          f.max_size = 5
-          f.provider = described_class.new(**provider_args)
-        end
-      }
+      subject(:feed) { SimpleFeed.get(:test_feed) }
+
+      it { is_expected.to be_a_kind_of(SimpleFeed::Feed) }
 
       let(:provider) { feed.provider.provider }
       let(:activity) { feed.activity(user_id) }
 
       let(:flush_feed) do
-        proc do
-          provider.with_redis(&:flushdb) if provider.respond_to?(:with_redis)
-          provider.h.clear if provider.respond_to?(:h)
+        proc do |provider_impl|
+          provider_impl.with_redis(&:flushdb) if provider_impl.respond_to?(:with_redis)
+          provider_impl.h.clear if provider_impl.respond_to?(:h)
         end
       end
 
@@ -49,8 +52,6 @@ RSpec.shared_examples('a valid provider') do |provider_args:, more_users: nil, p
       before { with_activity(activity) { wipe; total_count { |r| expect(r).to eq(0) } } }
 
       context '#store' do
-        before { flush_feed.call }
-
         context 'new events' do
           it 'returns valid responses back from each operation' do
             with_activity(activity, events: events) do
@@ -227,51 +228,59 @@ RSpec.shared_examples('a valid provider') do |provider_args:, more_users: nil, p
             end
           end
         end
+      end
 
-        context '#namespace' do
-          let(:feed_proc) {
-            ->(namespace) {
-              SimpleFeed.define(namespace.to_s) do |f|
-                f.max_size = 5
-                f.namespace = namespace
-                f.provider = described_class.new(provider_args)
-              end
-            }
+      context '#namespace' do
+        let(:feed_proc) {
+          ->(namespace) {
+            SimpleFeed.define(namespace.to_s) do |f|
+              f.max_size = 5
+              f.namespace = namespace
+              f.provider = described_class.new(provider_args)
+            end
           }
+        }
 
-          let(:feed_ns1) { feed_proc.call(:ns1) }
-          let(:feed_ns2) { feed_proc.call(:ns2) }
+        let(:feed_ns1) { feed_proc.call(:ns1) }
+        let(:feed_ns2) { feed_proc.call(:ns2) }
 
-          let(:ua_ns1) { feed_ns1.activity(user_id) }
-          let(:ua_ns2) { feed_ns2.activity(user_id) }
+        let(:ua_ns1) { feed_ns1.activity(user_id) }
+        let(:ua_ns2) { feed_ns2.activity(user_id) }
 
-          before do
-            ua_ns1.wipe
-            ua_ns1.store(value: 'ns1')
+        before do
+          ua_ns1.wipe
+          ua_ns1.store(value: 'ns1')
 
-            ua_ns2.wipe
-            ua_ns2.store(value: 'ns2')
-          end
+          ua_ns2.wipe
+          ua_ns2.store(value: 'ns2')
+        end
 
-          it 'properly sets namespace on each feed' do
-            expect(feed_ns1.namespace).to eq(:ns1)
-            expect(feed_ns2.namespace).to eq(:ns2)
-          end
+        it 'properly sets namespace on each feed' do
+          expect(feed_ns1.namespace).to eq(:ns1)
+          expect(feed_ns2.namespace).to eq(:ns2)
+        end
 
-          it 'does not conflict if namespaces are distinct' do
-            expect(ua_ns1.fetch.map(&:value)).to eq(%w(ns1))
-            expect(ua_ns2.fetch.map(&:value)).to eq(%w(ns2))
+        it 'does not conflict if namespaces are distinct' do
+          expect(ua_ns1.fetch.map(&:value)).to eq(%w(ns1))
+          expect(ua_ns2.fetch.map(&:value)).to eq(%w(ns2))
+        end
+      end
+
+      context 'additional methods' do
+        subject { feed.provider.provider } # this needs to be provider.provider, to get past the proxy
+
+        before { flush_feed[subject] }
+
+        before do
+          with_activity(activity, events: events) do
+            store(value: 'new story') { |r| expect(r).to be(true) }
+            reset_last_read
           end
         end
 
-        context 'additional methods' do
-          it '#total_memory_bytes' do
-            expect(provider.total_memory_bytes).to be > 0
-          end
-          it '#total_users' do
-            expect(provider.total_users).to eq(1)
-          end
-        end
+        its(:total_memory_bytes) { is_expected.to be > 0 }
+
+        its(:total_users) { is_expected.to eq 1 }
       end
     end
   end

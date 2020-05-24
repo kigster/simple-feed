@@ -13,7 +13,8 @@ module SimpleFeed
       end
 
       def render(opts = {})
-        template.render(opts.merge({ 'key_type' => name, 'key_marker' => marker }))
+        template.render(opts.merge({ key_type:   name,
+                                     key_marker: marker }))
       end
     end
 

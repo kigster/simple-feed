@@ -30,6 +30,7 @@ module SimpleFeed
         define_key_methods
       end
 
+      # Defines #data and #meta methods.
       def define_key_methods
         key_template.key_types.each do |type|
           key_name = type.name
@@ -43,7 +44,11 @@ module SimpleFeed
       end
 
       def base62_user_id
-        @base62_user_id ||= ::Base62.encode(user_id)
+        @base62_user_id ||= if user_id.is_a?(Numeric)
+                              ::Base62.encode(user_id)
+                            else
+                              rot13(user_id.to_s)
+                            end
       end
 
       def keys
@@ -63,6 +68,13 @@ module SimpleFeed
 
       def inspect
         render_options.inspect
+      end
+
+      private
+
+      def rot13(value)
+        value.tr('abcdefghijklmnopqrstuvwxyz',
+                 'nopqrstuvwxyzabcdefghijklm')
       end
     end
   end
