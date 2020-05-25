@@ -58,7 +58,7 @@ module SimpleFeed
         def with_response_batched(user_ids, external_response = nil)
           with_response(external_response) do |response|
             batch(user_ids) do |key|
-              response.for(key.user_id) { yield(key, response) }
+              response.for(key.consumer) { yield(key, response) }
             end
           end
         end

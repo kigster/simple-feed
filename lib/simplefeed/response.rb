@@ -28,7 +28,7 @@ module SimpleFeed
 
     def for(key_or_user_id, result = nil)
       user_id = key_or_user_id.is_a?(SimpleFeed::Providers::Key) ?
-        key_or_user_id.user_id :
+        key_or_user_id.consumer :
         key_or_user_id
 
       @result[user_id] = result || yield(@result[user_id])

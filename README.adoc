@@ -6,64 +6,86 @@
 
 == Scalable, Easy to Use Activity Feed Implementation.
 
+=== Build & Gem Status
+
 image:https://img.shields.io/gem/v/simple-feed.svg[Gem Version,link=https://rubygems.org/gems/simple-feed]
 image:https://img.shields.io/badge/license-MIT-blue.svg[MIT licensed,link=https://github.com/kigster/simple-feed/master/LICENSE.txt]
+image:http://inch-ci.org/github/kigster/simple-feed.svg?branch=master[Inline docs,link=http://inch-ci.org/github/kigster/simple-feed]
 
+image:https://travis-ci.org/kigster/simple-feed.svg?branch=master[Build Status,link=https://travis-ci.org/kigster/simple-feed]
 image:https://github.com/kigster/simple-feed/workflows/Ruby/badge.svg?branch=master[Ruby,link=https://github.com/kigster/simple-feed/actions?query=workflow%3ARuby]
 image:https://github.com/kigster/simple-feed/workflows/Rubocop/badge.svg?branch=master[Ruby,link=https://github.com/kigster/simple-feed/actions?query=workflow%3ARubocop]
 
-image:https://travis-ci.org/kigster/simple-feed.svg?branch=master[Build Status,link=https://travis-ci.org/kigster/simple-feed]
+image:https://codecov.io/gh/kigster/simple-feed/branch/master/graph/badge.svg[Coverage,link=https://codecov.io/gh/kigster/simple-feed]
 image:https://api.codeclimate.com/v1/badges/a11061820895fcde635e/maintainability[Maintainability,link=https://codeclimate.com/github/kigster/simple-feed/maintainability]
 image:https://api.codeclimate.com/v1/badges/a11061820895fcde635e/test_coverage[Test Coverage,link=https://codeclimate.com/github/kigster/simple-feed/test_coverage]
 
-image:http://inch-ci.org/github/kigster/simple-feed.svg?branch=master[Inline docs,link=http://inch-ci.org/github/kigster/simple-feed]
-image:https://img.shields.io/gitter/room/gitterHQ/gitter.svg[Talk on Gitter,link=https://gitter.im/kigster/simple-feed]
+=== Test Coverage Map
+
+image:https://codecov.io/gh/kigster/simple-feed/branch/master/graphs/sunburst.svg[Coverage Map,link=https://codecov.io/gh/kigster/simple-feed/branch/master]
 
 IMPORTANT: Please read the (somewhat outdated) blog post http://kig.re/2017/02/19/feeding-frenzy-with-simple-feed-activity-feed-ruby-gem.html[Feeding Frenzy with SimpleFeed] launching this library. Please leave comments or questions in the discussion thread at the bottom of that post. Thanks!
 
 If you like to see this project grow, your donation of any amount is much appreciated.
 
 image::https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif[Donate,link=https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=FSFYYNEQ8RKWU]
-'''
 
 This is a fast, pure-ruby implementation of an activity feed concept commonly used in social networking applications. The implementation is optimized for *read-time performance* and high concurrency (lots of users), and can be extended with custom backend providers. Two providers come bundled: the production-ready Redis provider, and a naive Ruby Hash-based provider.
 
 *Important Notes and Acknowledgements:*
 
 * SimpleFeed _does not depend on Ruby on Rails_ and is a *pure-ruby* implementation
-* SimpleFeed requires ruby 2.3 or later
+* SimpleFeed requires ruby 2.4 or later
 * SimpleFeed is currently live in production
 * SimpleFeed is open source thanks to the generosity of *http://simbi.com[Simbi, Inc]*.
 
 == Features
 
-SimpleFeed offers the following features:
+SimpleFeed is a Ruby Library that can be plugged into any application to power a fast, Redis-based activity feed implementation so common on social networking sites. SimpleFeed offers the following features:
 
- * Highly performant Redis-based activity feed
+ * Scalable and well performing Redis-based activity feed
 
- * Scales to millions of users (may need to use Twemproxy to shard across several Redis instances)
+ * Scales to millions of users (will need to use Twemproxy to shard across several Redis instances)
 
- * Stores a fixed number of events per unique activity ID (eg, a user) — the default is 2000. When the full list is used, the oldest events are bumped off the feed (and are effectively trashed).
-
- * Store user_id as either a string or an integer (the latter is base62 encoded when serialized, so very large users_ids are OK)
-
- * Updating feeds of N users is roughly a O(N * log(N)) operation
-
- * Reading feed for one user (or one type of user) is a O(1) operation
-
- * For each activity (user) read the number of total and new items in the feed, computed since the user last saw their feed.
-
- * Delete items from user's feed selectively (for instance, if a user unfollows someone they shouldn't see their events anymore).
-
- * Automatically reset the timestamp when the user last read their feed when reading from the feed (or not, it's an argument). As soon as the user reads their feed (you call the `paginate` method), the "unread counter" is reset to 0.
-
- * You can create as many different types of feeds per application as you like. No Singletons are used.
+ * Stores a fixed number of events for each unique "user" — the default is 1000. When the feed reaches 1001 events, the oldest event is offloaded from the activity.
 
  * Thread-safe implementation.
 
  * Zero assumptions about what you are storing: the "data" is just a string. Serialize it with JSON, Marshall, YAML, or whatever.
 
-== Background, Examples, Serialization, etc
+ * You can create as many different types of feeds per application as you like. No Singletons are used.
+
+ * Customize mapping from `user_id` to the activity id based on your business logic (more on this later).
+
+=== Publishing Events
+
+Pushing events to the feed requires three things:
+
+ * String `data`
+ * Float `at` (typically, the timestamp)
+ * One or more user objects or user_id, or consumers: basically — who should see this feed.
+
+You publish an event by choosing a set of users whose feed should be updated. For example, were you re-implementing Twitter, your array of `user_ids` when publishing an event would be all followers of the Tweet's author. While the `data` would probably be the Tweet ID.
+
+ * Publishing an event to the feeds of N users is roughly a O(N * log(N)) operation
+
+=== Consuming Events (Reading)
+
+You can consume events for one user or multiple users simultaneously.
+
+ * Use methods such as `paginate`, `fetch`, `delete_if`, `wipe`, etc.
+
+ * Reading feed for one user (or one type of user) is a O(1) operation
+
+ * For each activity (user) read the counts `total_count` and `unread_count` — the number of total and new items in the feed, where `unread_count` is computed since the user last reset their `read status`.
+
+ * The `last_read` timestamp can be automatically reset when the user is shown the feed via `paginate` method (controlled via a parameter).
+
+ * You can delete items from user's feed selectively (for instance, if a user un-follows someone they shouldn't see their events anymore).
+
+== Usage
+
+=== Example
 
 Please read the additional documentation, including the examples, on the https://github.com/kigster/simple-feed/wiki[project's Github Wiki].
 
@@ -71,7 +93,7 @@ Below is a screen shot of an actual activity feed powered by this library.
 
 image::https://raw.githubusercontent.com/kigster/simple-feed/master/man/activity-feed-action.png[usage]
 
-== Usage
+=== Providers
 
 A key concept to understanding SimpleFeed gem, is that of a _provider_, which is effectively a persistence implementation for the events belonging to each user.
 
@@ -108,55 +130,128 @@ After the feed is defined, the gem creates a similarly named method under the `S
 
 You can also get a full list of currently defined feeds with `SimpleFeed.feed_names` method.
 
-=== User IDs
-
-In the following section you will see the examples of reading and writing activity for users based on their ID.
-
-SimpleFeed supports user IDs that are either numeric (integer) or string-based (eg, UUID).
-
-If your User IDs are numeric, they generate redis keys using Base62 encoding (which makes them shorter, and more compact).
-
-For string User IDs, the only transformation performed is the basic link:https://en.wikipedia.org/wiki/ROT13[`rot13`] in case user ids are semi-sensitive.
-
-==== Partitioning Schema
-
-You can take advantage of string user IDs for situations where your feed requires a composite keys for instance. Just remember that SimpleFeed does not care about what's in your user ID, and even what you call "a user". It's convenient to think of the activities in terms of users, because typically each user has a unique feed that only they see.
-
-But you can just as easily use zip code as the unique activity ID, and create one feed of events per geographical location, that all folks living in that zip code share. But what about other countries?
-
-Now you use partioning scheme: make "user_id" a combination `iso_country_code.postal_code`, eg for San Francisco, you'd use `us.94107`, but for Australia you could use, eg `au.3148`.
-
 === Reading from and writing to the feed
 
 For the impatient, here is a quick way to get started with the `SimpleFeed`.
 
 [source,ruby]
 ----
-# This assumes we have previously defined a feed named :newsfeed (see above)
-activity = SimpleFeed.newsfeed.activity(@current_user.id)
-# Store directly the value and the optional time stamp
-activity.store(value: 'hello')
-# => true
+# Let's use the feed we defined earlier and create activity for all followers of the current user
+publish_activity = SimpleFeed.newsfeed.activity(@current_user.followers.map(&:id))
 
-# or equivalent:
-@event = SimpleFeed::Event.new('hello', Time.now)
-activity.store(event: @event)
-# => false # false indicates that the same event is already in the feed.
+# Store directly the value and the optional time stamp
+publish_activity.store(value: 'hello', at: Time.now)
+# => true  # indicates that value 'hello' was not yet in the feed (all events must be unique)
+
+# Or, using the event form:
+publish_activity.store(event: SimpleFeed::Event.new('good bye', Time.now))
+# => true
 ----
 
-As we've added events for this user, we can request them back, sorted by
-the time and paginated. If you are using a distributed provider, such as
-`Redis`, the events can be retrieved by any ruby process in your
-application, not just the one that published the event (which is the
-case for the "toy" `Hash::Provider`.
+As we've added the two events for these users, we can now read them back, sorted by
+the time and paginated:
 
 [source,ruby]
 ----
-activity.paginate(page: 1, reset_last_read: true)
-# => [ <SimpleFeed::Event#0x2134afa value='hello' at='2016-11-20 23:32:56 -0800'> ]
+# Let's grab the first follower
+user_activity = SimpleFeed.newsfeed.activity(@current_user.followers.first.id)
+
+# Now we can paginate the events, while resetting this user's last-read timestamp:
+user_activity.paginate(page: 1, reset_last_read: true)
+# [
+#     [0] #<SimpleFeed::Event: value=hello, at=1480475294.0579991>,
+#     [1] #<SimpleFeed::Event: value=good bye, at=1480472342.8979871>,
+# ]
 ----
 
-=== The Two Forms of the API
+IMPORTANT: Note that we stored the activity by passing an array of users, but read the activity for just one user. This is how you'd use SimpleFeed most of the time, with the exception of the alternative mapping described below.
+
+=== User IDs
+
+In the previous section you saw the examples of publishing events to many feeds, and then reading the activity for a given user.
+
+SimpleFeed supports user IDs that are either numeric (integer) or string-based (eg, UUID). Numeric IDs are best for simplest cases, and are the most compact. String keys offer the most flexibility.
+
+==== Activity Keys
+
+In the next section we'll talk about generating `keys` from user_ids. We mean — Redis Hash keys that uniquely map a user (or a set of users) to the activity feed they should see.
+
+There are up to two keys that are computed depending on the situation:
+
+ * `data_key` is used to store the actual feed events
+ * `meta_key` is used to store user's `last_read` status
+
+==== Partitioning Schema
+
+You can take advantage of string user IDs for situations where your feed requires keys to be composite for instance. Just remember that SimpleFeed does not care about what's in your user ID, and even what you call "a user". It's convenient to think of the activities in terms of users, because typically each user has a unique feed that only they see.
+
+But you can just as easily use zip code as the unique activity ID, and create one feed of events per geographical location, that all folks living in that zip code share. But what about other countries?
+
+Now you use partitioning scheme: make the "user_id" argument a combination `iso_country_code.postal_code`, eg for San Francisco, you'd use `us.94107`, but for Australia you could use, eg `au.3148`.
+
+==== Relationship between an Activity and a User
+
+===== One to One
+
+In the most common case, you will have one activity per user.
+
+For instance, in the Twitter example, each Twitter user has a unique tweeter feed that only they see.
+
+The events are published when someone posts a tweet, to the array of all users that follow the Tweet author.
+
+===== One to Many
+
+However, SimpleFeed supports one additional use-case, where you might have one activity shared among many users.
+
+Imagine a service that notifies residents of important announcements based on user's zip code of residence.
+
+We want this feed to work as follows:
+
+ * All users that share a zip-code should see the same exact feed.
+ * However, all users should never share the individual's `last_read` status: so if two people read the same activity from the same zip code, their `unread_count` should change independently.
+
+In terms of the activity keys, this means:
+
+ * `data_key` should be based on the zip-code of each user, and be one to many with users.
+ * `meta_key` should be based on the user ID as we want it to be 1-1 with users.
+
+To support this use-case, SimpleFeed supports two optional transformer lambdas that can be applied to each user object when computing their activity feed hash key:
+
+[source,ruby]
+----
+SimpleFeed.define(:zipcode_alerts) do |f|
+  f.provider   = SimpleFeed.provider(:redis, redis: -> { ::Redis.new }, pool_size: 10)
+  f.namespace  = 'zc'
+  f.data_key_transformer = ->(user) { user.zip_code }  # actual feed data is stored once per zip code
+  f.meta_key_transformer = ->(user) { user.id }        # last_read status is stored once per user
+end
+----
+
+When you publish events into this feed, you would need to provide `User` objects that all respond to `.zip_code` method (based on the above configuration). Since the data is only defined by Zip Code, you probably don't want to be publishing it via a giant array of users. Most likely, you'll want to publish event based on the zip code, and consume them based on the user ID.
+
+To support this user-case, let's modify our transformer lambda (only the `data` one) as follows — so that it can support both the consuming read by a user case, and the publishing a feed by zip code case:
+
+Alternatively, you could do something like this:
+
+[source,ruby]
+----
+  f.data_key_transformer = ->(entity) do
+    case entity
+      when User
+        entity.zip_code.to_i
+      when String # UUIDs
+        User.find(entity)&.zip_code.to_i
+      when ZipCode, Numeric
+        entity.to_i
+      else
+        raise ArgumentError, "Invalid type #{entity.class.name}"
+    end
+  end
+----
+
+Just make sure that your users always have `.zip_code` defined, and that `ZipCode.new(94107).to_i` returns exactly the same thing as `@user.zip_code.to_i` or your users won't see the feeds they are supposed to see.
+
+=== The Two Forms of the Feed API
 
 The feed API is offered in two forms:
 
@@ -170,9 +265,8 @@ The method names and signatures are the same. The only difference is in what the
 
 Please see further below the details about the <<batch-api,Batch API>>.
 
-+++<a name="single-user-api">++++++</a>+++
-
 [discrete]
+
 ===== Single-User API
 
 In the examples below we show responses based on a single-user usage. As previously mentioned, the multi-user usage is the same, except what the response values are, and is discussed further down below.

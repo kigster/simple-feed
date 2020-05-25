@@ -74,8 +74,8 @@ module SimpleFeed
       end
 
       def initialize(user_id:, feed:)
-        @feed              = feed
-        @user_id           = user_id
+        @feed = feed
+        @user_id = user_id
         self.user_activity = MultiUser.new(feed: feed, user_ids: [user_id])
       end
     end

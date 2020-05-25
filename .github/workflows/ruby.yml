@@ -31,5 +31,6 @@ jobs:
         bundle install --jobs 4 --retry 3
         bundle exec rspec --format documentation
       env:
+        CODECOV_TOKEN: "8314c388-54a3-4125-915b-3d4836c15b29"
         REDIS_HOST: redis
         REDIS_PORT: ${{ job.services.redis.ports[6379] }}

@@ -51,9 +51,9 @@ module SimpleFeed
           raise ArgumentError, '#delete_if must be called with a block that receives (user_id, event) as arguments.' unless block_given?
 
           with_response_batched(user_ids) do |key|
-            fetch(user_ids: [key.user_id])[key.user_id].map do |event|
+            fetch(user_ids: [key.consumer])[key.consumer].map do |event|
               with_redis do |redis|
-                if yield(event, key.user_id)
+                if yield(event, key.consumer)
                   redis.zrem(key.data, event.value) ? event : nil
                 end
               end
@@ -90,7 +90,7 @@ module SimpleFeed
 
           response = with_response_pipelined(user_ids) do |redis, key|
             if since == :unread
-              redis.zrevrangebyscore(key.data, '+inf', (last_read_response.delete(key.user_id) || 0).to_f, withscores: true)
+              redis.zrevrangebyscore(key.data, '+inf', (last_read_response.delete(key.consumer) || 0).to_f, withscores: true)
             elsif since
               redis.zrevrangebyscore(key.data, '+inf', since.to_f, withscores: true)
             else
@@ -120,7 +120,7 @@ module SimpleFeed
             get_users_last_read(redis, key)
           end
           with_response_pipelined(response.user_ids, response) do |redis, key, _response|
-            last_read = _response.delete(key.user_id).to_f
+            last_read = _response.delete(key.consumer).to_f
             redis.zcount(key.data, last_read, '+inf')
           end
         end
@@ -223,7 +223,7 @@ module SimpleFeed
         def with_response_pipelined(user_ids, response = nil)
           with_response(response) do |response|
             batch_pipelined(user_ids) do |redis, key|
-              response.for(key.user_id) { yield(redis, key, response) }
+              response.for(key.consumer) { yield(redis, key, response) }
             end
           end
         end
@@ -231,7 +231,7 @@ module SimpleFeed
         def with_response_multi(user_ids, response = nil)
           with_response(response) do |response|
             batch_multi(user_ids) do |redis, key|
-              response.for(key.user_id) { yield(redis, key, response) }
+              response.for(key.consumer) { yield(redis, key, response) }
             end
           end
         end

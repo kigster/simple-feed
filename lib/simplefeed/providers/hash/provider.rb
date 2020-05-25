@@ -46,7 +46,7 @@ module SimpleFeed
         def delete_if(user_ids:)
           with_response_batched(user_ids) do |key|
             activity(key).map do |event|
-              if yield(event, key.user_id)
+              if yield(event, key.consumer)
                 __delete(key, event)
                 event
               end
@@ -80,7 +80,7 @@ module SimpleFeed
         def fetch(user_ids:, since: nil, reset_last_read: false)
           response = with_response_batched(user_ids) do |key|
             if since == :unread
-              activity(key).reject { |event| event.at < user_record(key).last_read.to_f }
+              activity(key).reject { |event| event.at < user_meta_record(key).last_read.to_f }
             elsif since
               activity(key).reject { |event| event.at < since.to_f }
             else
@@ -94,7 +94,7 @@ module SimpleFeed
 
         def reset_last_read(user_ids:, at: Time.now)
           with_response_batched(user_ids) do |key|
-            user_record(key)[:last_read] = at
+            user_meta_record(key)[:last_read] = at
             at
           end
         end
@@ -107,13 +107,13 @@ module SimpleFeed
 
         def unread_count(user_ids:)
           with_response_batched(user_ids) do |key|
-            activity(key).count { |event| event.at > user_record(key).last_read.to_f }
+            activity(key).count { |event| event.at > user_meta_record(key).last_read.to_f }
           end
         end
 
         def last_read(user_ids:)
           with_response_batched(user_ids) do |key|
-            user_record(key).last_read
+            user_meta_record(key).last_read
           end
         end
 
@@ -122,7 +122,7 @@ module SimpleFeed
         end
 
         def total_users
-          h.size
+          h.size / 2
         end
 
         private
@@ -139,27 +139,37 @@ module SimpleFeed
           (size_before > size_after)
         end
 
-        def create_user_record
+        def create_meta_record
           Hashie::Mash.new(
-            { last_read: 0, activity: SortedSet.new }
+            { last_read: 0 }
           )
         end
 
-        def user_record(key)
-          h[key.data] ||= create_user_record
+        def create_data_record
+          Hashie::Mash.new(
+            { activity: SortedSet.new }
+          )
+        end
+
+        def user_data_record(key)
+          h[key.data] ||= create_data_record
+        end
+
+        def user_meta_record(key)
+          h[key.meta] ||= create_meta_record
         end
 
         def wipe_user_record(key)
-          h[key.data] = create_user_record
+          h[key.data] = create_data_record
         end
 
         def activity(key, event = nil)
-          user_record(key)[:activity] << event if event
-          user_record(key)[:activity].to_a
+          user_data_record(key)[:activity] << event if event
+          user_data_record(key)[:activity].to_a
         end
 
         def add_event(event, key)
-          uas = user_record(key)[:activity]
+          uas = user_data_record(key)[:activity]
           if uas.include?(event)
             false
           else
@@ -172,11 +182,11 @@ module SimpleFeed
         end
 
         def __last_read(key, _value = nil)
-          user_record(key)[:last_read]
+          user_meta_record(key)[:last_read]
         end
 
         def __delete(key, event)
-          user_record(key)[:activity].delete(event)
+          user_data_record(key)[:activity].delete(event)
         end
 
         def create_event(*args, **opts)

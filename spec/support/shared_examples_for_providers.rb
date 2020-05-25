@@ -15,8 +15,6 @@ def ensure_descending(r)
   end
 end
 
-USER_IDS_TO_TEST = [12_289_734, 12, UUID.generate, 'R1.COMPOSITE.0X2F8F7D'].freeze
-
 RSpec.shared_examples('a valid provider') do |provider_args:, more_users: nil, provider: described_class|
   user_ids = USER_IDS_TO_TEST.dup
   user_ids << Array(more_users) if more_users

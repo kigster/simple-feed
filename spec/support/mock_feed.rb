@@ -33,7 +33,7 @@ module SimpleFeed
     SimpleFeed::Providers::REQUIRED_METHODS.each do |m|
       define_method(m) do |user_ids:, **opts|
         with_response_batched(user_ids) do |key, response|
-          response.for(key.user_id) { opts[:result] || 0 }
+          response.for(key.consumer) { opts[:result] || 0 }
         end
       end
     end
