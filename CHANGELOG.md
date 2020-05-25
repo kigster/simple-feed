@@ -1,8 +1,8 @@
 # Changelog
 
-## [Unreleased](https://github.com/kigster/simple-feed/tree/HEAD)
+## [v3.0.0](https://github.com/kigster/simple-feed/tree/v3.0.0) (2020-05-25)
 
-[Full Changelog](https://github.com/kigster/simple-feed/compare/v2.1.0...HEAD)
+[Full Changelog](https://github.com/kigster/simple-feed/compare/v2.1.0...v3.0.0)
 
 **Merged pull requests:**
 
