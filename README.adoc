@@ -27,6 +27,8 @@ If you like to see this project grow, your donation of any amount is much apprec
 image::https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif[Donate,link=https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=FSFYYNEQ8RKWU]
 '''
 
+image:https://codecov.io/gh/kigster/simple-feed/master/graphs/sunburst.svg[coverage,link=https://codecov.io/gh/kigster/simple-feed/branch/master]
+
 This is a fast, pure-ruby implementation of an activity feed concept commonly used in social networking applications. The implementation is optimized for *read-time performance* and high concurrency (lots of users), and can be extended with custom backend providers. Two providers come bundled: the production-ready Redis provider, and a naive Ruby Hash-based provider.
 
 *Important Notes and Acknowledgements:*

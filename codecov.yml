@@ -1,3 +1,28 @@
+codecov:
+  require_ci_to_pass: yes
+
+  notify:
+    after_n_builds: 30
+    wait_for_ci: yes
+
 parsers:
   v1:
-    include_full_missed_files: true  # default false
+    include_full_missed_files: true # To use with Ruby so we see files that have NO tests written
+
+coverage:
+  precision: 1
+  status:
+    project:
+      default: off
+      simplefeed
+        target: 20%
+        threshold: 100%
+        informational: true
+        if_not_found: success
+        if_ci_failed: error
+        paths:
+          - lib/
+flags:
+  simplefeed:
+    paths:
+      - lib/
