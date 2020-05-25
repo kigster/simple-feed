@@ -45,7 +45,7 @@ SimpleFeed offers the following features:
 
  * Stores a fixed number of events per unique activity ID (eg, a user) — the default is 2000. When the full list is used, the oldest events are bumped off the feed (and are effectively trashed).
 
- * Store user_id as either a string or an integer (the latter is base62 encoded when serialized, so very large users_ids are OK)
+ * Store consumer_id as either a string or an integer (the latter is base62 encoded when serialized, so very large users_ids are OK)
 
  * Updating feeds of N users is roughly a O(N * log(N)) operation
 
@@ -124,7 +124,7 @@ You can take advantage of string user IDs for situations where your feed require
 
 But you can just as easily use zip code as the unique activity ID, and create one feed of events per geographical location, that all folks living in that zip code share. But what about other countries?
 
-Now you use partioning scheme: make "user_id" a combination `iso_country_code.postal_code`, eg for San Francisco, you'd use `us.94107`, but for Australia you could use, eg `au.3148`.
+Now you use partioning scheme: make "consumer_id" a combination `iso_country_code.postal_code`, eg for San Francisco, you'd use `us.94107`, but for Australia you could use, eg `au.3148`.
 
 === Reading from and writing to the feed
 
@@ -139,7 +139,7 @@ activity.store(value: 'hello')
 # => true
 
 # or equivalent:
-@event = SimpleFeed::Event.new('hello', Time.now)
+@event = SimpleFeed::EventTuple.new('hello', Time.now)
 activity.store(event: @event)
 # => false # false indicates that the same event is already in the feed.
 ----
@@ -153,7 +153,7 @@ case for the "toy" `Hash::Provider`.
 [source,ruby]
 ----
 activity.paginate(page: 1, reset_last_read: true)
-# => [ <SimpleFeed::Event#0x2134afa value='hello' at='2016-11-20 23:32:56 -0800'> ]
+# => [ <SimpleFeed::EventTuple#0x2134afa value='hello' at='2016-11-20 23:32:56 -0800'> ]
 ----
 
 === The Two Forms of the API
@@ -192,7 +192,7 @@ SimpleFeed.define(:followers) do |f|
 end
 
 # Let's get the Activity instance that wraps this
-activity = SimpleFeed.followers.activity(user_id)         # => [... complex object removed for brevity ]
+activity = SimpleFeed.followers.activity(consumer_id)         # => [... complex object removed for brevity ]
 
 # let's clear out this feed to ensure it's empty
 activity.wipe                                             # => true
@@ -209,8 +209,8 @@ activity.unread_count                                     # => 2
 # Now we can paginate the events, while resetting this user's last-read timestamp:
 activity.paginate(page: 1, reset_last_read: true)
 # [
-#     [0] #<SimpleFeed::Event: value=good bye, at=1480475294.0579991>,
-#     [1] #<SimpleFeed::Event: value=hello, at=1480475294.057138>
+#     [0] #<SimpleFeed::EventTuple: value=good bye, at=1480475294.0579991>,
+#     [1] #<SimpleFeed::EventTuple: value=hello, at=1480475294.057138>
 # ]
 # Now the unread_count should return 0 since the user just "viewed" the feed.
 activity.unread_count                                     # => 0
@@ -218,11 +218,11 @@ activity.delete(value: 'hello')                           # => true
 # the next method yields to a passed in block for each event in the user's feed, and deletes
 # all events for which the block returns true. The return of this call is the
 # array of all events that have been deleted for this user.
-activity.delete_if do |event, user_id|
+activity.delete_if do |event, consumer_id|
   event.value =~ /good/
 end
 # => [
-#     [0] #<SimpleFeed::Event: value=good bye, at=1480475294.0579991>
+#     [0] #<SimpleFeed::EventTuple: value=good bye, at=1480475294.0579991>
 # ]
 activity.total_count                                      # => 0
 ----
@@ -249,7 +249,7 @@ updates for different users asynchronously and concurrently.
 ____
 
 Multi-user operations return a `SimpleFeed::Response` object, which can
-be used as a hash (keyed on user_id) to fetch the result of a given
+be used as a hash (keyed on consumer_id) to fetch the result of a given
 user.
 
 [source,ruby]
@@ -261,7 +261,7 @@ user.
   activity = SimpleFeed.get(:followers).activity(group.map(&:id))
   activity.store(value: "#{@event_producer.name} liked an article")
 
-  # => [Response] { user_id1 => [Boolean], user_id2 => [Boolean]... }
+  # => [Response] { consumer_id1 => [Boolean], consumer_id2 => [Boolean]... }
   # true if the value was stored, false if it wasn't.
 end
 ----
@@ -308,7 +308,7 @@ end
 
 The DSL context has access to two additional methods:
 
-* `#event(value, at)` returns a fully constructed `SimpleFeed::Event` instance
+* `#event(value, at)` returns a fully constructed `SimpleFeed::EventTuple` instance
 * `#color_dump` prints to STDOUT the ASCII text dump of the current user's activities (events), as well as the counts and the `last_read` shown visually on the time line.
 
 [discrete]
@@ -322,14 +322,14 @@ Below is an example output of `color_dump` method, which is intended for the deb
 
 == Complete API
 
-For completeness sake we'll show the multi-user API responses only. For a single-user use-case the response is typically a scalar, and the input is a singular `user_id`, not an array of ids.
+For completeness sake we'll show the multi-user API responses only. For a single-user use-case the response is typically a scalar, and the input is a singular `consumer_id`, not an array of ids.
 
 [discrete]
 ==== Multi-User (Batch) API
 
 Each API call at this level expects an array of user IDs, therefore the
 return value is an object, `SimpleFeed::Response`, containing individual
-responses for each user, accessible via `response[user_id]` method.
+responses for each user, accessible via `response[consumer_id]` method.
 
 [source,ruby]
 ----
@@ -337,51 +337,51 @@ responses for each user, accessible via `response[user_id]` method.
 
 @multi.store(value:, at:)
 @multi.store(event:)
-# => [Response] { user_id => [Boolean], ... } true if the value was stored, false if it wasn't.
+# => [Response] { consumer_id => [Boolean], ... } true if the value was stored, false if it wasn't.
 
 @multi.delete(value:, at:)
 @multi.delete(event:)
-# => [Response] { user_id => [Boolean], ... } true if the value was removed, false if it didn't exist
+# => [Response] { consumer_id => [Boolean], ... } true if the value was removed, false if it didn't exist
 
-@multi.delete_if do |event, user_id|
+@multi.delete_if do |event, consumer_id|
   # if the block returns true, the event is deleted and returned
 end
-# => [Response] { user_id => [deleted_event1, deleted_event2, ...], ... }
+# => [Response] { consumer_id => [deleted_event1, deleted_event2, ...], ... }
 
 # Wipe the feed for a given user(s)
 @multi.wipe
-# => [Response] { user_id => [Boolean], ... } true if user activity was found and deleted, false otherwise
+# => [Response] { consumer_id => [Boolean], ... } true if user activity was found and deleted, false otherwise
 
 # Return a paginated list of all items, optionally with the total count of items
 @multi.paginate(page: 1,
                 per_page: @multi.feed.per_page,
                 with_total: false,
                 reset_last_read: false)
-# => [Response] { user_id => [Array]<Event>, ... }
+# => [Response] { consumer_id => [Array]<EventTuple>, ... }
 # Options:
 #   reset_last_read: false — reset last read to Time.now (true), or the provided timestamp
-#   with_total: true — returns a hash for each user_id:
-#        => [Response] { user_id => { events: Array<Event>, total_count: 3 }, ... }
+#   with_total: true — returns a hash for each consumer_id:
+#        => [Response] { consumer_id => { events: Array<EventTuple>, total_count: 3 }, ... }
 
 # Return un-paginated list of all items, optionally filtered
 @multi.fetch(since: nil, reset_last_read: false)
-# => [Response] { user_id => [Array]<Event>, ... }
+# => [Response] { consumer_id => [Array]<EventTuple>, ... }
 # Options:
 #   reset_last_read: false — reset last read to Time.now (true), or the provided timestamp
 #   since: <timestamp> — if provided, returns all items posted since then
 #   since: :last_read — if provided, returns all unread items and resets +last_read+
 
 @multi.reset_last_read
-# => [Response] { user_id => [Time] last_read, ... }
+# => [Response] { consumer_id => [Time] last_read, ... }
 
 @multi.total_count
-# => [Response] { user_id => [Integer, String] total_count, ... }
+# => [Response] { consumer_id => [Integer, String] total_count, ... }
 
 @multi.unread_count
-# => [Response] { user_id => [Integer, String] unread_count, ... }
+# => [Response] { consumer_id => [Integer, String] unread_count, ... }
 
 @multi.last_read
-# => [Response] { user_id => [Time] last_read, ... }
+# => [Response] { consumer_id => [Time] last_read, ... }
 ----
 
 == Providers

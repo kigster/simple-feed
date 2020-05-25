@@ -6,39 +6,34 @@ module SimpleFeed
     class Activities
       include SimpleFeed::DSL::Formatter
 
-      attr_accessor :activity, :feed
+      attr_accessor :activity, :event_feed, :feed
 
       def initialize(activity, **opts)
-        self.activity = activity
+        self.event_feed = activity
         self.feed     = activity.feed
-        opts.each_pair do |key, value|
+        opts.each_pair do |key, data|
           self.class.instance_eval do
             attr_accessor key
           end
-          send("#{key}=".to_sym, value)
+          send("#{key}=".to_sym, data)
         end
       end
 
-      # Creates wrapper methods around the API and optionally prints both calls and return values
-      #
-      # def store(event: .., | value:, at: )
-      #   activity.store(**opts)
-      # end
-      # etc...
+      # Creates wrapper methods around the API and optionally prints both calls and return datas
       SimpleFeed::Providers.define_provider_methods(self) do |instance, method, *args, **opts, &block|
         if args&.first
           arg1 = args.shift
-          if arg1.is_a?(SimpleFeed::Event)
+          if arg1.is_a?(SimpleFeed::EventTuple)
             event = arg1
           else
-            opts[:value] = arg1 unless opts[:value]
-            opts[:at]    = args.shift unless opts[:value]
+            opts[:data] = arg1 unless opts[:data]
+            opts[:at]    = args.shift unless opts[:data]
           end
         else
           event = opts.delete(:event)
         end
 
-        opts.merge!(value: event.value, at: event.at) if event
+        opts.merge!(data: event.data, at: event.at) if event
 
         response = instance.instance_eval do
           print_debug_info(method, **opts) do

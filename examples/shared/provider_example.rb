@@ -16,7 +16,7 @@ end
 
 pp @users
 
-@activity        = @feed.activity(@users)
+@activity        = @feed.event_feed(@users)
 @uid             = @users.first
 
 include SimpleFeed::DSL

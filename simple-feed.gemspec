@@ -30,6 +30,10 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'hashie'
   spec.add_dependency 'hiredis'
   spec.add_dependency 'redis'
+  # spec.add_dependency 'dry-validation'
+  # spec.add_dependency 'dry-schema'
+  # spec.add_dependency 'dry-struct'
+  # spec.add_dependency 'dry-events'
 
   spec.add_development_dependency 'awesome_print'
   spec.add_development_dependency 'bundler'
@@ -41,4 +45,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'simplecov'
   spec.add_development_dependency 'uuid'
   spec.add_development_dependency 'yard'
+  spec.add_development_dependency 'pry'
+  spec.add_development_dependency 'pry-byebug'
 end

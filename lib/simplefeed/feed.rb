@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 require_relative 'providers'
-require_relative 'activity/base'
+require_relative 'consumer/event_feed'
+require_relative 'publisher/activity'
+
 require 'simplefeed/key/template'
 
 module SimpleFeed
@@ -39,19 +41,20 @@ module SimpleFeed
       SimpleFeed::Providers::Base::Provider.class_to_registry(@proxy.provider.class)
     end
 
-    def user_activity(user_id)
-      Activity::SingleUser.new(user_id: user_id, feed: self)
+    def publish(event:, consumers:)
+      activity(consumers).publish(data: event.data, at: event.at)
     end
 
-    def users_activity(user_ids)
-      Activity::MultiUser.new(user_ids: user_ids, feed: self)
+    def store(data:, at:, consumers:)
+      activity(consumers).publish(data: data, at: at)
     end
 
-    # Depending on the argument returns either +SingleUserActivity+ or +MultiUserActivity+
-    def activity(one_or_more_users)
-      one_or_more_users.is_a?(Array) ?
-        users_activity(one_or_more_users) :
-        user_activity(one_or_more_users)
+    def activity(consumers)
+      Publisher::Activity.new(consumers: consumers, feed: self)
+    end
+
+    def event_feed(consumers)
+      Consumer::EventFeed.new(consumers: consumers, feed: self)
     end
 
     def configure(hash = {})
@@ -62,8 +65,8 @@ module SimpleFeed
       yield self if block_given?
     end
 
-    def key(user_id)
-      SimpleFeed::Providers::Key.new(user_id, key_template)
+    def key(consumer_id)
+      SimpleFeed::Providers::Key.new(consumer_id, key_template)
     end
 
     def eql?(other)

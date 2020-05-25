@@ -12,13 +12,13 @@ feeds:
         db: 1
 
     data:
-      - user_ids: afkj234
+      - consumers: afkj234
         activity:
           - { value: 'John liked Robert', at: "2016-11-20 23:32:56 -0800" }
           - { value: 'debbie liked Robert', at: '2016-11-20 23:35:56 -0800' }
         last_read_at: 2016-11-20 23:32h:56 -0800
 
-      - user_ids: 2
+      - consumers: 2
         activity:
           - { value: 'John is following Megan', at: "2016-11-20 23:32:56 -0800" }
           - { value: 'Konstantin is feeling great again', at: '2016-11-20 23:33:56 -0800' }
@@ -43,13 +43,13 @@ feeds:
         pool_size: 10
 
     data:
-      - user_ids: 1
+      - consumers: 1
         activity:
           - { value: 'you followed John', at: "2016-11-20 23:32:56 -0800" }
           - { value: 'your facebook friend D.Trump joined', at: '2016-11-20 23:35:56 -0800' }
         last_read_at: 2016-11-20 22:33:56 -0800
 
-      - user_ids: 2
+      - consumers: 2
         activity:
           - { value: 'your facebook friend amy joined', at: "2016-11-20 23:34:56 -0800" }
           - { value: 'your divorce proposal was rejected by your wife', at: '2016-11-20 23:35:56 -0800' }

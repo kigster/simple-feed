@@ -16,35 +16,35 @@ describe 'SimpleFeed::Activity::MultiUserActivity' do
   let!(:provider_proxy) { feed.provider }
   let!(:provider) { provider_proxy.provider }
 
-  let(:user_id_1) { 19_009_845 }
-  let(:user_id_2) { 32_423_049 }
+  let(:consumer_id_1) { 19_009_845 }
+  let(:consumer_id_2) { 32_423_049 }
 
-  let(:user_ids) { [user_id_1, user_id_2] }
-  let(:user_activity) { feed.activity(user_ids) }
+  let(:consumers) { [consumer_id_1, consumer_id_2] }
+  let(:user_activity) { feed.event_feed(consumers) }
 
   context 'method delegation' do
     it 'should correctly assign the type of user_activity' do
-      expect(user_activity.class).to eq(SimpleFeed::Activity::MultiUser)
-      expect(user_activity.user_ids).to eq(user_ids)
+      expect(user_activity.class).to eq(SimpleFeed::Activity)
+      expect(user_activity.consumers).to eq(consumers)
     end
 
     context 'Enumeration of users' do
       it 'should enumerate users' do
-        user_activity.each do |user_id|
-          expect(user_ids.include?(user_id)).to be(true)
+        user_activity.each do |consumer_id|
+          expect(consumers.include?(consumer_id)).to be(true)
         end
       end
     end
 
     context 'calling through to provider' do
       let(:true_response) do
-        SimpleFeed::Response.new({ user_id_1 => true, user_id_2 => true })
+        SimpleFeed::Response.new({ consumer_id_1 => true, consumer_id_2 => true })
       end
 
       let(:provider_must_receive) {
         ->(method, **opts) {
           expect(opts).to_not be_empty
-          expect(provider).to receive(method).with(user_ids: user_ids, **opts).
+          expect(provider).to receive(method).with(consumers: consumers, **opts).
                                 and_return(true_response)
         }
       }
@@ -64,7 +64,7 @@ describe 'SimpleFeed::Activity::MultiUserActivity' do
             its(:user_count) { should be 2 }
 
             it('should respond to #each') { is_expected.to respond_to(:each) }
-            it(:each) { expect { |args| subject.each(&args) }.to yield_successive_args([user_id_1, true], [user_id_2, true]) }
+            it(:each) { expect { |args| subject.each(&args) }.to yield_successive_args([consumer_id_1, true], [consumer_id_2, true]) }
           end
         end
       end

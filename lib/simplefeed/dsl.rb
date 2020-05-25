@@ -12,9 +12,9 @@ module SimpleFeed
   #     require 'simplefeed/dsl'
   #     include SimpleFeed::DSL
   #
-  #     with_activity(SimpleFeed.get(:newsfeed).activity(user_id)) do
-  #       store(value: 'hello', at: Time.now)  #=> true
-  #       fetch                                # => [ Event, Event, ... ]
+  #     with_activity(SimpleFeed.get(:newsfeed).event_feed(consumer_id)) do
+  #       store(data: 'hello', at: Time.now)  #=> true
+  #       fetch                                # => [ EventTuple, EventTuple, ... ]
   #       total_count                          # => 12
   #       unread_count                         # => 4
   #     end
@@ -34,7 +34,7 @@ module SimpleFeed
     end
 
     def event(value, at = Time.now)
-      SimpleFeed::Event.new(value, at)
+      SimpleFeed::EventTuple.new(value, at)
     end
   end
 end

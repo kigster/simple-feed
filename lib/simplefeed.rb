@@ -19,21 +19,20 @@ module SimpleFeed
   @registry = {}
 
   class << self
-    # @return [Hash<Symbol, Feed>] the registry of the defined feeds
+    # @return Hash[<Symbol, Feed>] registry of the defined feeds
     attr_reader :registry
 
-    # @param name [Symbol] feed name
-    # @param options [Hash] any key-value pairs to set on the feed
+    # @param <String, Symbol> name feed name
+    # @param <Hash, NilClass> options any key-value pairs to set on the feed
     #
-    # @return [Feed] the feed with the given name, and defined via options and a block
-    def define(name, **options, &block)
+    # @return <Feed> the feed with the given name, and defined via options and a block
+    def define(name, **options)
       name = name.to_sym unless name.is_a?(Symbol)
-      feed = registry[name] || SimpleFeed::Feed.new(name)
-      feed.configure(options) do
-        block&.call(feed)
-      end
-      registry[name] = feed
-      feed
+      (registry[name] ||= SimpleFeed::Feed.new(name)).tap { |feed|
+        feed.configure(options) do
+          yield(feed) if block_given?
+        end
+      }
     end
 
     # @return [Feed] the pre-defined feed with the given name
@@ -43,9 +42,9 @@ module SimpleFeed
 
     # A factory method that constructs an instance of a provider based on the provider name and arguments.
     #
-    # @param provider_name [Symbol] short name of the provider, eg, :redis, :hash, etc.
-    # @params args [Array] constructor array arguments of the provider
-    # @params opts [Hash] constructor hash arguments of the provider
+    # @param <Symbol> provider_name short name of the provider, eg, :redis, :hash, etc.
+    # @param <Array> args constructor array arguments of the provider
+    # @param <Hash> opts constructor hash arguments of the provider
     #
     # @return [Provider]
     def provider(provider_name, *args, **opts, &block)

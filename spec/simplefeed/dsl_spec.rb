@@ -16,8 +16,8 @@ describe SimpleFeed::DSL do
     include SimpleFeed::DSL
 
     let(:feed) { SimpleFeed::Fixtures.follow_feed }
-    let(:user_ids) { [1, 2, 3, 4, 5] }
-    let(:activity) { feed.activity(user_ids) }
+    let(:consumers) { [1, 2, 3, 4, 5] }
+    let(:activity) { feed.event_feed(consumers) }
 
     it(' should have feed defined') { expect(activity.feed).to eq feed }
 
@@ -31,7 +31,7 @@ describe SimpleFeed::DSL do
     it 'should be able to store and fetch counts' do
       with_activity_block.call do
         total_count result: 0, &context.user_responses_should_eq[0]
-        store value: 'hello', result: 'hello', &context.user_responses_should_eq['hello']
+        store data: 'hello', result: 'hello', &context.user_responses_should_eq['hello']
         unread_count result: 0, &context.user_responses_should_eq[0]
       end
     end

@@ -35,27 +35,27 @@ context 'Integration' do
     context 'event list' do
       it 'should be correctly defined' do
         expect(events.size).to eq(3)
-        expect(events.last.value).to eq(EVENT_MATRIX[2][0])
+        expect(events.last.data).to eq(EVENT_MATRIX[2][0])
         expect(Time.at(events.last.at)).to be_within(0.001).of(EVENT_MATRIX[2][1])
       end
     end
 
-    let(:user_ids) { [user_id] }
-    let(:user_activity) { feed.user_activity(user_id) }
+    let(:consumers) { [consumer_id] }
+    let(:user_activity) { feed.event_feed(consumer_id) }
 
     context ' ➞ Store Events' do
       before do
         events.each do |e|
-          expect(provider).to receive(:store).
-                                with(user_ids: [user_id], value: e.value, at: e.at).
-                                and_return(SimpleFeed::Response.new({ user_id => true }))
+          expect(provider).to receive(:publish).
+                                with(consumers: [consumer_id], data: e.data, at: e.at).
+                                and_return(SimpleFeed::Response.new({ consumer_id => true }))
         end
       end
-      it 'should call provider with :value and :at when supplied :event' do
-        events.each { |e| user_activity.store(event: e) }
+      it 'should call provider with :value and :at when supplied :publish/event_tuple' do
+        events.each { |e| user_activity.publish(event: e) }
       end
-      it 'should call provider as is without :event' do
-        events.each { |e| user_activity.store(value: e.value, at: e.at) }
+      it 'should call provider as i s without :publish/event_tuple' do
+        events.each { |e| user_activity.publish(data: e.data, at: e.at) }
       end
     end
   end

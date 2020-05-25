@@ -11,12 +11,12 @@ RSpec.describe SimpleFeed::Providers::Base::Provider do
 
   context 'inheritance' do
     class TestProvider < SimpleFeed::Providers::Base::Provider
-      def transform_response(user_id, result)
+      def transform_response(consumer_id, result)
         case result
         when Symbol
           result.to_s.upcase.to_sym
         when Hash
-          result.each { |k, v| result[k] = transform_response(user_id, v) }
+          result.each { |k, v| result[k] = transform_response(consumer_id, v) }
         when String
           if result =~ /^\d+\.\d+$/
             result.to_f
@@ -37,14 +37,16 @@ RSpec.describe SimpleFeed::Providers::Base::Provider do
       end
 
       # Override store
-      def store(user_ids:, **_opts)
-        with_response_batched(user_ids) do |key, response|
+      alias store publish
+
+    def publish(consumers:, **_opts)
+        with_response_batched(consumers) do |key, response|
           response.for(key, :add)
         end
       end
 
-      def delete(user_ids:, **_opts)
-        with_response_batched(user_ids) do |key, response|
+      def delete(consumers:, **_opts)
+        with_response_batched(consumers) do |key, response|
           response.for(key, { total: 'unknown' })
         end
       end
@@ -56,11 +58,11 @@ RSpec.describe SimpleFeed::Providers::Base::Provider do
 
     let(:feed) { SimpleFeed.define(:test, provider: TestProvider.new, namespace: 'ns') }
     let(:provider) { feed.provider }
-    let(:user_ids) { [1, 2, 3, 4] }
+    let(:consumers) { [1, 2, 3, 4] }
 
     context 'transforming values' do
       context '#store' do
-        let(:response) { feed.activity(user_ids).store(value: true, at: Time.now) }
+        let(:response) { feed.store(consumers: consumers, data: true, at: Time.now) }
         it 'should transform result' do
           expect(response.result.values.all? { |v| v == :ADD }).to be_truthy
         end
@@ -69,9 +71,9 @@ RSpec.describe SimpleFeed::Providers::Base::Provider do
       context '#delete' do
         let(:ts) { Time.now }
         before do
-          feed.activity(user_ids).store(event: SimpleFeed::Event.new(:hello, ts))
+          feed.publish(event: SimpleFeed::EventTuple.new(:hello, ts), consumers: consumers)
         end
-        let(:response) { feed.activity(user_ids).delete(value: :hello, at: ts) }
+        let(:response) { feed.event_feed(consumers).delete(data: :hello, at: ts) }
         it 'should transform the result' do
           response.values.all?{ |v| expect(v[:total]).to eq('UNKNOWN') }
         end

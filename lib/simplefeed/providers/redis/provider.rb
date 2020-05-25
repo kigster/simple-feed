@@ -6,7 +6,7 @@ require 'forwardable'
 require 'redis/pipeline' # defines Redis::Future
 
 require 'simplefeed/providers/base/provider'
-require 'simplefeed/providers/key'
+require 'simplefeed/key'
 
 require_relative 'driver'
 require_relative 'stats'
@@ -24,7 +24,7 @@ module SimpleFeed
       #   ```
       class Provider < ::SimpleFeed::Providers::Base::Provider
         # SimpleFeed::Providers.define_provider_methods(self) do |provider, method, **opts, &block|
-        #   users = Users.new(provider: provider, user_ids: opts.delete(:user_ids))
+        #   users = Users.new(provider: provider, consumers: opts.delete(:consumers))
         #   opts.empty? ?
         #     users.send(method, &block) :
         #     users.send(method, **opts, &block)
@@ -33,27 +33,27 @@ module SimpleFeed
 
         include Driver
 
-        def store(user_ids:, value:, at: Time.now)
-          with_response_pipelined(user_ids) do |redis, key|
+        def publish(consumers:, data:, at: Time.now)
+          with_response_pipelined(consumers) do |redis, key|
             tap redis.zadd(key.data, at.to_f, value) do
               redis.zremrangebyrank(key.data, 0, -feed.max_size - 1)
             end
           end
         end
 
-        def delete(user_ids:, value:, **)
-          with_response_pipelined(user_ids) do |redis, key|
+        def delete(consumers:, data:, **)
+          with_response_pipelined(consumers) do |redis, key|
             redis.zrem(key.data, value)
           end
         end
 
-        def delete_if(user_ids:)
-          raise ArgumentError, '#delete_if must be called with a block that receives (user_id, event) as arguments.' unless block_given?
+        def delete_if(consumers:)
+          raise ArgumentError, '#delete_if must be called with a block that receives (consumer_id, event) as arguments.' unless block_given?
 
-          with_response_batched(user_ids) do |key|
-            fetch(user_ids: [key.user_id])[key.user_id].map do |event|
+          with_response_batched(consumers) do |key|
+            fetch(consumers: [key.consumer_id])[key.consumer_id].map do |event|
               with_redis do |redis|
-                if yield(event, key.user_id)
+                if yield(event, key.consumer_id)
                   redis.zrem(key.data, event.value) ? event : nil
                 end
               end
@@ -61,36 +61,36 @@ module SimpleFeed
           end
         end
 
-        def wipe(user_ids:)
-          with_response_pipelined(user_ids) do |redis, key|
+        def wipe(consumers:)
+          with_response_pipelined(consumers) do |redis, key|
             key.keys.all? { |redis_key| redis.del(redis_key) }
           end
         end
 
-        def paginate(user_ids:, page:,
+        def paginate(consumers:, page:,
                      per_page: feed.per_page,
                      with_total: false,
                      reset_last_read: false)
 
-          reset_last_read_value(user_ids: user_ids, at: reset_last_read) if reset_last_read
+          reset_last_read_value(consumers: consumers, at: reset_last_read) if reset_last_read
 
-          with_response_pipelined(user_ids) do |redis, key|
+          with_response_pipelined(consumers) do |redis, key|
             events = paginated_events(page, per_page, redis, key)
-            with_total ? { events:      events,
+            with_total ? { events: events,
                            total_count: redis.zcard(key.data) } : events
           end
         end
 
-        def fetch(user_ids:, since: nil, reset_last_read: false)
+        def fetch(consumers:, since: nil, reset_last_read: false)
           if since == :unread
-            last_read_response = with_response_pipelined(user_ids) do |redis, key|
+            last_read_response = with_response_pipelined(consumers) do |redis, key|
               get_users_last_read(redis, key)
             end
           end
 
-          response = with_response_pipelined(user_ids) do |redis, key|
+          response = with_response_pipelined(consumers) do |redis, key|
             if since == :unread
-              redis.zrevrangebyscore(key.data, '+inf', (last_read_response.delete(key.user_id) || 0).to_f, withscores: true)
+              redis.zrevrangebyscore(key.data, '+inf', (last_read_response.delete(key.consumer_id) || 0).to_f, withscores: true)
             elsif since
               redis.zrevrangebyscore(key.data, '+inf', since.to_f, withscores: true)
             else
@@ -98,35 +98,35 @@ module SimpleFeed
             end
           end
 
-          reset_last_read_value(user_ids: user_ids, at: reset_last_read) if reset_last_read
+          reset_last_read_value(consumers: consumers, at: reset_last_read) if reset_last_read
 
           response
         end
 
-        def reset_last_read(user_ids:, at: Time.now)
-          with_response_pipelined(user_ids) do |redis, key, *|
+        def reset_last_read(consumers:, at: Time.now)
+          with_response_pipelined(consumers) do |redis, key, *|
             reset_users_last_read(redis, key, at.to_f)
           end
         end
 
-        def total_count(user_ids:)
-          with_response_pipelined(user_ids) do |redis, key|
+        def total_count(consumers:)
+          with_response_pipelined(consumers) do |redis, key|
             redis.zcard(key.data)
           end
         end
 
-        def unread_count(user_ids:)
-          response = with_response_pipelined(user_ids) do |redis, key|
+        def unread_count(consumers:)
+          response = with_response_pipelined(consumers) do |redis, key|
             get_users_last_read(redis, key)
           end
-          with_response_pipelined(response.user_ids, response) do |redis, key, _response|
-            last_read = _response.delete(key.user_id).to_f
+          with_response_pipelined(response.consumers, response) do |redis, key, _response|
+            last_read = _response.delete(key.consumer_id).to_f
             redis.zcount(key.data, last_read, '+inf')
           end
         end
 
-        def last_read(user_ids:)
-          with_response_pipelined(user_ids) do |redis, key, *|
+        def last_read(consumers:)
+          with_response_pipelined(consumers) do |redis, key, *|
             get_users_last_read(redis, key)
           end
         end
@@ -147,41 +147,41 @@ module SimpleFeed
           end
         end
 
-        def transform_response(user_id = nil, result)
+        def transform_response(consumer_id = nil, result)
           case result
-          when ::Redis::Future
-            transform_response(user_id, result.value)
+            when ::Redis::Future
+              transform_response(consumer_id, result.value)
 
-          when ::Hash
+            when ::Hash
 
-            if result.values.any? { |v| transformable_type?(v) }
-              result.each { |k, v| result[k] = transform_response(user_id, v) }
+              if result.values.any? { |v| transformable_type?(v) }
+                result.each { |k, v| result[k] = transform_response(consumer_id, v) }
+              else
+                result
+              end
+
+            when ::Array
+
+              if result.any? { |v| transformable_type?(v) }
+                result = result.map { |v| transform_response(consumer_id, v) }
+              end
+
+              if result.size == 2 && result[1].is_a?(Float)
+                SimpleFeed::EventTuple.new(data: result[0], at: Time.at(result[1]))
+              else
+                result
+              end
+
+            when ::String
+              if result =~ /^\d+\.\d+$/
+                result.to_f
+              elsif result =~ /^\d+$/
+                result.to_i
+              else
+                result
+              end
             else
               result
-            end
-
-          when ::Array
-
-            if result.any? { |v| transformable_type?(v) }
-              result = result.map { |v| transform_response(user_id, v) }
-            end
-
-            if result.size == 2 && result[1].is_a?(Float)
-              SimpleFeed::Event.new(value: result[0], at: Time.at(result[1]))
-            else
-              result
-            end
-
-          when ::String
-            if result =~ /^\d+\.\d+$/
-              result.to_f
-            elsif result =~ /^\d+$/
-              result.to_i
-            else
-              result
-            end
-          else
-            result
           end
         end
 
@@ -220,18 +220,18 @@ module SimpleFeed
         # Operations with response
         # ——————————————————————————————————————————————————————————————————————————————————————
 
-        def with_response_pipelined(user_ids, response = nil)
+        def with_response_pipelined(consumers, response = nil)
           with_response(response) do |response|
-            batch_pipelined(user_ids) do |redis, key|
-              response.for(key.user_id) { yield(redis, key, response) }
+            batch_pipelined(consumers) do |redis, key|
+              response.for(key.consumer_id) { yield(redis, key, response) }
             end
           end
         end
 
-        def with_response_multi(user_ids, response = nil)
+        def with_response_multi(consumers, response = nil)
           with_response(response) do |response|
-            batch_multi(user_ids) do |redis, key|
-              response.for(key.user_id) { yield(redis, key, response) }
+            batch_multi(consumers) do |redis, key|
+              response.for(key.consumer_id) { yield(redis, key, response) }
             end
           end
         end
@@ -239,33 +239,33 @@ module SimpleFeed
         # ——————————————————————————————————————————————————————————————————————————————————————
         # Batch operations
         # ——————————————————————————————————————————————————————————————————————————————————————
-        def batch_pipelined(user_ids)
-          to_array(user_ids).each_slice(batch_size) do |batch|
+        def batch_pipelined(consumers)
+          to_array(consumers).each_slice(batch_size) do |batch|
             with_pipelined do |redis|
-              batch.each do |user_id|
-                yield(redis, key(user_id))
+              batch.each do |consumer_id|
+                yield(redis, key(consumer_id))
               end
             end
           end
         end
 
-        def batch_pipelined_multi(user_ids)
-          to_array(user_ids).each_slice(batch_size) do |batch|
+        def batch_pipelined_multi(consumers)
+          to_array(consumers).each_slice(batch_size) do |batch|
             with_pipelined do
-              batch.each do |user_id|
+              batch.each do |consumer_id|
                 with_multi do |redis|
-                  yield(redis, key(user_id))
+                  yield(redis, key(consumer_id))
                 end
               end
             end
           end
         end
 
-        def batch_multi(user_ids)
-          to_array(user_ids).each_slice(batch_size) do |batch|
-            batch.each do |user_id|
+        def batch_multi(consumers)
+          to_array(consumers).each_slice(batch_size) do |batch|
+            batch.each do |consumer_id|
               with_multi do |redis|
-                yield(redis, key(user_id))
+                yield(redis, key(consumer_id))
               end
             end
           end

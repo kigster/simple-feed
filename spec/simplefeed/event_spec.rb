@@ -2,12 +2,12 @@
 
 require 'spec_helper'
 
-RSpec.describe SimpleFeed::Event do
+RSpec.describe SimpleFeed::EventTuple do
   let(:event_type) { described_class }
 
-  let(:event1) { event_type.new(value: '1', at: Time.now) }
-  let(:event2) { event_type.new(value: '2', at: Time.now - 10) }
-  let(:event3) { event_type.new(value: '3', at: Time.now + 10) }
+  let(:event1) { event_type.new(data: '1', at: Time.now) }
+  let(:event2) { event_type.new(data: '2', at: Time.now - 10) }
+  let(:event3) { event_type.new(data: '3', at: Time.now + 10) }
 
   let(:events_manually_sorted) { [event3, event1, event2] }
 
@@ -33,17 +33,17 @@ RSpec.describe SimpleFeed::Event do
       include_examples(:validate_event_constructor)
     end
     context 'when **opts are provided' do
-      let(:opts) { { value: 'hello', at: ts } }
+      let(:opts) { { data: 'hello', at: ts } }
       include_examples(:validate_event_constructor)
     end
     context 'when both *args and *opts are provided' do
       let(:args) { ['hello', ts] }
-      let(:opts) { { value: 'bye', at: ts - 100 } }
+      let(:opts) { { data: 'bye', at: ts - 100 } }
       include_examples(:validate_event_constructor)
     end
     context 'when partial *args and *opts are provided' do
       let(:args) { ['hello'] }
-      let(:opts) { { value: 'bye', at: ts } }
+      let(:opts) { { data: 'bye', at: ts } }
       include_examples(:validate_event_constructor)
     end
     context 'when partial *args and *opts are provided' do
@@ -54,7 +54,7 @@ RSpec.describe SimpleFeed::Event do
   end
 
   context '#eql?' do
-    let(:identical) { event_type.new(value: '1', at: ts) }
+    let(:identical) { event_type.new(data: '1', at: ts) }
     let(:dupe) { identical.dup }
 
     it 'should make a duplicate equal' do
@@ -78,7 +78,7 @@ RSpec.describe SimpleFeed::Event do
     let(:at) { event1.at }
     let(:value) { event1.value }
     let(:time) { Time.at(at) }
-    let(:expected_json) { { value: value, at: at, time: time }.to_json }
+    let(:expected_json) { { data: value, at: at, time: time }.to_json }
 
     its(:to_json) { should eq expected_json }
 

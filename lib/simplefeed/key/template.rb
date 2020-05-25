@@ -15,7 +15,7 @@ module SimpleFeed
       end
     end
 
-    DEFAULT_TEXT_TEMPLATE = TextTemplate.new('{{ namespace }}u.{{ base62_user_id }}.{{ key_marker }}')
+    DEFAULT_TEXT_TEMPLATE = TextTemplate.new('{{ namespace }}u.{{ serialized_consumer_id }}.{{ key_marker }}')
 
     class Template
       attr_accessor :namespace, :key_types, :text_template

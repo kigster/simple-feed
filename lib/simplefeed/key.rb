@@ -15,16 +15,16 @@ module SimpleFeed
     #              ↓        ↓
     #          "ff|u.f23098.m"
     #           ↑         ↑
-    #         namespace user_id(base62)
+    #         namespace consumer_id(base62)
     #
     class Key
-      attr_accessor :user_id, :key_template
+      attr_accessor :consumer_id, :key_template
 
       extend Forwardable
       def_delegators :@key_template, :key_names, :key_types
 
-      def initialize(user_id, key_template)
-        self.user_id = user_id
+      def initialize(consumer_id, key_template)
+        self.consumer_id = consumer_id
         self.key_template = key_template
 
         define_key_methods
@@ -43,11 +43,11 @@ module SimpleFeed
         end
       end
 
-      def base62_user_id
-        @base62_user_id ||= if user_id.is_a?(Numeric)
-                              ::Base62.encode(user_id)
+      def serialized_consumer_id
+        @serialized_consumer_id ||= if consumer_id.is_a?(Numeric)
+                              ::Base62.encode(consumer_id)
                             else
-                              rot13(user_id.to_s)
+                              rot13(consumer_id.to_s)
                             end
       end
 
@@ -57,13 +57,13 @@ module SimpleFeed
 
       def render_options
         key_template.render_options.merge!({
-                                             'user_id' => user_id,
-                                             'base62_user_id' => base62_user_id
+                                             'consumer_id' => consumer_id,
+                                             'serialized_consumer_id' => serialized_consumer_id
                                            })
       end
 
       def to_s
-        super + { user_id: user_id, base62_user_id: base62_user_id, keys: keys }.to_s
+        super + { consumer_id: consumer_id, serialized_consumer_id: serialized_consumer_id, keys: keys }.to_s
       end
 
       def inspect

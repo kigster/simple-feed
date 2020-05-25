@@ -18,12 +18,12 @@ end
 USER_IDS_TO_TEST = [12_289_734, 12, UUID.generate, 'R1.COMPOSITE.0X2F8F7D'].freeze
 
 RSpec.shared_examples('a valid provider') do |provider_args:, more_users: nil, provider: described_class|
-  user_ids = USER_IDS_TO_TEST.dup
-  user_ids << Array(more_users) if more_users
-  user_ids.flatten!
+  consumers = USER_IDS_TO_TEST.dup
+  consumers << Array(more_users) if more_users
+  consumers.flatten!
 
-  user_ids.each do |user_id|
-    describe "#{provider.name.gsub(/SimpleFeed::Providers/, '')} with User ID #{user_id}" do
+  consumers.each do |consumer_id|
+    describe "#{provider.name.gsub(/SimpleFeed::Providers/, '')} with User ID #{consumer_id}" do
       before do
         SimpleFeed.registry.delete(:test_feed)
         SimpleFeed.define(:test_feed) do |f|
@@ -39,7 +39,7 @@ RSpec.shared_examples('a valid provider') do |provider_args:, more_users: nil, p
       it { is_expected.to be_a_kind_of(SimpleFeed::Feed) }
 
       let(:provider) { feed.provider.provider }
-      let(:activity) { feed.activity(user_id) }
+      let(:activity) { feed.event_feed(consumer_id) }
 
       let(:flush_feed) do
         proc do |provider_impl|
@@ -101,12 +101,12 @@ RSpec.shared_examples('a valid provider') do |provider_args:, more_users: nil, p
           end
 
           context '#delete_if' do
-            let(:activity) { feed.activity(user_id) }
+            let(:activity) { feed.event_feed(consumer_id) }
 
             it 'should delete events that match' do
               activity.wipe
               events.each do |event|
-                expect(activity.store(event: event)).to eq(true)
+                expect(activity.publish(event: event)).to eq(true)
               end
               expect(activity.total_count).to eq(3)
               deleted_events = activity.delete_if do |event_to_delete, *|
@@ -124,12 +124,12 @@ RSpec.shared_examples('a valid provider') do |provider_args:, more_users: nil, p
               with_activity(activity, events: events) do
                 wipe
                 # The next one resets the time
-                store(value: 'new story right now') { |r| expect(r).to be true }
-                store(value: 'old one', at: Time.now - 5.0) { |r| expect(r).to be(true) }
-                store(value: 'older one', at: Time.now - 6.0) { |r| expect(r).to be(true) }
-                store(value: 'one just now') { |r| expect(r).to be(true) }
-                store(value: 'the super old one', at: Time.now - 20_000.0) { |r| expect(r).to be(true) }
-                store(value: 'and in the future', at: Time.now + 10.0) { |r| expect(r).to be(true) }
+                store(data: 'new story right now') { |r| expect(r).to be true }
+                store(data: 'old one', at: Time.now - 5.0) { |r| expect(r).to be(true) }
+                store(data: 'older one', at: Time.now - 6.0) { |r| expect(r).to be(true) }
+                store(data: 'one just now') { |r| expect(r).to be(true) }
+                store(data: 'the super old one', at: Time.now - 20_000.0) { |r| expect(r).to be(true) }
+                store(data: 'and in the future', at: Time.now + 10.0) { |r| expect(r).to be(true) }
 
                 fetch do |r|
                   ensure_descending(r)
@@ -153,9 +153,9 @@ RSpec.shared_examples('a valid provider') do |provider_args:, more_users: nil, p
                 last_read { |r| expect(r.to_f).to be_within(0.001).of(current_time.to_f) }
 
                 # The next one resets the time
-                store(value: 'new story right now') { |r| expect(r).to be true }
-                store(value: 'old one', at: current_time - 5.0) { |r| expect(r).to be(true) }
-                store(value: 'older one', at: current_time - 6.0) { |r| expect(r).to be(true) }
+                store(data: 'new story right now') { |r| expect(r).to be true }
+                store(data: 'old one', at: current_time - 5.0) { |r| expect(r).to be(true) }
+                store(data: 'older one', at: current_time - 6.0) { |r| expect(r).to be(true) }
 
                 # unread count at this point is 1 because only the 'new story right now' is more recent
                 # then the unread flag
@@ -183,16 +183,16 @@ RSpec.shared_examples('a valid provider') do |provider_args:, more_users: nil, p
 
                 last_read { |r| expect(r.to_f).to be < time_then.to_f }
 
-                store(value: 'and then one right now',) { |r| expect(r).to be(true) }
+                store(data: 'and then one right now',) { |r| expect(r).to be(true) }
                 unread_count { |r| expect(r).to be == 1 }
 
-                store(value: 'and then one just ahead of it', at: time_then + 3) { |r| expect(r).to be(true) }
+                store(data: 'and then one just ahead of it', at: time_then + 3) { |r| expect(r).to be(true) }
                 unread_count { |r| expect(r).to be == 2 }
 
-                store(value: 'and even then one more', at: time_then + 10) { |r| expect(r).to be(true) }
+                store(data: 'and even then one more', at: time_then + 10) { |r| expect(r).to be(true) }
                 unread_count { |r| expect(r).to be == 3 }
 
-                store(value: 'some other future ', at: time_then + 30) { |r| expect(r).to be(true) }
+                store(data: 'some other future ', at: time_then + 30) { |r| expect(r).to be(true) }
                 unread_count { |r| expect(r).to be == 4 }
 
                 fetch { |r| expect(r.size).to eq 5 }
@@ -218,10 +218,10 @@ RSpec.shared_examples('a valid provider') do |provider_args:, more_users: nil, p
               with_activity(activity, events: events) do
                 reset_last_read
 
-                store(value: 'new story') { |r| expect(r).to be(true) }
-                store(value: 'and another', at: Time.now - 7200) { |r| expect(r).to be(true) }
-                store(value: 'and one more') { |r| expect(r).to be(true) }
-                store(value: 'and two more') { |r| expect(r).to be(true) }
+                store(data: 'new story') { |r| expect(r).to be(true) }
+                store(data: 'and another', at: Time.now - 7200) { |r| expect(r).to be(true) }
+                store(data: 'and one more') { |r| expect(r).to be(true) }
+                store(data: 'and two more') { |r| expect(r).to be(true) }
 
                 fetch { |r| ensure_descending(r) }
               end
@@ -244,15 +244,15 @@ RSpec.shared_examples('a valid provider') do |provider_args:, more_users: nil, p
         let(:feed_ns1) { feed_proc.call(:ns1) }
         let(:feed_ns2) { feed_proc.call(:ns2) }
 
-        let(:ua_ns1) { feed_ns1.activity(user_id) }
-        let(:ua_ns2) { feed_ns2.activity(user_id) }
+        let(:ua_ns1) { feed_ns1.event_feed(consumer_id) }
+        let(:ua_ns2) { feed_ns2.event_feed(consumer_id) }
 
         before do
           ua_ns1.wipe
-          ua_ns1.store(value: 'ns1')
+          ua_ns1.publish(data: 'ns1')
 
           ua_ns2.wipe
-          ua_ns2.store(value: 'ns2')
+          ua_ns2.publish(data: 'ns2')
         end
 
         it 'properly sets namespace on each feed' do
@@ -273,7 +273,7 @@ RSpec.shared_examples('a valid provider') do |provider_args:, more_users: nil, p
 
         before do
           with_activity(activity, events: events) do
-            store(value: 'new story') { |r| expect(r).to be(true) }
+            store(data: 'new story') { |r| expect(r).to be(true) }
             reset_last_read
           end
         end
