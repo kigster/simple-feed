@@ -1,7 +1,10 @@
 # frozen_string_literal: true
 
 require 'simplecov'
-SimpleCov.start
+SimpleCov.start do
+  # e.g., usage of track files
+  track_files "lib/**/*.rb"
+end
 
 require 'yaml'
 require 'hashie'
@@ -19,3 +22,5 @@ SimpleFeed::Providers::Redis.debug = false
 RSpec.configure do |config|
   config.include(SimpleFeed::DSL)
 end
+
+USER_IDS_TO_TEST = [199_929_993_999, 12_289_734, 12, UUID.generate, 'R1.COMPOSITE.0X2F8F7D'].freeze

@@ -11,6 +11,7 @@ image:https://img.shields.io/badge/license-MIT-blue.svg[MIT licensed,link=https:
 
 image:https://github.com/kigster/simple-feed/workflows/Ruby/badge.svg?branch=master[Ruby,link=https://github.com/kigster/simple-feed/actions?query=workflow%3ARuby]
 image:https://github.com/kigster/simple-feed/workflows/Rubocop/badge.svg?branch=master[Ruby,link=https://github.com/kigster/simple-feed/actions?query=workflow%3ARubocop]
+image:https://codecov.io/gh/kigster/simple-feed/branch/master/graph/badge.svg[Coverage,link=https://codecov.io/gh/kigster/simple-feed]
 
 image:https://travis-ci.org/kigster/simple-feed.svg?branch=master[Build Status,link=https://travis-ci.org/kigster/simple-feed]
 image:https://api.codeclimate.com/v1/badges/a11061820895fcde635e/maintainability[Maintainability,link=https://codeclimate.com/github/kigster/simple-feed/maintainability]

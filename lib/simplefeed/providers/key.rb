@@ -2,10 +2,6 @@
 
 require 'base62-rb'
 require 'hashie/mash'
-require 'simplefeed/key/template'
-require 'simplefeed/key/type'
-
-require 'forwardable'
 
 module SimpleFeed
   module Providers
@@ -15,66 +11,85 @@ module SimpleFeed
     #              ↓        ↓
     #          "ff|u.f23098.m"
     #           ↑         ↑
-    #         namespace user_id(base62)
+    #         namespace consumer(base62)
     #
     class Key
-      attr_accessor :user_id, :key_template
-
-      extend Forwardable
-      def_delegators :@key_template, :key_names, :key_types
-
-      def initialize(user_id, key_template)
-        self.user_id = user_id
-        self.key_template = key_template
-
-        define_key_methods
-      end
-
-      # Defines #data and #meta methods.
-      def define_key_methods
-        key_template.key_types.each do |type|
-          key_name = type.name
-          next if respond_to?(key_name)
-
-          self.class.send(:define_method, key_name) do
-            instance_variable_get("@#{key_name}") ||
-              instance_variable_set("@#{key_name}", type.render(render_options))
-          end
+      class << self
+        def rot13(value)
+          value.tr('abcdefghijklmnopqrstuvwxyz',
+                   'nopqrstuvwxyzabcdefghijklm')
         end
       end
 
-      def base62_user_id
-        @base62_user_id ||= if user_id.is_a?(Numeric)
-                              ::Base62.encode(user_id)
-                            else
-                              rot13(user_id.to_s)
-                            end
+      SERIALIZED_DATA_TEMPLATE = '{{namespace}}u.{{data_id}}.d'
+      SERIALIZED_META_TEMPLATE = '{{namespace}}u.{{meta_id}}.m'
+
+      attr_reader :consumer, :namespace, :data_key_transformer, :meta_key_transformer
+
+      def initialize(consumer,
+                     namespace: nil,
+                     data_key_transformer: nil,
+                     meta_key_transformer: nil)
+        @consumer = consumer
+        @namespace = namespace
+        @data_key_transformer = data_key_transformer
+        @meta_key_transformer = meta_key_transformer
+      end
+
+      def data
+        @data ||= render(SERIALIZED_DATA_TEMPLATE)
+      end
+
+      def meta
+        @meta ||= render(SERIALIZED_META_TEMPLATE)
       end
 
       def keys
-        key_names.map { |name| send(name) }
-      end
-
-      def render_options
-        key_template.render_options.merge!({
-                                             'user_id' => user_id,
-                                             'base62_user_id' => base62_user_id
-                                           })
+        [data, meta]
       end
 
       def to_s
-        super + { user_id: user_id, base62_user_id: base62_user_id, keys: keys }.to_s
+        super + key_params.to_s
       end
 
       def inspect
-        render_options.inspect
+        super + key_params.inspect
       end
 
       private
 
-      def rot13(value)
-        value.tr('abcdefghijklmnopqrstuvwxyz',
-                 'nopqrstuvwxyzabcdefghijklm')
+      def render(template)
+        template.dup.tap do |output|
+          key_params.each_pair do |key, value|
+            output.gsub!(/{{#{key}}}/, value.to_s)
+          end
+        end
+      end
+
+      def obscure_value(id)
+        id = id.to_i if id.is_a?(String) && /^[\d]+$/.match?(id)
+
+        if id.is_a?(Numeric)
+          ::Base62.encode(id)
+        else
+          self.class.rot13(id.to_s)
+        end
+      end
+
+      def key_params
+        @key_params ||= Hashie::Mash.new(
+          namespace: namespace ? "#{namespace}|" : '',
+          data_id:   obscure_value(data_id),
+          meta_id:   obscure_value(meta_id)
+        )
+      end
+
+      def meta_id
+        meta_key_transformer&.call(consumer) || consumer
+      end
+
+      def data_id
+        data_key_transformer&.call(consumer) || consumer
       end
     end
   end

@@ -40,15 +40,15 @@ context 'Integration' do
       end
     end
 
-    let(:user_ids) { [user_id] }
-    let(:user_activity) { feed.user_activity(user_id) }
+    let(:consumer_ids) { [consumer_id] }
+    let(:user_activity) { feed.user_activity(consumer_id) }
 
     context ' ➞ Store Events' do
       before do
         events.each do |e|
           expect(provider).to receive(:store).
-                                with(user_ids: [user_id], value: e.value, at: e.at).
-                                and_return(SimpleFeed::Response.new({ user_id => true }))
+                                with(consumer_ids: [consumer_id], value: e.value, at: e.at).
+                                and_return(SimpleFeed::Response.new({ consumer_id => true }))
         end
       end
       it 'should call provider with :value and :at when supplied :event' do

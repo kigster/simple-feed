@@ -16,8 +16,8 @@ describe SimpleFeed::DSL do
     include SimpleFeed::DSL
 
     let(:feed) { SimpleFeed::Fixtures.follow_feed }
-    let(:user_ids) { [1, 2, 3, 4, 5] }
-    let(:activity) { feed.activity(user_ids) }
+    let(:consumer_ids) { [1, 2, 3, 4, 5] }
+    let(:activity) { feed.activity(consumer_ids) }
 
     it(' should have feed defined') { expect(activity.feed).to eq feed }
 

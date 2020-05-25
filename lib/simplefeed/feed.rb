@@ -2,11 +2,17 @@
 
 require_relative 'providers'
 require_relative 'activity/base'
-require 'simplefeed/key/template'
+require_relative 'providers/key'
 
 module SimpleFeed
   class Feed
-    attr_accessor :per_page, :max_size, :batch_size, :meta, :namespace
+    attr_accessor :per_page,
+                  :max_size,
+                  :batch_size,
+                  :namespace,
+                  :data_key_transformer,
+                  :meta_key_transformer
+
     attr_reader :name
 
     SimpleFeed::Providers.define_provider_methods(self) do |feed, method, opts, &block|
@@ -14,19 +20,21 @@ module SimpleFeed
     end
 
     def initialize(name)
-      @name         = name
-      @name         = name.underscore.to_sym unless name.is_a?(Symbol)
+      @name = name
+      @name = name.underscore.to_sym unless name.is_a?(Symbol)
       # set the defaults if not passed in
-      @meta         = {}
-      @namespace    = nil
+      @meta = {}
+      @namespace = nil
       @per_page ||= 50
       @max_size ||= 1000
       @batch_size ||= 10
+      @meta_key_transformer = nil
+      @data_key_transformer = nil
       @proxy = nil
     end
 
     def provider=(definition)
-      @proxy      = Providers::Proxy.from(definition)
+      @proxy = Providers::Proxy.from(definition)
       @proxy.feed = self
       @proxy
     end
@@ -39,12 +47,12 @@ module SimpleFeed
       SimpleFeed::Providers::Base::Provider.class_to_registry(@proxy.provider.class)
     end
 
-    def user_activity(user_id)
-      Activity::SingleUser.new(user_id: user_id, feed: self)
+    def user_activity(consumer_id)
+      Activity::SingleUser.new(consumer_id: consumer_id, feed: self)
     end
 
-    def users_activity(user_ids)
-      Activity::MultiUser.new(user_ids: user_ids, feed: self)
+    def users_activity(consumer_ids)
+      Activity::MultiUser.new(consumer_ids: consumer_ids, feed: self)
     end
 
     # Depending on the argument returns either +SingleUserActivity+ or +MultiUserActivity+
@@ -62,13 +70,16 @@ module SimpleFeed
       yield self if block_given?
     end
 
-    def key(user_id)
-      SimpleFeed::Providers::Key.new(user_id, key_template)
+    def key(consumer_id)
+      SimpleFeed::Providers::Key.new(consumer_id,
+                                     namespace:            namespace,
+                                     data_key_transformer: data_key_transformer,
+                                     meta_key_transformer: meta_key_transformer)
     end
 
     def eql?(other)
       other.class == self.class &&
-        %i(per_page max_size name).all? { |m| send(m).equal?(other.send(m)) } &&
+        %i(per_page max_size name namespace data_key_transformer meta_key_transformer).all? { |m| send(m).equal?(other.send(m)) } &&
         provider.provider.class == other.provider.provider.class
     end
 

@@ -11,7 +11,7 @@ Kernel.module_eval do
 end
 
 shared_context :event_matrix do
-  let(:user_id) { 1_020_945 }
+  let(:consumer_id) { 1_020_945 }
 
   unless defined?(EVENT_MATRIX)
     EVENT_MATRIX = [
