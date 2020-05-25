@@ -6,28 +6,30 @@
 
 == Scalable, Easy to Use Activity Feed Implementation.
 
+=== Build & Gem Status
+
 image:https://img.shields.io/gem/v/simple-feed.svg[Gem Version,link=https://rubygems.org/gems/simple-feed]
 image:https://img.shields.io/badge/license-MIT-blue.svg[MIT licensed,link=https://github.com/kigster/simple-feed/master/LICENSE.txt]
+image:http://inch-ci.org/github/kigster/simple-feed.svg?branch=master[Inline docs,link=http://inch-ci.org/github/kigster/simple-feed]
 
+image:https://travis-ci.org/kigster/simple-feed.svg?branch=master[Build Status,link=https://travis-ci.org/kigster/simple-feed]
 image:https://github.com/kigster/simple-feed/workflows/Ruby/badge.svg?branch=master[Ruby,link=https://github.com/kigster/simple-feed/actions?query=workflow%3ARuby]
 image:https://github.com/kigster/simple-feed/workflows/Rubocop/badge.svg?branch=master[Ruby,link=https://github.com/kigster/simple-feed/actions?query=workflow%3ARubocop]
 image:https://codecov.io/gh/kigster/simple-feed/branch/master/graph/badge.svg[Coverage,link=https://codecov.io/gh/kigster/simple-feed]
 
-image:https://travis-ci.org/kigster/simple-feed.svg?branch=master[Build Status,link=https://travis-ci.org/kigster/simple-feed]
 image:https://api.codeclimate.com/v1/badges/a11061820895fcde635e/maintainability[Maintainability,link=https://codeclimate.com/github/kigster/simple-feed/maintainability]
 image:https://api.codeclimate.com/v1/badges/a11061820895fcde635e/test_coverage[Test Coverage,link=https://codeclimate.com/github/kigster/simple-feed/test_coverage]
 
-image:http://inch-ci.org/github/kigster/simple-feed.svg?branch=master[Inline docs,link=http://inch-ci.org/github/kigster/simple-feed]
-image:https://img.shields.io/gitter/room/gitterHQ/gitter.svg[Talk on Gitter,link=https://gitter.im/kigster/simple-feed]
+=== Test Coverage Map
+
+image:https://codecov.io/gh/kigster/simple-feed/branch/master/graphs/sunburst.svg[Coverage Map,link=https://codecov.io/gh/kigster/simple-feed/branch/master]
 
 IMPORTANT: Please read the (somewhat outdated) blog post http://kig.re/2017/02/19/feeding-frenzy-with-simple-feed-activity-feed-ruby-gem.html[Feeding Frenzy with SimpleFeed] launching this library. Please leave comments or questions in the discussion thread at the bottom of that post. Thanks!
 
 If you like to see this project grow, your donation of any amount is much appreciated.
 
 image::https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif[Donate,link=https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=FSFYYNEQ8RKWU]
-'''
 
-image:https://codecov.io/gh/kigster/simple-feed/master/graphs/sunburst.svg[coverage,link=https://codecov.io/gh/kigster/simple-feed/branch/master]
 
 This is a fast, pure-ruby implementation of an activity feed concept commonly used in social networking applications. The implementation is optimized for *read-time performance* and high concurrency (lots of users), and can be extended with custom backend providers. Two providers come bundled: the production-ready Redis provider, and a naive Ruby Hash-based provider.
 
