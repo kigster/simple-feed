@@ -14,8 +14,8 @@ module SimpleFeed
 
     def each
       if block_given?
-        @result.each_pair do |consumer_id, result|
-          yield(consumer_id, result)
+        @result.each_pair do |user_id, result|
+          yield(user_id, result)
         end
       else
         @result.keys.to_enum
@@ -26,20 +26,20 @@ module SimpleFeed
       @result = data.dup
     end
 
-    def for(key_or_consumer_id, result = nil)
-      consumer_id = key_or_consumer_id.is_a?(SimpleFeed::Providers::Key) ?
-        key_or_consumer_id.consumer :
-        key_or_consumer_id
+    def for(key_or_user_id, result = nil)
+      user_id = key_or_user_id.is_a?(SimpleFeed::Providers::Key) ?
+        key_or_user_id.consumer :
+        key_or_user_id
 
-      @result[consumer_id] = result || yield(@result[consumer_id])
+      @result[user_id] = result || yield(@result[user_id])
     end
 
-    def consumer_ids
+    def user_ids
       @result.keys
     end
 
-    def has_user?(consumer_id)
-      @result.key?(consumer_id)
+    def has_user?(user_id)
+      @result.key?(user_id)
     end
 
     def user_count
@@ -55,16 +55,16 @@ module SimpleFeed
     # an individual response, and be implemented in the subclasses
     def transform
       if block_given?
-        @result.each_pair do |consumer_id, value|
-          @result[consumer_id] = yield(consumer_id, value)
+        @result.each_pair do |user_id, value|
+          @result[user_id] = yield(user_id, value)
         end
       end
       self
     end
 
-    def result(consumer_id = nil)
-      if consumer_id
-        @result[consumer_id]
+    def result(user_id = nil)
+      if user_id
+        @result[user_id]
       else
         if @result.values.size == 1
           @result.values.first

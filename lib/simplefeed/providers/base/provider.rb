@@ -26,13 +26,13 @@ module SimpleFeed
 
         protected
 
-        def reset_last_read_value(consumer_ids:, at: nil)
+        def reset_last_read_value(user_ids:, at: nil)
           at = [Time, DateTime, Date].include?(at.class) ? at : Time.now
           at = at.to_time if at.respond_to?(:to_time)
           at = at.to_f if at.respond_to?(:to_f)
 
           if respond_to?(:reset_last_read)
-            reset_last_read(consumer_ids: consumer_ids, at: at)
+            reset_last_read(user_ids: user_ids, at: at)
           else
             raise ArgumentError, "Class #{self.class} does not implement #reset_last_read method"
           end
@@ -43,30 +43,30 @@ module SimpleFeed
           value
         end
 
-        def key(consumer_id)
-          feed.key(consumer_id)
+        def key(user_id)
+          feed.key(user_id)
         end
 
-        def to_array(consumer_ids)
-          consumer_ids.is_a?(Array) ? consumer_ids : [consumer_ids]
+        def to_array(user_ids)
+          user_ids.is_a?(Array) ? user_ids : [user_ids]
         end
 
         def batch_size
           feed.batch_size
         end
 
-        def with_response_batched(consumer_ids, external_response = nil)
+        def with_response_batched(user_ids, external_response = nil)
           with_response(external_response) do |response|
-            batch(consumer_ids) do |key|
+            batch(user_ids) do |key|
               response.for(key.consumer) { yield(key, response) }
             end
           end
         end
 
-        def batch(consumer_ids)
-          to_array(consumer_ids).each_slice(batch_size) do |batch|
-            batch.each do |consumer_id|
-              yield(key(consumer_id))
+        def batch(user_ids)
+          to_array(user_ids).each_slice(batch_size) do |batch|
+            batch.each do |user_id|
+              yield(key(user_id))
             end
           end
         end
@@ -75,9 +75,9 @@ module SimpleFeed
           response ||= SimpleFeed::Response.new
           yield(response)
           if respond_to?(:transform_response)
-            response.transform do |consumer_id, result|
+            response.transform do |user_id, result|
               # calling into a subclass
-              transform_response(consumer_id, result)
+              transform_response(user_id, result)
             end
           end
           response

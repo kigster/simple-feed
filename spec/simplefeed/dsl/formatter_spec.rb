@@ -7,8 +7,8 @@ end
 
 describe SimpleFeed::DSL::Formatter do
   let(:feed) { SimpleFeed::Fixtures.follow_feed }
-  let(:consumer_ids) { [1, 2, 3, 4, 5] }
-  let(:activity) { feed.activity(consumer_ids) }
+  let(:user_ids) { [1, 2, 3, 4, 5] }
+  let(:activity) { feed.activity(user_ids) }
 
   let(:main_output) { '' }
 
@@ -27,7 +27,7 @@ describe SimpleFeed::DSL::Formatter do
 
   let(:fetch_response) do
     ->(user_result) {
-      consumer_ids.each_with_object({}) do |id, hash|
+      user_ids.each_with_object({}) do |id, hash|
         hash[id] = user_result
       end
     }

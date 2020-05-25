@@ -47,12 +47,12 @@ module SimpleFeed
       SimpleFeed::Providers::Base::Provider.class_to_registry(@proxy.provider.class)
     end
 
-    def user_activity(consumer_id)
-      Activity::SingleUser.new(consumer_id: consumer_id, feed: self)
+    def user_activity(user_id)
+      Activity::SingleUser.new(user_id: user_id, feed: self)
     end
 
-    def users_activity(consumer_ids)
-      Activity::MultiUser.new(consumer_ids: consumer_ids, feed: self)
+    def users_activity(user_ids)
+      Activity::MultiUser.new(user_ids: user_ids, feed: self)
     end
 
     # Depending on the argument returns either +SingleUserActivity+ or +MultiUserActivity+
@@ -70,8 +70,8 @@ module SimpleFeed
       yield self if block_given?
     end
 
-    def key(consumer_id)
-      SimpleFeed::Providers::Key.new(consumer_id,
+    def key(user_id)
+      SimpleFeed::Providers::Key.new(user_id,
                                      namespace:            namespace,
                                      data_key_transformer: data_key_transformer,
                                      meta_key_transformer: meta_key_transformer)

@@ -12,7 +12,7 @@ module SimpleFeed
   #     require 'simplefeed/dsl'
   #     include SimpleFeed::DSL
   #
-  #     with_activity(SimpleFeed.get(:newsfeed).activity(consumer_id)) do
+  #     with_activity(SimpleFeed.get(:newsfeed).activity(user_id)) do
   #       store(value: 'hello', at: Time.now)  #=> true
   #       fetch                                # => [ Event, Event, ... ]
   #       total_count                          # => 12

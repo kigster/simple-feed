@@ -28,9 +28,9 @@ RSpec.describe SimpleFeed::Providers::Hash::Paginator do
     end
 
     context '#events' do
-      let(:consumer_id) { 23_409_239_048_293 }
+      let(:user_id) { 23_409_239_048_293 }
       let(:paginated) { TestClass.new(feed) }
-      let(:generated_response) { SimpleFeed::Response.new({ consumer_id => events.map(&:dup).dup }) }
+      let(:generated_response) { SimpleFeed::Response.new({ user_id => events.map(&:dup).dup }) }
 
       before do
         expect(feed).to receive(:fetch).
@@ -41,10 +41,10 @@ RSpec.describe SimpleFeed::Providers::Hash::Paginator do
       it 'should correctly paginate events' do
         manually_sorted_events.each_with_index do |event, index|
           page = index + 1
-          response = paginated.paginate(consumer_ids: [consumer_id], page: page, per_page: 1)
-          expect(response[consumer_id]).to eq([event])
+          response = paginated.paginate(user_ids: [user_id], page: page, per_page: 1)
+          expect(response[user_id]).to eq([event])
         end
-        expect(paginated.paginate(consumer_ids: [consumer_id], page: 1, per_page: 2)[consumer_id]).to eq [events[1], events[2]]
+        expect(paginated.paginate(user_ids: [user_id], page: 1, per_page: 2)[user_id]).to eq [events[1], events[2]]
       end
     end
   end

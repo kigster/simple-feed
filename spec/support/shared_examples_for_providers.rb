@@ -16,12 +16,12 @@ def ensure_descending(r)
 end
 
 RSpec.shared_examples('a valid provider') do |provider_args:, more_users: nil, provider: described_class|
-  consumer_ids = USER_IDS_TO_TEST.dup
-  consumer_ids << Array(more_users) if more_users
-  consumer_ids.flatten!
+  user_ids = USER_IDS_TO_TEST.dup
+  user_ids << Array(more_users) if more_users
+  user_ids.flatten!
 
-  consumer_ids.each do |consumer_id|
-    describe "#{provider.name.gsub(/SimpleFeed::Providers/, '')} with User ID #{consumer_id}" do
+  user_ids.each do |user_id|
+    describe "#{provider.name.gsub(/SimpleFeed::Providers/, '')} with User ID #{user_id}" do
       before do
         SimpleFeed.registry.delete(:test_feed)
         SimpleFeed.define(:test_feed) do |f|
@@ -37,7 +37,7 @@ RSpec.shared_examples('a valid provider') do |provider_args:, more_users: nil, p
       it { is_expected.to be_a_kind_of(SimpleFeed::Feed) }
 
       let(:provider) { feed.provider.provider }
-      let(:activity) { feed.activity(consumer_id) }
+      let(:activity) { feed.activity(user_id) }
 
       let(:flush_feed) do
         proc do |provider_impl|
@@ -99,7 +99,7 @@ RSpec.shared_examples('a valid provider') do |provider_args:, more_users: nil, p
           end
 
           context '#delete_if' do
-            let(:activity) { feed.activity(consumer_id) }
+            let(:activity) { feed.activity(user_id) }
 
             it 'should delete events that match' do
               activity.wipe
@@ -242,8 +242,8 @@ RSpec.shared_examples('a valid provider') do |provider_args:, more_users: nil, p
         let(:feed_ns1) { feed_proc.call(:ns1) }
         let(:feed_ns2) { feed_proc.call(:ns2) }
 
-        let(:ua_ns1) { feed_ns1.activity(consumer_id) }
-        let(:ua_ns2) { feed_ns2.activity(consumer_id) }
+        let(:ua_ns1) { feed_ns1.activity(user_id) }
+        let(:ua_ns2) { feed_ns2.activity(user_id) }
 
         before do
           ua_ns1.wipe

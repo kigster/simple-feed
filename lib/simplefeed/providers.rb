@@ -16,7 +16,7 @@ module SimpleFeed
     end
 
     # These methods must be implemented by each Provider, and operation on a given
-    # set of users passed via the consumer_ids: parameter.
+    # set of users passed via the user_ids: parameter.
     ACTIVITY_METHODS = %i[
       store
       delete

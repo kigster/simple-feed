@@ -15,7 +15,7 @@ module SimpleFeed
 
       def color_dump(this_activity = activity)
         this_activity = if this_activity.is_a?(SimpleFeed::Activity::SingleUser)
-                          this_activity.feed.activity([this_activity.consumer_id])
+                          this_activity.feed.activity([this_activity.user_id])
                         else
                           this_activity
                     end
@@ -28,19 +28,19 @@ module SimpleFeed
         end
 
         with_activity(this_activity) do
-          this_activity.each do |consumer_id|
+          this_activity.each do |user_id|
             this_last_event_at = nil
-            this_last_read     = (last_read[consumer_id] || 0.0).to_f
+            this_last_read     = (last_read[user_id] || 0.0).to_f
 
-            [['User ID', consumer_id, "\n"],
-             ['Activities', sprintf('%d total, %d unread', total_count[consumer_id], unread_count[consumer_id]), "\n"],
+            [['User ID', user_id, "\n"],
+             ['Activities', sprintf('%d total, %d unread', total_count[user_id], unread_count[user_id]), "\n"],
              ['Last Read', this_last_read ? Time.at(this_last_read) : 'N/A'],].each do |field, value, *args|
               field(field, value, *args)
             end
 
             _puts; hr '¨'
 
-            this_events       = fetch[consumer_id]
+            this_events       = fetch[user_id]
             this_events_count = this_events.size
             this_events.each_with_index do |_event, _index|
               if this_last_event_at.nil? && _event.at < this_last_read

@@ -8,8 +8,8 @@ module SimpleFeed
       #
       # Of course this is not very efficient, because it requires fetching all events for the user.
       module Paginator
-        def paginate(consumer_ids:, page: nil, per_page: feed.per_page, &block)
-          response = feed.fetch(consumer_ids: consumer_ids)
+        def paginate(user_ids:, page: nil, per_page: feed.per_page, &block)
+          response = feed.fetch(user_ids: user_ids)
           response = SimpleFeed::Response.new(response.to_h)
           response.transform do |*, events|
             paginate_items(order_events(events, &block), page: page, per_page: per_page)
