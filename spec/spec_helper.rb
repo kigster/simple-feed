@@ -6,8 +6,10 @@ SimpleCov.start do
   track_files "lib/**/*.rb"
 end
 
-require 'codecov'
-SimpleCov.formatter = SimpleCov::Formatter::Codecov
+if ENV['CODECOV_TOKEN']
+  require 'codecov'
+  SimpleCov.formatter = SimpleCov::Formatter::Codecov
+end
 
 require 'yaml'
 require 'hashie'
@@ -15,9 +17,14 @@ require 'hashie'
 $LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 
 require 'simplefeed'
+require 'simplefeed/version'
+require 'simple-feed'
+require 'simple_feed'
 require 'rspec/its'
 
-::Dir.glob(::File.expand_path('../support/*.rb', __FILE__)).each { |f| require_relative(f) }
+::Dir.glob(::File.expand_path('../support/*.rb', __FILE__)).each do |f|
+  require_relative(f)
+end
 
 SimpleFeed::DSL.debug = false
 SimpleFeed::Providers::Redis.debug = false

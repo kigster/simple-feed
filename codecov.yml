@@ -1,5 +1,5 @@
 codecov:
-  require_ci_to_pass: yes
+  require_ci_to_pass: no
 
   notify:
     after_n_builds: 30
@@ -14,8 +14,8 @@ coverage:
   status:
     project:
       default: off
-      simplefeed
-        target: 20%
+      simplefeed:
+        target: 90%
         threshold: 100%
         informational: true
         if_not_found: success

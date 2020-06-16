@@ -8,6 +8,7 @@ RSpec.describe SimpleFeed::Event do
   let(:event1) { event_type.new(value: '1', at: Time.now) }
   let(:event2) { event_type.new(value: '2', at: Time.now - 10) }
   let(:event3) { event_type.new(value: '3', at: Time.now + 10) }
+  let(:event4) { event_type.new(value: '4', at: -0.3044356) }
 
   let(:events_manually_sorted) { [event3, event1, event2] }
 
@@ -28,10 +29,12 @@ RSpec.describe SimpleFeed::Event do
       its(:value) { should eq expected_value }
       its(:at) { should eq expected_timestamp }
     end
+
     context 'when *args are provided' do
       let(:args) { ['hello', ts] }
       include_examples(:validate_event_constructor)
     end
+
     context 'when **opts are provided' do
       let(:opts) { { value: 'hello', at: ts } }
       include_examples(:validate_event_constructor)
@@ -78,20 +81,40 @@ RSpec.describe SimpleFeed::Event do
     let(:at) { event1.at }
     let(:value) { event1.value }
     let(:time) { Time.at(at) }
+    let(:formatted_time) { time.strftime(::SimpleFeed::TIME_FORMAT) }
     let(:expected_json) { { value: value, at: at, time: time }.to_json }
 
     its(:to_json) { should eq expected_json }
 
     its(:to_s) do
-      should match(/#{at.to_f}/)
       should match(/#{value}/)
-      should include(time.to_s)
+      should include(formatted_time)
     end
 
     its(:to_color_s) do
-      should match(/#{at.to_f}/)
       should match(/#{value}/)
-      should include(time.to_s)
+      should include(formatted_time)
+    end
+  end
+
+  context 'when #at is not a time' do
+    subject { event4 }
+
+    describe 'but a float' do
+      its(:time) { should be_nil }
+    end
+
+    context 'but a string' do
+      before { event4.at = 'hello' }
+      its(:time) { should be_nil }
+    end
+
+    describe '#to_yaml' do
+      its(:to_yaml) { should eq "---\n:value: '4'\n:at: -0.3044356\n" }
+    end
+
+    describe '#inspect' do
+      its(:inspect) { should include "@value=\"4\", @at=-0.3044356>" }
     end
   end
 
@@ -102,15 +125,18 @@ RSpec.describe SimpleFeed::Event do
 
     context 'inside a sorted set' do
       let(:events) { SortedSet.new }
+
       before do
         events << event1
         events << event2
         events << event3
       end
+
       it 'should already exist in the set' do
         expect(events.size).to eq(3)
         expect(events.include?(event2)).to eq(true)
       end
+
       it 'should automatically sort events based on Time desc' do
         expect(events.to_a.map(&:value)).to eq(events_manually_sorted.map(&:value))
       end
