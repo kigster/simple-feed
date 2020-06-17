@@ -59,29 +59,50 @@ SimpleFeed is a Ruby Library that can be plugged into any application to power a
 
 === Publishing Events
 
-Pushing events to the feed requires three things:
+Pushing events to the feed requires the following:
 
- * String `data`
- * Float `at` (typically, the timestamp)
- * One or more user objects or user_id, or consumers: basically — who should see this feed.
+ * An `Event` consisting of:
+ ** String `data` that, most commonly, is a foreign key to a database table, but can really be anything you like.
+ ** Float `at` (typically, the timestamp, but can be any `float` number)
+ * One or more user IDs, or event consumers: basically — who should see the event being published in their feed.
 
 You publish an event by choosing a set of users whose feed should be updated. For example, were you re-implementing Twitter, your array of `user_ids` when publishing an event would be all followers of the Tweet's author. While the `data` would probably be the Tweet ID.
 
- * Publishing an event to the feeds of N users is roughly a O(N * log(N)) operation
 
-=== Consuming Events (Reading)
+NOTE: Publishing an event to the feeds of N users is roughly a O(N * log(N)) operation
 
-You can consume events for one user or multiple users simultaneously.
+=== Consuming Events (Reading / Rendering the Feed)
 
- * Use methods such as `paginate`, `fetch`, `delete_if`, `wipe`, etc.
+You can fetch the chronologically ordered events for a particular user, using:
 
- * Reading feed for one user (or one type of user) is a O(1) operation
+ * Methods on the `activity` such as `paginate`, `fetch`.
 
- * For each activity (user) read the counts `total_count` and `unread_count` — the number of total and new items in the feed, where `unread_count` is computed since the user last reset their `read status`.
+ ** Reading feed for one user (or one type of user) is a `O(1)` operation
 
- * The `last_read` timestamp can be automatically reset when the user is shown the feed via `paginate` method (controlled via a parameter).
+ * For each activity (user) you can fetch the `total_count` and the `unread_count` — the number of total and new items in the feed, where `unread_count` is computed since the user last reset their `read status`.
 
- * You can delete items from user's feed selectively (for instance, if a user un-follows someone they shouldn't see their events anymore).
+ ** Note: `total_count` can never exceed the maximum size of the feed that you configured. The default is 1000 items.
+
+ ** The `last_read` timestamp can be automatically reset when the user is shown the feed via `paginate` method (whether or not its reset is controlled via a method argument).
+
+=== Modifying User's Feed
+
+For any given user, you can:
+
+ * Wipe their feed with `wipe`
+
+ * Selectively remove items from the feed with `delete_if`.
+ ** For instance, if a user un-follows someone they shouldn't see their events anymore, so you'd have to call `delete_if` and remove any events published by the unfollowed user.
+
+=== Aggregating Events
+
+This is a feature planned for future versions.
+
+Help us much appreciated, even if you are not a developer, but have a clear idea about how it should work.
+
+== Commercial & Enterprise Support
+
+Commercial Support plans are available for SimpleFeed through author's https://reinvent.one[ReinventONE Inc] consulting company. Please reach out to kig AT reinvent.one for more information.
 
 == Usage
 
@@ -182,6 +203,8 @@ There are up to two keys that are computed depending on the situation:
  * `meta_key` is used to store user's `last_read` status
 
 ==== Partitioning Schema
+
+NOTE: This feature is only available in **SimpleFeed Version 3+**.
 
 You can take advantage of string user IDs for situations where your feed requires keys to be composite for instance. Just remember that SimpleFeed does not care about what's in your user ID, and even what you call "a user". It's convenient to think of the activities in terms of users, because typically each user has a unique feed that only they see.
 
@@ -410,7 +433,7 @@ The DSL context has access to two additional methods:
 
 Below is an example output of `color_dump` method, which is intended for the debugging purposes.
 
-[image:https://raw.githubusercontent.com/kigster/simple-feed/master/man/sf-color-dump.png[color_dump output,450]](https://raw.githubusercontent.com/kigster/simple-feed/master/man/sf-color-dump.png)
+image::https://raw.githubusercontent.com/kigster/simple-feed/master/man/sf-color-dump.png[title=#color_dump method output, width=659, link=https://raw.githubusercontent.com/kigster/simple-feed/master/man/sf-color-dump.png]
 
 +++<a name="api">++++++</a>+++
 
@@ -522,11 +545,11 @@ ruby examples/redis_provider_example.rb
 
 The above command will help you download, setup all dependencies, and run the examples for a single user:
 
-image::https://raw.githubusercontent.com/kigster/simple-feed/master/man/running-example.png[Example,link=https://raw.githubusercontent.com/kigster/simple-feed/master/man/running-example.png]
+image::https://raw.githubusercontent.com/kigster/simple-feed/master/man/running-example.png[title=Running Redis Example in a Terminal, width=663, link=https://raw.githubusercontent.com/kigster/simple-feed/master/man/running-example.png]
 
 If you set `REDIS_DEBUG` variable prior to running the example, you will be able to see every single Redis command executed as the example works its way through. Below is a sample output:
 
-image::https://raw.githubusercontent.com/kigster/simple-feed/master/man/running-example-redis-debug.png[Example with Debugging,link=https://raw.githubusercontent.com/kigster/simple-feed/master/man/running-example-redis-debug.png]
+image::https://raw.githubusercontent.com/kigster/simple-feed/master/man/running-example-redis-debug.png[title=Running Redis Example with REDIS_DEBUG set, width=918, link=https://raw.githubusercontent.com/kigster/simple-feed/master/man/running-example-redis-debug.png]
 
 === Generating Ruby API Documentation
 
