@@ -2,6 +2,8 @@
 
 module SimpleFeed
   module Providers
+    RUBY_MAJOR_VERSION = RUBY_VERSION.split('.')[0..1].join.to_i
+
     class Proxy
       attr_accessor :provider
 
@@ -26,12 +28,23 @@ module SimpleFeed
         end
       end
 
-      # Forward all other method calls to Provider
-      def method_missing(name, *args, **opts, &block)
-        if provider&.respond_to?(name)
-          provider.send(name, *args, **opts, &block)
-        else
-          super(name, *args, **opts, &block)
+      if RUBY_MAJOR_VERSION >= 27
+        # Forward all other method calls to Provider
+        def method_missing(name, *args, **opts, &block)
+          if provider&.respond_to?(name)
+            provider.send(name, *args, **opts, &block)
+          else
+            super(name, *args, **opts, &block)
+          end
+        end
+      else
+        # Forward all other method calls to Provider
+        def method_missing(name, *args, &block)
+          if provider&.respond_to?(name)
+            provider.send(name, *args, &block)
+          else
+            super(name, *args, &block)
+          end
         end
       end
     end
