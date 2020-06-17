@@ -2,7 +2,8 @@
 
 lib = File.expand_path('lib', __dir__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'simplefeed/version'
+# noinspection RubyResolve
+load File.expand_path("#{lib}/simplefeed/version.rb")
 
 Gem::Specification.new do |spec|
   spec.name          = 'simple-feed'
@@ -30,6 +31,8 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'hashie'
   spec.add_dependency 'hiredis'
   spec.add_dependency 'redis'
+  spec.add_dependency 'tty-box'
+  spec.add_dependency 'tty-screen'
 
   spec.add_development_dependency 'awesome_print'
   spec.add_development_dependency 'bundler'

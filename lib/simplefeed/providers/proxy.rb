@@ -15,7 +15,7 @@ module SimpleFeed
       end
 
       def initialize(provider_or_klass, *args, **options)
-        self.provider = if provider_or_klass.is_a?(::String)
+        self.provider = if provider_or_klass.is_a?(::String) || provider_or_klass.is_a?(::Symbol)
                           ::Object.const_get(provider_or_klass).new(*args, **options)
                         else
                           provider_or_klass

@@ -17,6 +17,8 @@ require 'simplefeed/feed'
 # points into the library, such as ability to define and fetch new feeds via +define+,
 # and so on.
 module SimpleFeed
+  TIME_FORMAT = '%Y-%m-%d %H:%M:%S.%L'
+
   @registry = {}
 
   class << self

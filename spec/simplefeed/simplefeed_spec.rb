@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-
+require_relative '../../lib/simplefeed/version'
 describe SimpleFeed do
   it 'has a version number' do
     expect(SimpleFeed::VERSION).not_to be nil
