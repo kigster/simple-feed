@@ -1,6 +1,18 @@
 # Changelog
 
+
+## [v3.0.1](https://github.com/kigster/simple-feed/tree/v3.0.1) (2020-06-17)
+
+[Full Changelog](https://github.com/kigster/simple-feed/compare/v3.0.0..v3.0.1)
+
+**Merged pull requests:**
+
+- Switch to tty-box for color_dump and examples [\#20](https://github.com/kigster/simple-feed/pull/20) ([kigster](https://github.com/kigster))
+- [Bug Fix] Use standard *args expansion for Ruby < 2.7 [\#21](https://github.com/kigster/simple-feed/pull/21) ([kigster](https://github.com/kigster))
+
 ## [v3.0.0](https://github.com/kigster/simple-feed/tree/v3.0.0) (2020-05-25)
+
+**WARNING:** broken on Ruby < 2.7, and no longer available on RubyGems.org.
 
 [Full Changelog](https://github.com/kigster/simple-feed/compare/v2.1.0...v3.0.0)
 
