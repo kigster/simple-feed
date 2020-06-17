@@ -35,7 +35,7 @@ This is a fast, pure-ruby implementation of an activity feed concept commonly us
 *Important Notes and Acknowledgements:*
 
 * SimpleFeed _does not depend on Ruby on Rails_ and is a *pure-ruby* implementation
-* SimpleFeed requires ruby 2.4 or later
+* SimpleFeed requires MRI Ruby 2.3 or later
 * SimpleFeed is currently live in production
 * SimpleFeed is open source thanks to the generosity of *http://simbi.com[Simbi, Inc]*.
 
@@ -538,8 +538,11 @@ To run it, checkout the source of the library, and then:
 ----
 git clone https://github.com/kigster/simple-feed.git
 cd simple-feed
-bundle
-be rspec  # make sure tests are passing
+
+gem install bundler --version 2.1.4
+bundle install
+bundle exec rspec  # make sure tests are passing
+
 ruby examples/redis_provider_example.rb
 ----
 
