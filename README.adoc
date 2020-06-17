@@ -528,9 +528,11 @@ This is a pure Hash-like implementation of a provider that can be useful in unit
 
 If you set environment variable `REDIS_DEBUG` to `true` and run the example (see below) you will see every operation redis performs. This could be useful in debugging an issue or submitting a bug report.
 
-== Running the Examples
+== Running the Examples and Specs
 
 Source code for the gem contains the `examples` folder with an example file that can be used to test out the providers, and see what they do under the hood.
+
+Both the specs and the example requires a local redis instance to be available. 
 
 To run it, checkout the source of the library, and then:
 
@@ -539,10 +541,19 @@ To run it, checkout the source of the library, and then:
 git clone https://github.com/kigster/simple-feed.git
 cd simple-feed
 
+# on OSX with HomeBrew:
+brew install redis
+brew services start redis
+
+# check that your redis is up:
+redis-cli info
+
+# install bundler and other dependencies
 gem install bundler --version 2.1.4
 bundle install
 bundle exec rspec  # make sure tests are passing
 
+# run the example:
 ruby examples/redis_provider_example.rb
 ----
 
