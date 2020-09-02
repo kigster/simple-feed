@@ -128,7 +128,7 @@ module SimpleFeed
     def header(*args, **opts)
       message = args.join("\n")
       msg = block_given? ? (yield || message) : message + "\n"
-      box = TTY::Box.frame(box_config(**opts)) { Array(msg).join("\n") }
+      box = TTY::Box.frame(**box_config(**opts)) { Array(msg).join("\n") }
       output "\n#{box}"
     end
 
