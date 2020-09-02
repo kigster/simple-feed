@@ -8,10 +8,10 @@
 
 === Build & Gem Status
 
-image:https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkigster%2Fsimple-feed.svg?type=shield[License Scan OK, link=https://app.fossa.com/projects/git%2Bgithub.com%2Fkigster%2Fsimple-feed?ref=badge_shield])
+image:https://img.shields.io/badge/license-MIT-blue.svg[MIT licensed,link=https://github.com/kigster/simple-feed/master/LICENSE.txt]
+image:https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkigster%2Fsimple-feed.svg?type=shield[License Scan OK, link=https://app.fossa.com/projects/git%2Bgithub.com%2Fkigster%2Fsimple-feed?ref=badge_shield]
 
 image:https://img.shields.io/gem/v/simple-feed.svg[Gem Version,link=https://rubygems.org/gems/simple-feed]
-image:https://img.shields.io/badge/license-MIT-blue.svg[MIT licensed,link=https://github.com/kigster/simple-feed/master/LICENSE.txt]
 image:http://inch-ci.org/github/kigster/simple-feed.svg?branch=master[Inline docs,link=http://inch-ci.org/github/kigster/simple-feed]
 
 image:https://travis-ci.org/kigster/simple-feed.svg?branch=master[Build Status,link=https://travis-ci.org/kigster/simple-feed]
