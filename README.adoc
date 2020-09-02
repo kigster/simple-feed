@@ -134,6 +134,8 @@ Below we configure a feed called `:newsfeed`, which in this example will be popu
 require 'simplefeed'
 
 # Let's define a Redis-based feed, and wrap Redis in a in a ConnectionPool.
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkigster%2Fsimple-feed.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fkigster%2Fsimple-feed?ref=badge_shield)
+
 SimpleFeed.define(:newsfeed) do |f|
   f.provider   = SimpleFeed.provider(:redis,
                                       redis: -> { ::Redis.new },
@@ -609,3 +611,7 @@ The gem is available as open source under the terms of the http://opensource.org
 
 * This project is conceived and sponsored by https://simbi.com[Simbi, Inc.].
 * Author's personal experience at https://wanelo.com[Wanelo, Inc.] has served as an inspiration.
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkigster%2Fsimple-feed.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fkigster%2Fsimple-feed?ref=badge_large)
