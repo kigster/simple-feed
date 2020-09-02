@@ -28,7 +28,7 @@ jobs:
       run: |
         gem update --system
         gem install bundler
-        bundle install --jobs 4 --retry 3
+        bundle update --jobs 4 --retry 3
         bundle exec rspec --format documentation
       env:
         CODECOV_TOKEN: "8314c388-54a3-4125-915b-3d4836c15b29"

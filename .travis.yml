@@ -8,4 +8,4 @@ rvm:
 - 2.7.1
 services:
 - redis-server
-script: bundle exec rspec
+script: bundle update && bundle exec rspec

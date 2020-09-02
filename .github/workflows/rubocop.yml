@@ -28,6 +28,6 @@ jobs:
       with:
         ruby-version: 2.7
     - name: Install dependencies
-      run: bundle install
+      run: bundle update && bundle install
     - name: Run Rubocop
       run: bundle exec rubocop
