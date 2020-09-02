@@ -8,6 +8,8 @@
 
 === Build & Gem Status
 
+image:https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkigster%2Fsimple-feed.svg?type=shield[License Scan OK, link=https://app.fossa.com/projects/git%2Bgithub.com%2Fkigster%2Fsimple-feed?ref=badge_shield])
+
 image:https://img.shields.io/gem/v/simple-feed.svg[Gem Version,link=https://rubygems.org/gems/simple-feed]
 image:https://img.shields.io/badge/license-MIT-blue.svg[MIT licensed,link=https://github.com/kigster/simple-feed/master/LICENSE.txt]
 image:http://inch-ci.org/github/kigster/simple-feed.svg?branch=master[Inline docs,link=http://inch-ci.org/github/kigster/simple-feed]
@@ -134,7 +136,6 @@ Below we configure a feed called `:newsfeed`, which in this example will be popu
 require 'simplefeed'
 
 # Let's define a Redis-based feed, and wrap Redis in a in a ConnectionPool.
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkigster%2Fsimple-feed.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fkigster%2Fsimple-feed?ref=badge_shield)
 
 SimpleFeed.define(:newsfeed) do |f|
   f.provider   = SimpleFeed.provider(:redis,
@@ -607,11 +608,9 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/kigste
 
 The gem is available as open source under the terms of the http://opensource.org/licenses/MIT[MIT License].
 
+image:https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkigster%2Fsimple-feed.svg?type=large[FOSSA Scan Status, link=https://app.fossa.com/projects/git%2Bgithub.com%2Fkigster%2Fsimple-feed?ref=badge_large]
+
 === Acknowledgements
 
 * This project is conceived and sponsored by https://simbi.com[Simbi, Inc.].
 * Author's personal experience at https://wanelo.com[Wanelo, Inc.] has served as an inspiration.
-
-
-## License
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkigster%2Fsimple-feed.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fkigster%2Fsimple-feed?ref=badge_large)
