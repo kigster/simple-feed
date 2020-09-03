@@ -5,6 +5,7 @@ require 'tty-screen'
 require 'simplefeed/dsl'
 require 'simplefeed/activity/single_user'
 require 'simplefeed/activity/multi_user'
+require 'awesome_print'
 
 module SimpleFeed
   module DSL
@@ -21,7 +22,7 @@ module SimpleFeed
                           this_activity.feed.activity([this_activity.user_id])
                         else
                           this_activity
-        end
+                        end
         _puts
 
         feed_header(feed) do
@@ -44,20 +45,20 @@ module SimpleFeed
               fields << field(field, value, *args)
             end
 
-            header(title: { top_center: " « User Activity #{index + 1} » " }) { fields.map(&:green) }
+            header(title: { top_center: " « User Activity #{index + 1} » " }, style: { fg: :green }) { fields }
 
             this_events       = fetch[user_id]
             this_events_count = this_events.size
-            this_events.each_with_index do |_event, _index|
-              if this_last_event_at.nil? && _event.at < this_last_read
+            this_events.each_with_index do |evt, idx|
+              if this_last_event_at.nil? && evt.at < this_last_read
                 print_last_read_separator(this_last_read)
-              elsif this_last_event_at && this_last_read < this_last_event_at && this_last_read > _event.at
+              elsif this_last_event_at && this_last_read < this_last_event_at && this_last_read > evt.at
                 print_last_read_separator(this_last_read)
               end
 
-              this_last_event_at = _event.at # float
-              output "[%2d] %16s %s\n", _index, _event.time.strftime(TIME_FORMAT).blue.bold, _event.value
-              if _index == this_events_count - 1 && this_last_read < _event.at
+              this_last_event_at = evt.at # float
+              output "[%2d] %16s %s\n", idx, evt.time.strftime(TIME_FORMAT).blue.bold, evt.value
+              if idx == this_events_count - 1 && this_last_read < evt.at
                 print_last_read_separator(this_last_read)
               end
             end
@@ -66,7 +67,7 @@ module SimpleFeed
       end
 
       def print_last_read_separator(lr)
-        output ">>>> %16s <<<< last read\n", Time.at(lr).strftime(TIME_FORMAT).red.bold
+        output "———— %16s [last read] ———————————— \n", Time.at(lr).strftime(TIME_FORMAT).red.bold
       end
     end
 
@@ -101,7 +102,7 @@ module SimpleFeed
     end
 
     def field(label, value, _sep = '')
-      field_label(label) + ' -> ' + field_value(value)
+      field_label(label) + ' ❯ ' + field_value(value)
     end
 
     def hr
@@ -113,22 +114,25 @@ module SimpleFeed
     end
 
     def width
-      @width ||= TTY::Screen.width - 5
+      @width ||= [[TTY::Screen.width - 5, 60].max, 75].min
     end
 
     def feed_header(feed, &block)
       header title:  { top_left: " « #{feed.name.capitalize} Feed » " },
              border: :thick,
              style:  {
-               fg:     :bright_red,
-               border: { fg: :white }
+               fg:     :black,
+               bg:     :green,
+               border: { fg: :bright_black, bg: :green }
              }, &block
     end
 
     def header(*args, **opts)
       message = args.join("\n")
-      msg = block_given? ? (yield || message) : message + "\n"
-      box = TTY::Box.frame(**box_config(**opts)) { Array(msg).join("\n") }
+      msg     = block_given? ? (yield || message) : message + "\n"
+      config  = box_config(**opts)
+      lines   = Array(msg).flatten
+      box     = TTY::Box.frame(*lines, **config)
       output "\n#{box}"
     end
 
@@ -138,7 +142,7 @@ module SimpleFeed
       {
         width:   width,
         align:   :left,
-        padding: [0, 3],
+        padding: [1, 3],
         style:   {
           fg:     :bright_yellow,
           border: {

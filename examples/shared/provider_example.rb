@@ -29,7 +29,7 @@ class Object
 end
 
 def p(*args)
-  printf "%40s -> %s\n", args[0].strip.blue.bold, args[1].bold.red
+  printf "%40s  ❯ %s\n", args[0].strip.blue.bold, args[1].bold.red
 end
 
 with_activity(@activity) do

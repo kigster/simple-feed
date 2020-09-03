@@ -83,7 +83,7 @@ module SimpleFeed
       output = StringIO.new
       output.print "<SimpleFeed::Event: "
       output.print(time.nil? ? "[#{at}]" : "[#{time&.strftime(::SimpleFeed::TIME_FORMAT)}]")
-      output.print " -> [#{value}] "
+      output.print ", [\"#{value}\"]"
       @to_s = output.string
     end
 
