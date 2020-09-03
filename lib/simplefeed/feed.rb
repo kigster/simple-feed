@@ -15,8 +15,8 @@ module SimpleFeed
 
     attr_reader :name
 
-    SimpleFeed::Providers.define_provider_methods(self) do |feed, method, opts, &block|
-      feed.provider.send(method, **opts, &block)
+    SimpleFeed::Providers.define_provider_methods(self) do |feed, method, *args, **opts, &block|
+      feed.provider.send(method, *args, **opts, &block)
     end
 
     def initialize(name)
