@@ -142,8 +142,8 @@ module SimpleFeed
         def with_pipelined
           with_retries do
             with_redis do |redis|
-              redis.pipelined do
-                yield(redis)
+              redis.pipelined do |pipeline|
+                yield(pipeline)
               end
             end
           end
