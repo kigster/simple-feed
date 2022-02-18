@@ -19,7 +19,7 @@ end
 task build: :permissions
 
 YARD::Rake::YardocTask.new(:doc) do |t|
-  t.files = %w(lib/**/*.rb exe/*.rb - README.md LICENSE.txt)
+  t.files = %w(lib/**/*.rb exe/*.rb - README.adoc LICENSE.txt)
   t.options.unshift('--title', '"SimpleFeed — Fast and Scalable "write-time" Simple Feed for Social Networks, with a Redis-based default backend implementation."')
   t.after = -> { exec('open doc/index.html') } if RUBY_PLATFORM =~ /darwin/
 end
