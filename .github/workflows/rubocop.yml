@@ -1,6 +1,11 @@
 
 name: Rubocop
-on: [push, pull_request]
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
 jobs:
   test:
@@ -14,15 +19,15 @@ jobs:
     env:
       CODECOV_TOKEN: "8314c388-54a3-4125-915b-3d4836c15b29"
       REDIS_HOST: redis
-      REDIS_PORT: ${{ job.services.redis.ports[6379] }}
+      REDIS_PORT: 6379
     steps:
       - uses: actions/checkout@v2
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 2.1 # Not needed with a .ruby-version file
+          ruby-version: 3.1 # Not needed with a .ruby-version file
           bundler-cache: true # runs 'bundle install' and caches installed gems automatically
-      run: |
-        gem update --system
-        gem install bundler
-        bundle update --jobs 4 --retry 3
-        bundle exec rubocop
+      - run: |
+          gem update --system
+          gem install bundler
+          bundle update --jobs 4 --retry 3
+          bundle exec rubocop
