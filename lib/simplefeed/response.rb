@@ -12,11 +12,9 @@ module SimpleFeed
 
     include Enumerable
 
-    def each
+    def each(&block)
       if block_given?
-        @result.each_pair do |user_id, result|
-          yield(user_id, result)
-        end
+        @result.each_pair(&block)
       else
         @result.keys.to_enum
       end

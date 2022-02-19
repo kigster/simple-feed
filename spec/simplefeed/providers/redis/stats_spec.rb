@@ -24,7 +24,7 @@ RSpec.describe SimpleFeed::Providers::Redis::Stats do
     subject { stats.info }
     its(:uptime_in_seconds) { should be >= 0 }
     its(:used_memory) { should be >= 1_000_000 }
-    its([:dbstats, '7']) { should include({ 'keys' => 1 }) }
+    its(['dbstats', 7]) { is_expected.to include({ 'keys' => 1 }) }
   end
 
   its(:used_memory_at_boot) { should eq(1_008_384) }

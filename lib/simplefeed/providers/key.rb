@@ -67,7 +67,7 @@ module SimpleFeed
       end
 
       def obscure_value(id)
-        id = id.to_i if id.is_a?(String) && id =~ /^[\d]+$/
+        id = id.to_i if id.is_a?(String) && id =~ /^\d+$/
 
         if id.is_a?(Numeric)
           ::Base62.encode(id)

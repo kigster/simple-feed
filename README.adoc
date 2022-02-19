@@ -32,7 +32,7 @@ If you like to see this project grow, your donation of any amount is much apprec
 
 image::https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif[Donate,link=https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=FSFYYNEQ8RKWU]
 
-This is a fast, pure-ruby implementation of an activity feed concept commonly used in social networking applications. The implementation is optimized for *read-time performance* and high concurrency (lots of users), and can be extended with custom backend providers. Two providers come bundled: the production-ready Redis provider, and a naive Ruby Hash-based provider.
+This is a fast, pure-ruby implementation of an activity feed concept commonly used in social networking applications. The implementation is optimized for *read-time performance* and high concurrency (lots of users), and can be extended with custom backend providers. Two providers come bundled: the production-ready Redis provider.
 
 *Important Notes and Acknowledgements:*
 
@@ -120,10 +120,7 @@ image::https://raw.githubusercontent.com/kigster/simple-feed/master/man/activity
 
 A key concept to understanding SimpleFeed gem, is that of a _provider_, which is effectively a persistence implementation for the events belonging to each user.
 
-Two providers are supplied with this gem:
-
-* The production-ready `:redis` provider, which uses the https://redislabs.com/ebook/redis-in-action/part-2-core-concepts-2/chapter-3-commands-in-redis/3-5-sorted-sets[sorted set Redis data type] to store and fetch the events, scored by time (but not necessarily).
-* The naïve `:hash` provider based on the ruby `Hash` class, that can be useful in unit tests, or in simple simulations.
+One providers are supplied with this gem: the production-ready `:redis` provider, which uses the https://redislabs.com/ebook/redis-in-action/part-2-core-concepts-2/chapter-3-commands-in-redis/3-5-sorted-sets[sorted set Redis data type] to store and fetch the events, scored by time (but not necessarily).
 
 You initialize a provider by using the `SimpleFeed.provider([Symbol])` method.
 
@@ -303,10 +300,10 @@ Let's take a look at a ruby session, which demonstrates return values of the fee
 ----
 require 'simplefeed'
 
-# Define the feed using an in-memory Hash provider, which uses
+# Define the feed using Redis provider, which uses
 # SortedSet to keep user's events sorted.
 SimpleFeed.define(:followers) do |f|
-  f.provider = SimpleFeed.provider(:hash)
+  f.provider = SimpleFeed.provider(:redis)
   f.per_page = 50
   f.per_page = 2
 end
@@ -513,21 +510,13 @@ It is the intention of this gem that:
 * it should be easy to write new providers
 * it should be easy to swap out providers
 
-To create a new provider please use `SimpleFeed::Providers::Hash::Provider` class as a starting point.
-
-Two providers are available with this gem:
+One provider is included with this gem:
 
 === `SimpleFeed::Providers::Redis::Provider`
 
 Redis Provider is a production-ready persistence adapter that uses the https://redislabs.com/ebook/redis-in-action/part-2-core-concepts-2/chapter-3-commands-in-redis/3-5-sorted-sets[sorted set Redis data type].
 
 This provider is optimized for large writes and can use either a single Redis instance for all users of your application, or any number of Redis https://en.wikipedia.org/wiki/Shard_(database_architecture)[shards] by using a https://github.com/twitter/twemproxy[_Twemproxy_] in front of the Redis shards.
-
-=== `SimpleFeed::Providers::HashProvider`
-
-This is a pure Hash-like implementation of a provider that can be useful in unit tests of a host application. This provider could be used to write and read events within a single ruby process, can be serialized to and from a YAML file, and is therefore intended primarily for Feed emulations in automated tests.
-
-== Redis Provider
 
 If you set environment variable `REDIS_DEBUG` to `true` and run the example (see below) you will see every operation redis performs. This could be useful in debugging an issue or submitting a bug report.
 
@@ -539,7 +528,6 @@ Both the specs and the example requires a local redis instance to be available.
 
 To run it, checkout the source of the library, and then:
 
-[source,bash]
 ----
 git clone https://github.com/kigster/simple-feed.git
 cd simple-feed
