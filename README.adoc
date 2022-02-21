@@ -11,11 +11,11 @@
 image:https://img.shields.io/badge/license-MIT-blue.svg[MIT licensed,link=https://github.com/kigster/simple-feed/master/LICENSE.txt]
 image:https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkigster%2Fsimple-feed.svg?type=shield[License Scan OK, link=https://app.fossa.com/projects/git%2Bgithub.com%2Fkigster%2Fsimple-feed?ref=badge_shield]
 
+image:https://github.com/kigster/simple-feed/workflows/RSpec/badge.svg[RSpec,link=https://github.com/kigster/simple-feed/actions?query=workflow%3ARSpec]
+image:https://github.com/kigster/simple-feed/workflows/Rubocop/badge.svg?branch=master%5BRuby,link=https://github.com/kigster/simple-feed/actions?query=workflow%3ARubocop%5D
+
 image:https://img.shields.io/gem/v/simple-feed.svg[Gem Version,link=https://rubygems.org/gems/simple-feed]
 image:http://inch-ci.org/github/kigster/simple-feed.svg?branch=master[Inline docs,link=http://inch-ci.org/github/kigster/simple-feed]
-
-image:https://github.com/kigster/simple-feed/workflows/Ruby/badge.svg?branch=master[Ruby,link=https://github.com/kigster/simple-feed/actions?query=workflow%3ARuby]
-image:https://github.com/kigster/simple-feed/workflows/Rubocop/badge.svg?branch=master[Ruby,link=https://github.com/kigster/simple-feed/actions?query=workflow%3ARubocop]
 
 image:https://codecov.io/gh/kigster/simple-feed/branch/master/graph/badge.svg[Coverage,link=https://codecov.io/gh/kigster/simple-feed]
 
