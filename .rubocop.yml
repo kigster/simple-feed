@@ -3,7 +3,6 @@ inherit_from:
   - .relaxed-rubocop-2.4.yml
 
 
-
 AllCops:
   TargetRubyVersion: 2.6
   UseCache: true
@@ -27,6 +26,7 @@ AllCops:
     - '**/*.ru'
     - '**/Gemfile'
     - '**/Rakefile'
+  SuggestExtensions: false      
 
 Layout/HashAlignment:
   Enabled: true

@@ -31,6 +31,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'hashie'
   spec.add_dependency 'hiredis'
   spec.add_dependency 'redis'
+  spec.add_dependency 'sorted_set'
   spec.add_dependency 'tty-box'
   spec.add_dependency 'tty-screen'
 

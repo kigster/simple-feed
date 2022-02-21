@@ -5,21 +5,29 @@ require 'redis/connection/hiredis'
 require 'connection_pool'
 require 'simplefeed/providers/redis/driver'
 
-RSpec.describe SimpleFeed::Providers::Redis::Driver do
-  class RedisAdapter
-    include SimpleFeed::Providers::Redis::Driver
-  end
+class RedisAdapter
+  include ::SimpleFeed::Providers::Redis::Driver
+end
 
+RSpec.describe SimpleFeed::Providers::Redis::Driver do
   shared_examples(:validate_adapter) do
     let(:success) { 'OK' }
 
     context '#set & #get' do
       before { adapter.set(key, value) }
-      it 'should have the key/value set' do
+
+      it '#get(key)' do
         expect(adapter.get(key)).to eq(value)
-        expect(adapter.exists(key)).to eq(true)
+      end
+      it '#exists(key)' do
+        expect(adapter.exists(key)).to eq(1)
+      end
+      it '#delete(key)' do
         expect(adapter.delete(key)).to eq(1)
-        expect(adapter.exists(key)).to eq(false)
+      end
+      it '#exists(key) after #delete(key)' do
+        expect(adapter.delete(key)).to eq(1)
+        expect(adapter.exists(key)).to eq(0)
       end
     end
 
@@ -34,7 +42,7 @@ RSpec.describe SimpleFeed::Providers::Redis::Driver do
         end
         expect(@set.value).to eq(success)
         expect(@get.value).to eq(value)
-        expect(@exists.value).to eq(true)
+        expect(@exists.value).to eq(1)
         expect(@rm.value).to eq(1)
       end
     end
@@ -46,9 +54,9 @@ RSpec.describe SimpleFeed::Providers::Redis::Driver do
       end
       it 'should manipulate an ordered set' do
         expect(adapter.zrange(key, 0, 1)).to eq([value])
-        expect(adapter.exists?(key)).to eq(true)
+        expect(adapter.exists(key)).to eq(1)
         expect(adapter.rm(key)).to eq(1)
-        expect(adapter.exists(key)).to eq(false)
+        expect(adapter.exists(key)).to eq(0)
       end
     end
   end

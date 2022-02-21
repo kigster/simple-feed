@@ -1,16 +1,13 @@
 feeds:
-# ——————————————————————————————————————————————————————————————————————————————————————————————
   - name: news
     max_size: 5
     per_page: 2
-
     provider: &mock_provider
       klass: SimpleFeed::MockProvider
       args: [ '127.0.0.1', '6379' ]
       opts:
         namespace: :mock
         db: 1
-
     data:
       - user_ids: afkj234
         activity:
@@ -25,14 +22,14 @@ feeds:
           - { value: 'Megan is following Konstantin', at: '2016-11-20 23:33:56 -0800' }
         last_read_at: '2016-11-20 23:33:56 -0800'
 
-# ——————————————————————————————————————————————————————————————————————————————————————————————
+  # ——————————————————————————————————————————————————————————————————————————————————————————————
 
   - name: notifications
     max_size: 5
     per_page: 2
 
     provider:
-      klass: 'SimpleFeed::Redis::Provider'
+      klass: 'SimpleFeed::Providers::Redis::Provider'
       opts:
         redis:
           host: '127.0.0.1'

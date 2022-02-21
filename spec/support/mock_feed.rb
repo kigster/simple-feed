@@ -1,10 +1,22 @@
 # frozen_string_literal: true
 
+require 'yaml'
+require 'simplefeed/providers/redis'
+require 'simplefeed/providers/redis/provider'
+
+FEED_FILE    = ::IO.read('spec/fixtures/sample_feed.yml').freeze
+YAML_CLASSES = [::Integer, ::String, ::Symbol, ::Time, ::Hash, ::Float, ::SimpleFeed::Providers::Redis::Provider].freeze
+FEED_SPEC    = ::YAML.safe_load(FEED_FILE, permitted_classes: YAML_CLASSES, symbolize_names: true)
+#.each do |c|
+#   add(c.delete(:name), c.delete(:value), c)
+# end.freeze
+
 module SimpleFeed
   module Fixtures
     def self.sample_feed
       # noinspection RubyResolve
-      @sample_feed ||= Hashie::Mash.new(YAML.load(::File.read('spec/fixtures/sample_feed.yml')))
+
+      @sample_feed ||= Hashie::Mash.new(FEED_SPEC)
     end
 
     def self.mock_provider_props

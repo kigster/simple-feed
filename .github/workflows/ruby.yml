@@ -1,4 +1,5 @@
-name: Ruby
+
+name: RSpec
 
 on:
   push:
@@ -7,30 +8,26 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
-
     services:
       redis:
         image: redis
         ports:
-        - 6379:6379
+          - 6379:6379
         options: --entrypoint redis-server
-
+    env:
+      CODECOV_TOKEN: "8314c388-54a3-4125-915b-3d4836c15b29"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Ruby 2.7
-      uses: actions/setup-ruby@v1
-      with:
-        ruby-version: 2.7.x
-
-    - name: Build and test with Rake
-      run: |
-        gem update --system
-        gem install bundler
-        bundle update --jobs 4 --retry 3
-        bundle exec rspec --format documentation
-      env:
-        CODECOV_TOKEN: "8314c388-54a3-4125-915b-3d4836c15b29"
-        REDIS_HOST: redis
-        REDIS_PORT: ${{ job.services.redis.ports[6379] }}
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.1 # Not needed with a .ruby-version file
+          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+      - run: |
+          gem update --system
+          gem install bundler
+          bundle update --jobs 4 --retry 3
+          bundle exec rspec --format documentation

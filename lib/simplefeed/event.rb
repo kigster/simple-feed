@@ -5,6 +5,7 @@ require 'json'
 module SimpleFeed
   class Event
     attr_accessor :value, :at
+
     include Comparable
 
     class << self

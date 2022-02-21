@@ -9,7 +9,6 @@ Hashie.logger = Logger.new(nil)
 ::Dir.glob(::File.expand_path('../simplefeed/*.rb', __FILE__)).each { |f| require_relative(f) }
 
 require 'simplefeed/providers/redis'
-require 'simplefeed/providers/hash'
 require 'simplefeed/dsl'
 require 'simplefeed/feed'
 
