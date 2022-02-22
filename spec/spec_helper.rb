@@ -1,14 +1,15 @@
 # frozen_string_literal: true
 
 require 'simplecov'
-SimpleCov.start do
-  # e.g., usage of track files
-  track_files "lib/**/*.rb"
-end
 
 if ENV['CODECOV_TOKEN']
   require 'codecov'
   SimpleCov.formatter = SimpleCov::Formatter::Codecov
+end
+
+SimpleCov.start do
+  # e.g., usage of track files
+  track_files "lib/**/*.rb"
 end
 
 require 'yaml'
