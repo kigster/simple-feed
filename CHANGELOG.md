@@ -1,18 +1,36 @@
 # Changelog
 
+## [v3.1.1](https://github.com/kigster/simple-feed/tree/v3.1.1) (2022-02-22)
 
-## [v3.0.1](https://github.com/kigster/simple-feed/tree/v3.0.1) (2020-06-17)
+[Full Changelog](https://github.com/kigster/simple-feed/compare/v3.1.0...v3.1.1)
 
-[Full Changelog](https://github.com/kigster/simple-feed/compare/v3.0.0..v3.0.1)
+**Closed issues:**
+
+- Fix pipelined usage for redis.rb 5.0.0 [\#28](https://github.com/kigster/simple-feed/issues/28)
 
 **Merged pull requests:**
 
-- Switch to tty-box for color_dump and examples [\#20](https://github.com/kigster/simple-feed/pull/20) ([kigster](https://github.com/kigster))
-- [Bug Fix] Use standard *args expansion for Ruby < 2.7 [\#21](https://github.com/kigster/simple-feed/pull/21) ([kigster](https://github.com/kigster))
+- Redis library 5.0.0 + Removing Hash Provider [\#29](https://github.com/kigster/simple-feed/pull/29) ([kigster](https://github.com/kigster))
+- Add license scan report and status [\#24](https://github.com/kigster/simple-feed/pull/24) ([fossabot](https://github.com/fossabot))
+
+## [v3.1.0](https://github.com/kigster/simple-feed/tree/v3.1.0) (2022-02-21)
+
+[Full Changelog](https://github.com/kigster/simple-feed/compare/v3.0.1...v3.1.0)
+
+**Closed issues:**
+
+- Error after upgrading to 3.0 [\#19](https://github.com/kigster/simple-feed/issues/19)
+
+## [v3.0.1](https://github.com/kigster/simple-feed/tree/v3.0.1) (2020-06-17)
+
+[Full Changelog](https://github.com/kigster/simple-feed/compare/v3.0.0...v3.0.1)
+
+**Merged pull requests:**
+
+- Use standard \*args expansion for Ruby \< 2.7 [\#21](https://github.com/kigster/simple-feed/pull/21) ([kigster](https://github.com/kigster))
+- Switch to tty-box for color\_dump and examples [\#20](https://github.com/kigster/simple-feed/pull/20) ([kigster](https://github.com/kigster))
 
 ## [v3.0.0](https://github.com/kigster/simple-feed/tree/v3.0.0) (2020-05-25)
-
-**WARNING:** broken on Ruby < 2.7, and no longer available on RubyGems.org.
 
 [Full Changelog](https://github.com/kigster/simple-feed/compare/v2.1.0...v3.0.0)
 
@@ -20,6 +38,8 @@
 
 - First pass on meta/data refactor to allow different publisher/consumer [\#18](https://github.com/kigster/simple-feed/pull/18) ([kigster](https://github.com/kigster))
 - \(v2.1.0\) Support for non-integer user\_ids [\#17](https://github.com/kigster/simple-feed/pull/17) ([kigster](https://github.com/kigster))
+- Not sure how this is working for everyone else? [\#15](https://github.com/kigster/simple-feed/pull/15) ([rromanchuk](https://github.com/rromanchuk))
+- Adding Codecov [\#14](https://github.com/kigster/simple-feed/pull/14) ([kigster](https://github.com/kigster))
 
 ## [v2.1.0](https://github.com/kigster/simple-feed/tree/v2.1.0) (2020-05-24)
 
@@ -34,11 +54,6 @@
 - Caching conventions? [\#10](https://github.com/kigster/simple-feed/issues/10)
 - Optional secondary index? [\#9](https://github.com/kigster/simple-feed/issues/9)
 - Group feeds? [\#8](https://github.com/kigster/simple-feed/issues/8)
-
-**Merged pull requests:**
-
-- Not sure how this is working for everyone else? [\#15](https://github.com/kigster/simple-feed/pull/15) ([rromanchuk](https://github.com/rromanchuk))
-- Adding Codecov [\#14](https://github.com/kigster/simple-feed/pull/14) ([kigster](https://github.com/kigster))
 
 ## [v2.0.2](https://github.com/kigster/simple-feed/tree/v2.0.2) (2017-12-07)
 
