@@ -3,8 +3,11 @@
 :toc:
 :toclevels: 5
 :sectnums:
+:icons: font
 
 == Scalable, Easy to Use Activity Feed Implementation.
+
+NOTE: please feel free to read this README in the formatted-for-print xref:README.pdf[PDF Version].
 
 === Build & Gem Status
 
