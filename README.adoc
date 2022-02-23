@@ -45,19 +45,19 @@ This is a fast, pure-ruby implementation of an activity feed concept commonly us
 
 SimpleFeed is a Ruby Library that can be plugged into any application to power a fast, Redis-based activity feed implementation so common on social networking sites. SimpleFeed offers the following features:
 
- * Scalable and well performing Redis-based activity feed
-
- * Scales to millions of users (will need to use Twemproxy to shard across several Redis instances)
-
- * Stores a fixed number of events for each unique "user" — the default is 1000. When the feed reaches 1001 events, the oldest event is offloaded from the activity.
-
- * Thread-safe implementation.
-
- * Zero assumptions about what you are storing: the "data" is just a string. Serialize it with JSON, Marshall, YAML, or whatever.
-
- * You can create as many different types of feeds per application as you like. No Singletons are used.
-
- * Customize mapping from `user_id` to the activity id based on your business logic (more on this later).
+ * Modelled after graph-relationships similar to those on Twitter (bi-directional independent follow relationships):
+ ** Feed maintains a reverse-chronological order for heterogeneous events for each user.
+ ** It offers a constant time lookup for user's feed, avoiding complex SQL joins to render it.
+ ** An API to read/paginate the feed for a given user
+ ** As well as to *query the total unread items in the feed* since it was last read by the user (typically shown on App icons).
+ * Scalable and well performing Redis-based activity feed —
+ ** Scales to millions of users (will need to use Twemproxy to shard across several Redis instances)
+ ** Stores a fixed number of events for each unique "user" — the default is 1000. When the feed reaches 1001 events, the oldest event is offloaded from the activity.
+ * Implementation properties:
+ ** Fully thread-safe implementation, writing events can be done in eg. Sidekiq.
+ ** Zero assumptions about what you are storing: the "data" is just a string. Serialize it with JSON, Marshall, YAML, or whatever.
+ ** You can create as many different types of feeds per application as you like (no Ruby Singletons used).
+ ** Customize mapping from `user_id` to the activity id based on your business logic (more on this later).
 
 === Publishing Events
 
