@@ -25,6 +25,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'activesupport'
+  spec.add_dependency 'awesome_print'
   spec.add_dependency 'base62-rb'
   spec.add_dependency 'colored2'
   spec.add_dependency 'connection_pool', '~> 2'
@@ -35,7 +36,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'tty-box'
   spec.add_dependency 'tty-screen'
 
-  spec.add_development_dependency 'awesome_print'
   spec.add_development_dependency 'bundler'
   spec.add_development_dependency 'codeclimate-test-reporter'
   spec.add_development_dependency 'codecov'
