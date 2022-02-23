@@ -1,5 +1,13 @@
 # Changelog
 
+## [v3.1.2](https://github.com/kigster/simple-feed/tree/v3.1.2) (2022-02-23)
+
+[Full Changelog](https://github.com/kigster/simple-feed/compare/v3.1.1...v3.1.2)
+
+**Merged pull requests:**
+
+- Awesome print should be a regular dependency if it will be required [\#31](https://github.com/kigster/simple-feed/pull/31) ([danigirl329](https://github.com/danigirl329))
+
 ## [v3.1.1](https://github.com/kigster/simple-feed/tree/v3.1.1) (2022-02-22)
 
 [Full Changelog](https://github.com/kigster/simple-feed/compare/v3.1.0...v3.1.1)
