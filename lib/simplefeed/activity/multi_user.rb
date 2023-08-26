@@ -72,7 +72,7 @@ module SimpleFeed
           opts.delete(:event)
         end
         response = instance.feed.send(method, *args, **opts, &block)
-        block&.call(response)
+        block&.call(response) unless method.to_sym == :delete_if
         raise StandardError, "Nil response from provider #{instance.feed.provider&.provider&.class}, method #{method}(#{opts})" unless response
 
         response

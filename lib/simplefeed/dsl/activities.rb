@@ -25,7 +25,12 @@ module SimpleFeed
       #   activity.store(**opts)
       # end
       # etc...
-      SimpleFeed::Providers.define_provider_methods(self) do |instance, method, *args, **opts, &block|
+      SimpleFeed::Providers.define_provider_methods(self) do |instance,
+                                                                method,
+                                                                *args,
+                                                                activity_block: nil,
+                                                                **opts,
+                                                                &block|
         if args&.first
           arg1 = args.shift
           if arg1.is_a?(SimpleFeed::Event)
@@ -42,7 +47,7 @@ module SimpleFeed
 
         response = instance.instance_eval do
           print_debug_info(method, **opts) do
-            activity.send(method, *args, **opts)
+            activity.send(method, *args, **opts, &activity_block)
           end
         end
 

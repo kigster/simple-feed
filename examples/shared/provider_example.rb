@@ -58,16 +58,24 @@ with_activity(@activity) do
   store('value four')   { p 'storing', 'value four' }
 
   color_dump
+  puts
+  total_count               { |r| p 'total_count ', "#{r[@uid]._v}" }
+  unread_count              { |r| p 'unread_count ', "#{r[@uid]._v}" }
 
-  header 'deleting'
+  header 'deleting "value three" via delete_if'
 
-  delete('value three')     { p 'deleting', 'value three' }
+  delete_block = ->(event, _consumer) {
+    event&.value == 'value three'
+  }
+
+  delete_if(activity_block: delete_block)
 
   total_count               { |r| p 'total_count ', "#{r[@uid]._v}" }
   unread_count              { |r| p 'unread_count ', "#{r[@uid]._v}" }
 
   hr
 
+  header 'deleting "value four"'
   delete('value four')      { p 'deleting', 'value four' }
   total_count               { |r| p 'total_count ', "#{r[@uid]._v}" }
   unread_count              { |r| p 'unread_count ', "#{r[@uid]._v}" }
