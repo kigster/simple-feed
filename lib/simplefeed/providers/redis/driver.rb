@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'redis'
-require 'redis/connection/hiredis'
+# require 'redis/connection/hiredis'
 require 'connection_pool'
 require 'colored2'
 require 'hashie/mash'
