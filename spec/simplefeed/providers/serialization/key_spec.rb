@@ -41,15 +41,11 @@ RSpec.describe SimpleFeed::Providers::Key do
     let(:namespace) { :poo }
 
     let(:meta_key_transformer) do
-      ->(consumer) do
-        consumer.id
-      end
+      lambda(&:id)
     end
 
     let(:data_key_transformer) do
-      ->(consumer) do
-        consumer.zipcode
-      end
+      lambda(&:zipcode)
     end
 
     context '#key_params' do

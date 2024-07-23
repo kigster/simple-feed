@@ -97,7 +97,7 @@ module SimpleFeed
             end
 
             if redis_proc
-              self.pool = ::ConnectionPool.new(size: (opts[:pool_size] || 2)) do
+              self.pool = ::ConnectionPool.new(size: opts[:pool_size] || 2) do
                 redis_proc.call
               end
             end
