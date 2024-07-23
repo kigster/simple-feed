@@ -5,13 +5,18 @@
 :sectnums:
 :icons: font
 
+====
 
----
+https://liberapay.com/kigster/donate[image:https://liberapay.com/assets/widgets/donate.svg[Donate using Liberapay,height=30]]
 
-https://liberapay.com/kigster/donate[image:https://liberapay.com/assets/widgets/donate.svg[Donate using Liberapay,height=30]]   https://liberapay.com/kigster/donate[image:https://img.shields.io/liberapay/goal/kigster.svg?logo=liberapay[https://img.shields.io/liberapay/goal/kigster,height=30]]
+https://liberapay.com/kigster/donate[image:https://img.shields.io/liberapay/goal/kigster.svg?logo=liberapay[https://img.shields.io/liberapay/goal/kigster,height=50]]
+====
 
+== Scalable, Easy to Use Activity (aka "News") Feed
 
-== Scalable, Easy to Use Activity Feed Implementation.
+=== What is this gem? — A Quick Summary
+
+NOTE: This gem is the Redis-backed backend implementation for a reverse chronological order news feed for a typical social network similar in some ways to Twitter: where users have followers, but also topics or a categories can have followers. When an event is posted by a user, it is also pushed to various individual feeds, and the gem then offers `O(1)` speed pagination for reading any page of the feed. The limitation is that the number of feed items must be capped (the default is 4000 items). The implementation can be scaled horizontally by sharding Redis backend, which can be implemented using a Redis Proxy layer such as https://github.com/twitter/twemproxy[Twemproxy] or https://github.com/envoyproxy/envoy/issues/19436[Envoy]).
 
 === Build & Gem Status
 
@@ -20,8 +25,7 @@ image:https://github.com/kigster/simple-feed/actions/workflows/ruby.yml/badge.sv
 image:https://github.com/kigster/simple-feed/actions/workflows/rubocop.yml/badge.svg[Rubocop,link=https://github.com/kigster/simple-feed/actions/workflows/rubocop.yml]
 
 image:https://img.shields.io/gem/v/simple-feed.svg[Gem Version,link=https://rubygems.org/gems/simple-feed]
-image:http://inch-ci.org/github/kigster/simple-feed.svg?branch=main[Inline docs,link=http://inch-ci.org/github/kigster/simple-feed]
-image:https://codecov.io/gh/kigster/simple-feed/branch/main/graph/badge.svg[Coverage,link=https://codecov.io/gh/kigster/simple-feed]
+image:https://codecov.io/gh/kigster/simple-feed/branch/master/graph/badge.svg?token=RvDkGqoahz[Coverage,link=https://codecov.io/gh/kigster/simple-feed]
 
 === Test Coverage Map
 
@@ -40,6 +44,7 @@ This is a fast, pure-ruby implementation of an activity feed concept commonly us
 * SimpleFeed _does not depend on Ruby on Rails_ and is a *pure-ruby* implementation
 * SimpleFeed requires MRI Ruby 2.3 or later
 * SimpleFeed is currently live in production
+* SimpleFeed can use https://github.com/redis/hiredis[hiredis] if you install it separately and load it before loading the gem.
 * SimpleFeed is open source thanks to the generosity of *http://simbi.com[Simbi, Inc]*.
 
 == Features
@@ -525,7 +530,7 @@ If you set environment variable `REDIS_DEBUG` to `true` and run the example (see
 
 Source code for the gem contains the `examples` folder with an example file that can be used to test out the providers, and see what they do under the hood.
 
-Both the specs and the example requires a local redis instance to be available. 
+Both the specs and the example requires a local redis instance to be available.
 
 To run it, checkout the source of the library, and then:
 
