@@ -16,8 +16,8 @@ https://liberapay.com/kigster/donate[image:https://liberapay.com/assets/widgets/
 === Build & Gem Status
 
 image:https://img.shields.io/badge/license-MIT-blue.svg[MIT licensed,link=https://github.com/kigster/simple-feed/main/LICENSE.txt]
-image:https://github.com/kigster/simple-feed/workflows/RSpec/badge.svg?branch=main[RSpec,link=https://github.com/kigster/simple-feed/actions?query=workflow%3ARSpec]
-image:https://github.com/kigster/simple-feed/workflows/Rubocop/badge.svg?branch=main[Rubocop,link=https://github.com/kigster/simple-feed/actions?query=workflow%3ARubocop]
+image:https://github.com/kigster/simple-feed/actions/workflows/ruby.yml/badge.svg[RSpec,link=https://github.com/kigster/simple-feed/actions/workflows/ruby.yml]
+image:https://github.com/kigster/simple-feed/actions/workflows/rubocop.yml/badge.svg[Rubocop,link=https://github.com/kigster/simple-feed/actions/workflows/rubocop.yml]
 
 image:https://img.shields.io/gem/v/simple-feed.svg[Gem Version,link=https://rubygems.org/gems/simple-feed]
 image:http://inch-ci.org/github/kigster/simple-feed.svg?branch=main[Inline docs,link=http://inch-ci.org/github/kigster/simple-feed]
