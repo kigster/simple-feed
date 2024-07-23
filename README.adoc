@@ -13,21 +13,19 @@ https://liberapay.com/kigster/donate[image:https://liberapay.com/assets/widgets/
 
 == Scalable, Easy to Use Activity Feed Implementation.
 
-NOTE: please feel free to read this README in the formatted-for-print xref:README.pdf[PDF Version].
-
 === Build & Gem Status
 
-image:https://img.shields.io/badge/license-MIT-blue.svg[MIT licensed,link=https://github.com/kigster/simple-feed/master/LICENSE.txt]
-image:https://github.com/kigster/simple-feed/workflows/RSpec/badge.svg?branch=master[RSpec,link=https://github.com/kigster/simple-feed/actions?query=workflow%3ARSpec]
-image:https://github.com/kigster/simple-feed/workflows/Rubocop/badge.svg?branch=master[Rubocop,link=https://github.com/kigster/simple-feed/actions?query=workflow%3ARubocop]
+image:https://img.shields.io/badge/license-MIT-blue.svg[MIT licensed,link=https://github.com/kigster/simple-feed/main/LICENSE.txt]
+image:https://github.com/kigster/simple-feed/workflows/RSpec/badge.svg?branch=main[RSpec,link=https://github.com/kigster/simple-feed/actions?query=workflow%3ARSpec]
+image:https://github.com/kigster/simple-feed/workflows/Rubocop/badge.svg?branch=main[Rubocop,link=https://github.com/kigster/simple-feed/actions?query=workflow%3ARubocop]
 
 image:https://img.shields.io/gem/v/simple-feed.svg[Gem Version,link=https://rubygems.org/gems/simple-feed]
-image:http://inch-ci.org/github/kigster/simple-feed.svg?branch=master[Inline docs,link=http://inch-ci.org/github/kigster/simple-feed]
-image:https://codecov.io/gh/kigster/simple-feed/branch/master/graph/badge.svg[Coverage,link=https://codecov.io/gh/kigster/simple-feed]
+image:http://inch-ci.org/github/kigster/simple-feed.svg?branch=main[Inline docs,link=http://inch-ci.org/github/kigster/simple-feed]
+image:https://codecov.io/gh/kigster/simple-feed/branch/main/graph/badge.svg[Coverage,link=https://codecov.io/gh/kigster/simple-feed]
 
 === Test Coverage Map
 
-image:https://codecov.io/gh/kigster/simple-feed/branch/master/graphs/sunburst.svg[Coverage Map,link=https://codecov.io/gh/kigster/simple-feed/branch/master]
+image:https://codecov.io/gh/kigster/simple-feed/branch/main/graphs/sunburst.svg[Coverage Map,link=https://codecov.io/gh/kigster/simple-feed/branch/main]
 
 IMPORTANT: Please read the (somewhat outdated) blog post http://kig.re/2017/02/19/feeding-frenzy-with-simple-feed-activity-feed-ruby-gem.html[Feeding Frenzy with SimpleFeed] launching this library. Please leave comments or questions in the discussion thread at the bottom of that post. Thanks!
 
@@ -117,7 +115,7 @@ Please read the additional documentation, including the examples, on the https:/
 
 Below is a screen shot of an actual activity feed powered by this library.
 
-image::https://raw.githubusercontent.com/kigster/simple-feed/master/man/activity-feed-action.png[usage]
+image::https://raw.githubusercontent.com/kigster/simple-feed/main/man/activity-feed-action.png[usage]
 
 === Providers
 
@@ -436,7 +434,7 @@ The DSL context has access to two additional methods:
 
 Below is an example output of `color_dump` method, which is intended for the debugging purposes.
 
-image::https://raw.githubusercontent.com/kigster/simple-feed/master/man/sf-color-dump.png[title=#color_dump method output, width=659, link=https://raw.githubusercontent.com/kigster/simple-feed/master/man/sf-color-dump.png]
+image::https://raw.githubusercontent.com/kigster/simple-feed/main/man/sf-color-dump.png[title=#color_dump method output, width=659, link=https://raw.githubusercontent.com/kigster/simple-feed/main/man/sf-color-dump.png]
 
 +++<a name="api">++++++</a>+++
 
@@ -553,11 +551,11 @@ ruby examples/redis_provider_example.rb
 
 The above command will help you download, setup all dependencies, and run the examples for a single user:
 
-image::https://raw.githubusercontent.com/kigster/simple-feed/master/man/running-example.png[title=Running Redis Example in a Terminal, width=663, link=https://raw.githubusercontent.com/kigster/simple-feed/master/man/running-example.png]
+image::https://raw.githubusercontent.com/kigster/simple-feed/main/man/running-example.png[title=Running Redis Example in a Terminal, width=663, link=https://raw.githubusercontent.com/kigster/simple-feed/main/man/running-example.png]
 
 If you set `REDIS_DEBUG` variable prior to running the example, you will be able to see every single Redis command executed as the example works its way through. Below is a sample output:
 
-image::https://raw.githubusercontent.com/kigster/simple-feed/master/man/running-example-redis-debug.png[title=Running Redis Example with REDIS_DEBUG set, width=918, link=https://raw.githubusercontent.com/kigster/simple-feed/master/man/running-example-redis-debug.png]
+image::https://raw.githubusercontent.com/kigster/simple-feed/main/man/running-example-redis-debug.png[title=Running Redis Example with REDIS_DEBUG set, width=918, link=https://raw.githubusercontent.com/kigster/simple-feed/main/man/running-example-redis-debug.png]
 
 === Generating Ruby API Documentation
 
