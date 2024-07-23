@@ -30,7 +30,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'colored2'
   spec.add_dependency 'connection_pool', '~> 2'
   spec.add_dependency 'hashie'
-  spec.add_dependency 'hiredis'
   spec.add_dependency 'redis'
   spec.add_dependency 'sorted_set'
   spec.add_dependency 'tty-box'
