@@ -23,7 +23,7 @@ require 'simple-feed'
 require 'simple_feed'
 require 'rspec/its'
 
-::Dir.glob(::File.expand_path('../support/*.rb', __FILE__)).each do |f|
+::Dir.glob(::File.expand_path('../support/*.rb', __FILE__)).sort.each do |f|
   require_relative(f)
 end
 

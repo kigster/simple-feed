@@ -1,12 +1,10 @@
 # frozen_string_literal: true
 
 require 'redis'
-require 'redis/connection/hiredis'
 require 'connection_pool'
 require 'colored2'
 require 'hashie/mash'
 require 'yaml'
-require 'pp'
 
 module SimpleFeed
   module Providers
@@ -99,7 +97,7 @@ module SimpleFeed
             end
 
             if redis_proc
-              self.pool = ::ConnectionPool.new(size: (opts[:pool_size] || 2)) do
+              self.pool = ::ConnectionPool.new(size: opts[:pool_size] || 2) do
                 redis_proc.call
               end
             end
