@@ -47,13 +47,13 @@ module SimpleFeed
           end
         end
 
-        def delete_if(user_ids:)
-          raise ArgumentError, '#delete_if must be called with a block that receives (user_id, event) as arguments.' unless block_given?
+        def delete_if(user_ids:, &block)
+          raise ArgumentError, '#delete_if must be called with a block that receives (event_id, user_id) as arguments.' if block.nil?
 
           with_response_batched(user_ids) do |key|
             fetch(user_ids: [key.consumer])[key.consumer].map do |event|
               with_redis do |redis|
-                if yield(event, key.consumer)
+                if block.call(event, key.consumer)
                   redis.zrem(key.data, event.value) ? event : nil
                 end
               end

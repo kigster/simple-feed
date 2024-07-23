@@ -84,13 +84,14 @@ RSpec.shared_examples('a valid provider') do |provider_args:, more_users: nil, p
           end
 
           context '#delete' do
-            it('with event as an argument') do
+            it 'with event as an argument' do
               with_activity(activity, events: events) do
                 delete(events.first) { |r| expect(r).to eq(true) }
                 total_count { |r| expect(r).to eq(1) }
               end
             end
-            it('with event value as an argument') do
+
+            it 'with event value as an argument' do
               with_activity(activity, events: events) do
                 delete(events.first.value) { |r| expect(r).to eq(true) }
                 total_count { |r| expect(r).to eq(1) }
@@ -100,25 +101,27 @@ RSpec.shared_examples('a valid provider') do |provider_args:, more_users: nil, p
 
           context '#delete_if' do
             let(:activity) { feed.activity(user_id) }
-
-            it 'should delete events that match' do
+            before do
               activity.wipe
               events.each do |event|
                 expect(activity.store(event: event)).to eq(true)
               end
               expect(activity.total_count).to eq(3)
+            end
+
+            it 'should delete events that match' do
               deleted_events = activity.delete_if do |event_to_delete, *|
-                event_to_delete == events.first
+                event_to_delete == events.last
               end
               expect(activity.total_count).to eq(2)
-              expect(deleted_events).to eq([events.first])
-              expect(activity.fetch).to include(events.last)
-              expect(activity.fetch).not_to include(events.first)
+              expect(deleted_events).to eq([events.last])
+              expect(activity.fetch).to include(events.first)
+              expect(activity.fetch).not_to include(events.last)
             end
           end
 
           context 'hitting #max_size of the feed' do
-            it('pushes the oldest one out') do
+            it 'pushes the oldest one out' do
               with_activity(activity, events: events) do
                 wipe
                 # The next one resets the time
