@@ -25,7 +25,7 @@ image:https://codecov.io/gh/kigster/simple-feed/branch/main/graph/badge.svg[Cove
 
 === Test Coverage Map
 
-image:https://codecov.io/gh/kigster/simple-feed/branch/main/graphs/sunburst.svg[Coverage Map,link=https://codecov.io/gh/kigster/simple-feed/branch/main]
+image:https://codecov.io/gh/kigster/simple-feed/graphs/sunburst.svg?token=RvDkGqoahz[Coverage Map,link=https://codecov.io/gh/kigster/simple-feed/branch/master]
 
 IMPORTANT: Please read the (somewhat outdated) blog post http://kig.re/2017/02/19/feeding-frenzy-with-simple-feed-activity-feed-ruby-gem.html[Feeding Frenzy with SimpleFeed] launching this library. Please leave comments or questions in the discussion thread at the bottom of that post. Thanks!
 
