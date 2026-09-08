@@ -28,7 +28,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'awesome_print'
   spec.add_dependency 'base62-rb'
   spec.add_dependency 'colored2'
-  spec.add_dependency 'connection_pool', '~> 2'
+  spec.add_dependency 'connection_pool', '>= 2', '< 4'
   spec.add_dependency 'hashie'
   spec.add_dependency 'redis'
   spec.add_dependency 'sorted_set'
